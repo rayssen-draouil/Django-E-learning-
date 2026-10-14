@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Connexion | E-Learning{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Connexion</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}{{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+        {% endfor %}
+        <button type="submit">Se connecter</button>
+    </form>
+    <p>Pas encore de compte ? <a href="{% url 'users:register' %}">S'inscrire</a></p>
+</section>
+{% endblock %}

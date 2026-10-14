@@ -1,0 +1,30 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}E-Learning{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'users/css/users.css' %}">
+</head>
+<body>
+<nav class="site-nav">
+    <a href="{% url 'users:profile' %}">E-Learning</a>
+    <div>
+        {% if request.session.user_id %}
+            <a href="{% url 'users:profile' %}">Mon profil</a>
+            <form method="post" action="{% url 'users:logout' %}" class="inline-form">
+                {% csrf_token %}<button type="submit" class="link-button">Déconnexion</button>
+            </form>
+        {% else %}
+            <a href="{% url 'users:login' %}">Connexion</a>
+            <a href="{% url 'users:register' %}">Inscription</a>
+        {% endif %}
+    </div>
+</nav>
+<main class="container">
+    {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
