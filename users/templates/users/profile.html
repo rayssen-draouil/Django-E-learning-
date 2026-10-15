@@ -1,19 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Mon profil | E-Learning{% endblock %}
+{% block title %}Mon profil | SkillForge{% endblock %}
+{% block main_class %}profile-container{% endblock %}
 {% block content %}
-<section class="card">
-    <h1>Mon profil</h1>
-    <dl>
-        <dt>Adresse e-mail</dt><dd>{{ user.email }}</dd>
-        <dt>Rôle</dt><dd>{{ user.role }}</dd>
-    </dl>
-    <h2>Modifier mes informations</h2>
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
-        {% endfor %}
-        <button type="submit">Enregistrer</button>
-    </form>
-</section>
+<div class="profile-layout">
+    <section class="profile-hero">
+        <div class="profile-cover"></div>
+        <div class="profile-hero-content">
+            <div class="profile-avatar"><span>{{ user.first_name|default:"S"|first|upper }}</span></div>
+            <div class="profile-identity">
+                <p class="profile-eyebrow">VOTRE ESPACE D'APPRENTISSAGE</p>
+                <h1>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"" }}</h1>
+                <p>{{ user.email }}</p>
+            </div>
+            <a class="profile-dashboard-link" href="{% url 'users:backoffice' %}">Mon tableau de bord <span>→</span></a>
+        </div>
+    </section>
+
+    <div class="profile-columns">
+        <section class="profile-card profile-info-card">
+            <div class="profile-card-heading">
+                <div>
+                    <p class="profile-eyebrow">SKILLFORGE</p>
+                    <h2>Votre espace personnel</h2>
+                </div>
+                <span class="profile-card-icon">✦</span>
+            </div>
+            <div class="profile-details">
+                <div><span>Adresse e-mail</span><strong>{{ user.email }}</strong></div>
+                <div><span>Rôle</span><strong>{{ user.role|default:"Apprenant" }}</strong></div>
+                <div><span>Statut</span><strong class="status-pill">Actif</strong></div>
+            </div>
+            <div class="profile-shortcuts">
+                <a href="{% url 'users:backoffice_courses' %}"><span>▣</span><b>Cours</b><small>Continuer</small></a>
+                <a href="{% url 'users:backoffice_mentors' %}"><span>♧</span><b>Mentors</b><small>Explorer</small></a>
+                <a href="{% url 'users:backoffice_quizzes' %}"><span>✓</span><b>Quiz</b><small>S'entraîner</small></a>
+            </div>
+        </section>
+
+        <section class="profile-card profile-edit-card">
+            <div class="profile-card-heading">
+                <div>
+                    <p class="profile-eyebrow">VOS PRÉFÉRENCES</p>
+                    <h2>Modifier le profil</h2>
+                </div>
+            </div>
+            <p class="profile-card-subtitle">Gardez vos informations à jour pour profiter pleinement de votre parcours SkillForge.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="field">
+                        {{ field.label_tag }}{{ field }}{{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button class="profile-save-button" type="submit">Enregistrer les modifications</button>
+            </form>
+        </section>
+    </div>
+</div>
 {% endblock %}

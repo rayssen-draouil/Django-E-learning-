@@ -78,7 +78,7 @@ class UsersViewsTests(TestCase):
             })
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/users/profile/")
+        self.assertEqual(response["Location"], "/")
         self.assertEqual(self.client.session["user_id"], str(user["_id"]))
 
     def test_invalid_login_does_not_reveal_account_existence(self):

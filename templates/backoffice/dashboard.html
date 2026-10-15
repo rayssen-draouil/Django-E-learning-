@@ -1,0 +1,137 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tableau de bord | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        <aside class="dashboard-sidebar">
+            <a href="{% url 'home' %}" class="dashboard-logo">
+                <span class="logo-shape">S</span>
+                <span>SkillForge</span>
+            </a>
+            <p class="sidebar-label">ESPACE APPRENANT</p>
+            <nav class="dashboard-nav">
+                <a href="{% url 'users:backoffice' %}" class="active">
+                    <span class="nav-icon">⌂</span> Tableau de bord
+                </a>
+                <a href="{% url 'users:backoffice_courses' %}">
+                    <span class="nav-icon">▣</span> Mes cours
+                </a>
+                <a href="{% url 'users:backoffice_mentors' %}">
+                    <span class="nav-icon">♧</span> Mentors
+                </a>
+                <a href="{% url 'users:backoffice_quizzes' %}">
+                    <span class="nav-icon">✓</span> Quiz
+                </a>
+            </nav>
+            <div class="sidebar-promo">
+                <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
+                <strong>Continuez votre élan !</strong>
+                <p>Un petit pas chaque jour crée de grandes compétences.</p>
+                <a href="{% url 'users:courses' %}">Voir les cours</a>
+            </div>
+            <form method="post" action="{% url 'users:logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit"><span class="nav-icon">↪</span> Déconnexion</button>
+            </form>
+        </aside>
+
+        <main class="dashboard-main">
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                    <h1>Bonjour {{ user.first_name|default:"apprenant" }} <span aria-hidden="true">👋</span></h1>
+                    <p class="header-subtitle">Voici un aperçu de votre progression.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+                    <a href="{% url 'users:profile' %}" class="profile-chip">
+                        <span>{{ user.first_name|default:"S"|first|upper }}</span>
+                        {{ user.first_name|default:"Mon profil" }}
+                    </a>
+                </div>
+            </header>
+
+            <section class="stats-grid" aria-label="Statistiques d'apprentissage">
+                {% for label, value, color in stats %}
+                    <article class="stat-card {{ color }}">
+                        <div class="stat-icon">{{ forloop.counter }}</div>
+                        <div>
+                            <p>{{ label }}</p>
+                            <strong>{{ value }}</strong>
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+
+            <section class="dashboard-grid">
+                <article class="panel progress-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Progression générale</h2>
+                            <p>Votre activité ces dernières semaines</p>
+                        </div>
+                        <span class="trend">+12%</span>
+                    </div>
+                    <div class="progress-visual">
+                        <div class="progress-ring"><span>68<small>%</small></span></div>
+                        <div>
+                            <strong>Excellent travail !</strong>
+                            <p>Vous êtes sur la bonne voie. Continuez à apprendre régulièrement.</p>
+                        </div>
+                    </div>
+                    <div class="activity-bars" aria-label="Activité hebdomadaire">
+                        {% for height in activity_heights %}
+                            <span style="height: {{ height }}%;"></span>
+                        {% endfor %}
+                    </div>
+                    <div class="days"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+                </article>
+
+                <article class="panel profile-panel">
+                    <div class="cover"></div>
+                    <div class="profile-content">
+                        <img src="{% static 'backoffice/images/user-1.jpg' %}" alt="Photo de profil" class="large-avatar">
+                        <h2>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"SkillForge" }}</h2>
+                        <p>{{ user.email }}</p>
+                        <div class="profile-line"><span>Niveau actuel</span><strong>Intermédiaire</strong></div>
+                        <div class="profile-line"><span>Objectif hebdomadaire</span><strong>4 / 5 jours</strong></div>
+                        <a href="{% url 'users:profile' %}" class="primary-button">Modifier mon profil</a>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel courses-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Reprendre mes cours</h2>
+                        <p>Continuez là où vous vous êtes arrêté.</p>
+                    </div>
+                    <a href="{% url 'users:courses' %}" class="text-link">Tous les cours →</a>
+                </div>
+                <div class="course-list">
+                    {% for title, progress, status in courses %}
+                        <div class="course-row">
+                            <div class="course-image course-image-{{ forloop.counter }}"></div>
+                            <div class="course-info">
+                                <h3>{{ title }}</h3>
+                                <div class="course-meta"><span>{{ progress }} terminé</span><span>{{ status }}</span></div>
+                                <div class="bar"><i style="width: {{ progress }};"></i></div>
+                            </div>
+                            <a href="{% url 'users:courses' %}" class="continue-button">Continuer</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

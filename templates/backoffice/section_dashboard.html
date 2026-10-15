@@ -1,0 +1,86 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        <aside class="dashboard-sidebar">
+            <a href="{% url 'home' %}" class="dashboard-logo"><span class="logo-shape">S</span><span>SkillForge</span></a>
+            <p class="sidebar-label">ESPACE APPRENANT</p>
+            <nav class="dashboard-nav">
+                <a href="{% url 'users:backoffice' %}"><span class="nav-icon">⌂</span> Tableau de bord</a>
+                <a href="{% url 'users:backoffice_courses' %}" class="{% if section == 'courses' %}active{% endif %}"><span class="nav-icon">▣</span> Mes cours</a>
+                <a href="{% url 'users:backoffice_mentors' %}" class="{% if section == 'mentors' %}active{% endif %}"><span class="nav-icon">♧</span> Mentors</a>
+                <a href="{% url 'users:backoffice_quizzes' %}" class="{% if section == 'quizzes' %}active{% endif %}"><span class="nav-icon">✓</span> Quiz</a>
+            </nav>
+            <div class="sidebar-promo">
+                <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
+                <strong>Continuez votre élan !</strong>
+                <p>Un petit pas chaque jour crée de grandes compétences.</p>
+                <a href="{% url 'users:backoffice_courses' %}">Voir les cours</a>
+            </div>
+            <form method="post" action="{% url 'users:logout' %}" class="logout-form">
+                {% csrf_token %}<button type="submit"><span class="nav-icon">↪</span> Déconnexion</button>
+            </form>
+        </aside>
+
+        <main class="dashboard-main">
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                    <h1>{{ title }}</h1>
+                    <p class="header-subtitle">{{ intro }}</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'users:backoffice' %}" class="outline-button">Vue générale</a>
+                    <a href="{% url 'users:profile' %}" class="profile-chip"><span>{{ user.first_name|default:"S"|first|upper }}</span>{{ user.first_name|default:"Mon profil" }}</a>
+                </div>
+            </header>
+
+            <section class="stats-grid" aria-label="Statistiques">
+                {% for label, value, color in stats %}
+                    <article class="stat-card {{ color }}"><div class="stat-icon">{{ forloop.counter }}</div><div><p>{{ label }}</p><strong>{{ value }}</strong></div></article>
+                {% endfor %}
+            </section>
+
+            <section class="panel section-hero">
+                <div>
+                    <p class="eyebrow">VOTRE PROGRESSION</p>
+                    <h2>Avancez avec SkillForge</h2>
+                    <p>Retrouvez vos ressources, suivez vos résultats et gardez le rythme grâce à un espace pensé pour vous.</p>
+                </div>
+                <img src="{% if section == 'mentors' %}{% static 'backoffice/images/customer-support-img.png' %}{% elif section == 'quizzes' %}{% static 'backoffice/images/unlimited-bg.png' %}{% else %}{% static 'backoffice/images/rocket.png' %}{% endif %}" alt="">
+            </section>
+
+            <section class="panel section-items">
+                <div class="panel-heading">
+                    <div><h2>{% if section == 'mentors' %}Mentors recommandés{% elif section == 'quizzes' %}Quiz à découvrir{% else %}Mes parcours de cours{% endif %}</h2><p>Mis à jour selon votre activité.</p></div>
+                    <span class="trend">À jour</span>
+                </div>
+                <div class="section-item-list">
+                    {% for name, category, progress, detail, image in items %}
+                        <article class="section-item">
+                            <img src="{% static 'backoffice/images/' %}{{ image }}" alt="">
+                            <div class="section-item-content">
+                                <p class="item-category">{{ category }}</p>
+                                <h3>{{ name }}</h3>
+                                <p class="item-detail">{{ detail }}</p>
+                                {% if section != 'mentors' %}<div class="bar"><i style="width: {{ progress }};"></i></div>{% endif %}
+                            </div>
+                            <a href="{% if section == 'mentors' %}{% url 'users:mentors' %}{% elif section == 'quizzes' %}{% url 'users:quiz' %}{% else %}{% url 'users:courses' %}{% endif %}" class="continue-button">{% if section == 'mentors' %}Voir le profil{% elif section == 'quizzes' %}Commencer{% else %}Continuer{% endif %}</a>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
