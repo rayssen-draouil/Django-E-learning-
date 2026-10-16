@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Quiz | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="page-eyebrow">SkillForge</p>
+        <h1>Quiz</h1>
+        <p class="page-intro">Testez vos connaissances et identifiez les compétences à renforcer.</p>
+    </div>
+    {% if is_editor %}
+        <a class="btn btn-primary" href="{% url 'users:quiz_create' %}">Créer un quiz</a>
+    {% endif %}
+</header>
+
+<form class="filters" method="get" role="search" aria-label="Rechercher et filtrer les quiz">
+    <div class="filter-field">
+        <label for="id_q">Rechercher</label>
+        <input id="id_q" type="search" name="q" value="{{ search_term }}" placeholder="Titre ou description">
+    </div>
+    <div class="filter-field">
+        <label for="id_course">Cours</label>
+        <select id="id_course" name="course">
+            <option value="">Tous les cours</option>
+            {% for course in courses %}
+                <option value="{{ course.pk }}" {% if selected_course == course.pk|stringformat:"s" %}selected{% endif %}>{{ course.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="btn btn-secondary" type="submit">Filtrer</button>
+    {% if search_term or selected_course %}
+        <a class="btn btn-ghost" href="{% url 'users:quiz' %}">Réinitialiser</a>
+    {% endif %}
+</form>
+
+<div class="list-toolbar">
+    <p class="result-count">{{ page_obj.paginator.count }} quiz</p>
+    <nav class="sort-nav" aria-label="Trier les quiz">
+        <span>Trier :</span>
+        {% for key, url in sort_links %}
+            <a href="{{ url }}" {% if active_sort == key %}class="is-active" aria-current="true"{% endif %}>{{ key|capfirst }}</a>
+        {% endfor %}
+    </nav>
+</div>
+
+{% if quizzes %}
+    <div class="card-grid">
+        {% for quiz in quizzes %}
+            <article class="card">
+                <div class="card-body">
+                    <p class="card-badges">
+                        <span class="badge">{{ quiz.course.title }}</span>
+                        {% if not quiz.is_published %}<span class="badge badge-draft">Brouillon</span>{% endif %}
+                    </p>
+                    <h2 class="card-title"><a href="{{ quiz.get_absolute_url }}">{{ quiz.title }}</a></h2>
+                    <p class="card-text">{{ quiz.description|default:"Mettez vos connaissances à l'épreuve."|truncatewords:24 }}</p>
+                    <p class="card-meta">
+                        {{ quiz.annotated_question_count }} question{{ quiz.annotated_question_count|pluralize }}
+                        {% if quiz.course.mentor %} · avec {{ quiz.course.mentor.display_name }}{% endif %}
+                    </p>
+                </div>
+                <footer class="card-footer">
+                    <a class="card-link" href="{{ quiz.get_absolute_url }}">Voir le quiz →</a>
+                </footer>
+            </article>
+        {% endfor %}
+    </div>
+    {% include "users/learning/_pagination.html" %}
+{% else %}
+    <div class="empty-state">
+        <h2>Aucun quiz trouvé</h2>
+        {% if search_term or selected_course %}
+            <p>Aucun quiz ne correspond à votre recherche.</p>
+            <a class="btn btn-ghost" href="{% url 'users:quiz' %}">Réinitialiser les filtres</a>
+        {% else %}
+            <p>Les quiz arrivent : revenez bientôt pour tester vos connaissances.</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

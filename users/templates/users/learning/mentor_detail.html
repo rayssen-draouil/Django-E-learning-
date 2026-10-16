@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ mentor.display_name }} | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<article class="detail">
+    <header class="detail-header mentor-header">
+        {% if mentor.photo %}
+            <img class="mentor-photo" src="{{ mentor.photo.url }}" alt="Photo de {{ mentor.display_name }}">
+        {% endif %}
+        <div class="detail-header-text">
+            <p class="page-eyebrow">Mentor SkillForge</p>
+            <h1>{{ mentor.display_name }}</h1>
+            <p class="detail-meta">{{ mentor.specialties }} · Membre depuis {{ mentor.created_at|date:"m/Y" }}</p>
+            {% if can_edit %}
+                <div class="detail-actions">
+                    <a class="btn btn-secondary" href="{% url 'users:mentor_update' mentor.pk %}">Modifier</a>
+                    <a class="btn btn-danger" href="{% url 'users:mentor_delete' mentor.pk %}">Supprimer</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="detail-section">
+        <h2>Biographie</h2>
+        <p class="detail-description">{{ mentor.bio|linebreaks }}</p>
+    </section>
+
+    <section class="detail-section">
+        <div class="section-heading">
+            <h2>Cours publiés ({{ mentor.courses.all|length }})</h2>
+            <a class="btn btn-secondary" href="{% url 'users:courses' %}?mentor={{ mentor.pk }}">Filtrer par ce mentor</a>
+        </div>
+        <ul class="item-list">
+            {% for course in mentor.courses.all %}
+                <li>
+                    <span class="item-order" aria-hidden="true">§</span>
+                    <a href="{{ course.get_absolute_url }}">{{ course.title }}</a>
+                    <span class="item-meta">{{ course.get_level_display }} · {{ course.module_count }} module{{ course.module_count|pluralize }}</span>
+                </li>
+            {% empty %}
+                <li class="empty-note">Aucun cours publié pour le moment.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <footer class="detail-footer">
+        <a class="btn btn-ghost" href="{% url 'users:mentors' %}">← Retour aux mentors</a>
+    </footer>
+</article>
+{% endblock %}

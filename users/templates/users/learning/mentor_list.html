@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Mentors | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="page-eyebrow">SkillForge</p>
+        <h1>Mentors</h1>
+        <p class="page-intro">Échangez avec des experts qui vous accompagnent dans chaque étape de votre apprentissage.</p>
+    </div>
+    {% if is_editor %}
+        <a class="btn btn-primary" href="{% url 'users:mentor_create' %}">Créer un profil mentor</a>
+    {% endif %}
+</header>
+
+<form class="filters" method="get" role="search" aria-label="Rechercher les mentors">
+    <div class="filter-field">
+        <label for="id_q">Rechercher</label>
+        <input id="id_q" type="search" name="q" value="{{ search_term }}" placeholder="Nom, bio ou spécialité">
+    </div>
+    <button class="btn btn-secondary" type="submit">Rechercher</button>
+    {% if search_term %}
+        <a class="btn btn-ghost" href="{% url 'users:mentors' %}">Réinitialiser</a>
+    {% endif %}
+</form>
+
+<div class="list-toolbar">
+    <p class="result-count">{{ page_obj.paginator.count }} mentor{{ page_obj.paginator.count|pluralize }}</p>
+    <nav class="sort-nav" aria-label="Trier les mentors">
+        <span>Trier :</span>
+        {% for key, url in sort_links %}
+            <a href="{{ url }}" {% if active_sort == key %}class="is-active" aria-current="true"{% endif %}>{{ key|capfirst }}</a>
+        {% endfor %}
+    </nav>
+</div>
+
+{% if mentors %}
+    <div class="card-grid">
+        {% for mentor in mentors %}
+            <article class="card card-mentor">
+                {% if mentor.photo %}
+                    <img class="card-media card-media-round" src="{{ mentor.photo.url }}" alt="Photo de {{ mentor.display_name }}" loading="lazy">
+                {% else %}
+                    <div class="card-media card-media-placeholder card-media-round" aria-hidden="true"></div>
+                {% endif %}
+                <div class="card-body">
+                    <h2 class="card-title"><a href="{{ mentor.get_absolute_url }}">{{ mentor.display_name }}</a></h2>
+                    <p class="card-meta">{{ mentor.specialties }}</p>
+                    <p class="card-text">{{ mentor.bio|truncatewords:24 }}</p>
+                    <p class="card-meta">{{ mentor.annotated_course_count }} cours publié{{ mentor.annotated_course_count|pluralize }}</p>
+                </div>
+                <footer class="card-footer">
+                    <a class="card-link" href="{{ mentor.get_absolute_url }}">Voir le profil →</a>
+                </footer>
+            </article>
+        {% endfor %}
+    </div>
+    {% include "users/learning/_pagination.html" %}
+{% else %}
+    <div class="empty-state">
+        <h2>Aucun mentor trouvé</h2>
+        {% if search_term %}
+            <p>Aucun mentor ne correspond à « {{ search_term }} ».</p>
+            <a class="btn btn-ghost" href="{% url 'users:mentors' %}">Réinitialiser la recherche</a>
+        {% else %}
+            <p>Notre communauté de mentors grandit. Revenez très vite !</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

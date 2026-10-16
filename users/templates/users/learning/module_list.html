@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Modules | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="page-eyebrow">SkillForge</p>
+        <h1>Modules</h1>
+        <p class="page-intro">Parcourez toutes les leçons de la plateforme, cours par cours.</p>
+    </div>
+    {% if is_editor %}
+        <a class="btn btn-primary" href="{% url 'users:module_create' %}">Créer un module</a>
+    {% endif %}
+</header>
+
+<form class="filters" method="get" role="search" aria-label="Rechercher et filtrer les modules">
+    <div class="filter-field">
+        <label for="id_q">Rechercher</label>
+        <input id="id_q" type="search" name="q" value="{{ search_term }}" placeholder="Titre ou contenu du module">
+    </div>
+    <div class="filter-field">
+        <label for="id_course">Cours</label>
+        <select id="id_course" name="course">
+            <option value="">Tous les cours</option>
+            {% for course in courses %}
+                <option value="{{ course.pk }}" {% if selected_course == course.pk|stringformat:"s" %}selected{% endif %}>{{ course.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="btn btn-secondary" type="submit">Filtrer</button>
+    {% if search_term or selected_course %}
+        <a class="btn btn-ghost" href="{% url 'users:module_list' %}">Réinitialiser</a>
+    {% endif %}
+</form>
+
+<div class="list-toolbar">
+    <p class="result-count">{{ page_obj.paginator.count }} module{{ page_obj.paginator.count|pluralize }}</p>
+    <nav class="sort-nav" aria-label="Trier les modules">
+        <span>Trier :</span>
+        {% for key, url in sort_links %}
+            <a href="{{ url }}" {% if active_sort == key %}class="is-active" aria-current="true"{% endif %}>{{ key|capfirst }}</a>
+        {% endfor %}
+    </nav>
+</div>
+
+{% if modules %}
+    <ul class="item-list item-list-cards">
+        {% for module in modules %}
+            <li>
+                <span class="item-order">{{ module.order }}</span>
+                <div class="item-main">
+                    <a class="item-title" href="{{ module.get_absolute_url }}">{{ module.title }}</a>
+                    <p class="item-subtitle">Cours « {{ module.course.title }} » · {{ module.content|truncatewords:18 }}</p>
+                </div>
+                {% if is_editor %}
+                    <span class="item-actions">
+                        <a href="{% url 'users:module_update' module.pk %}">Modifier</a>
+                        <a href="{% url 'users:module_delete' module.pk %}">Supprimer</a>
+                    </span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    {% include "users/learning/_pagination.html" %}
+{% else %}
+    <div class="empty-state">
+        <h2>Aucun module trouvé</h2>
+        {% if search_term or selected_course %}
+            <p>Aucun module ne correspond à votre recherche.</p>
+            <a class="btn btn-ghost" href="{% url 'users:module_list' %}">Réinitialiser les filtres</a>
+        {% else %}
+            <p>Les modules apparaîtront ici dès que les mentors publieront du contenu.</p>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<section class="form-panel">
+    <p class="page-eyebrow">Quiz « {{ quiz.title }} »</p>
+    <h1>{{ page_title }}</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <fieldset class="answer-fieldset">
+            <legend>Réponses</legend>
+            <p class="field-help">Cochez la bonne réponse et retirez les réponses inutiles.</p>
+            {{ answer_formset.management_form }}
+            {{ answer_formset.non_form_errors }}
+            <div class="answer-rows">
+                {% for answer_form in answer_formset %}
+                    <div class="answer-row{% if answer_form.errors %} answer-row-errors{% endif %}">
+                        {% if answer_form.instance.pk %}{{ answer_form.id }}{% endif %}
+                        <div class="field">
+                            <label for="{{ answer_form.text.id_for_label }}">Réponse {{ forloop.counter }}</label>
+                            {{ answer_form.text }}
+                            {{ answer_form.text.errors }}
+                        </div>
+                        <div class="field field-check">
+                            <label for="{{ answer_form.is_correct.id_for_label }}">
+                                {{ answer_form.is_correct.label }} {{ answer_form.is_correct }}
+                            </label>
+                        </div>
+                        {% if answer_form.DELETE.field.widget.input_type == "checkbox" %}
+                            <div class="field field-check">
+                                <label for="{{ answer_form.DELETE.id_for_label }}">
+                                    {{ answer_form.DELETE.label }} {{ answer_form.DELETE }}
+                                </label>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {{ answer_form.non_field_errors }}
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Enregistrer</button>
+            {% if back_url %}<a class="btn btn-ghost" href="{{ back_url }}">Annuler</a>{% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

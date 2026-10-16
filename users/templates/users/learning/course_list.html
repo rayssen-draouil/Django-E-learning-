@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Cours | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="page-eyebrow">SkillForge</p>
+        <h1>Cours</h1>
+        <p class="page-intro">Développez vos compétences avec des parcours conçus pour progresser à votre rythme.</p>
+    </div>
+</header>
+
+<form class="filters" method="get" role="search" aria-label="Rechercher et filtrer les cours">
+    <div class="filter-field">
+        <label for="id_q">Rechercher</label>
+        <input id="id_q" type="search" name="q" value="{{ search_term }}" placeholder="Titre, description ou résumé">
+    </div>
+    <div class="filter-field">
+        <label for="id_level">Niveau</label>
+        <select id="id_level" name="level">
+            <option value="">Tous les niveaux</option>
+            {% for value, label in levels %}
+                <option value="{{ value }}" {% if selected_level == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-field">
+        <label for="id_category">Catégorie</label>
+        <select id="id_category" name="category">
+            <option value="">Toutes les catégories</option>
+            {% for category in categories %}
+                <option value="{{ category.pk }}" {% if selected_category == category.pk|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if request.user.is_staff %}
+        <div class="filter-field">
+            <label for="id_status">Statut</label>
+            <select id="id_status" name="status">
+                <option value="">Tous les statuts</option>
+                {% for value, label in statuses %}
+                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    {% endif %}
+    <button class="btn-ghost" type="submit">Filtrer</button>
+    {% if search_term or selected_level or selected_category or selected_status %}
+        <a class="btn-ghost" href="{% url 'users:courses' %}">Réinitialiser</a>
+    {% endif %}
+</form>
+
+<div class="list-toolbar">
+    <p class="result-count">{{ page_obj.paginator.count }} cours trouvé{% if page_obj.paginator.count > 1 %}s{% endif %}</p>
+    <nav class="sort-nav" aria-label="Trier les cours">
+        <span>Trier :</span>
+        {% for key, url in sort_links %}
+            <a href="{{ url }}" {% if active_sort == key %}class="is-active" aria-current="true"{% endif %}>
+                {% if key == 'newest' %}Plus récents{% elif key == 'oldest' %}Plus anciens{% else %}Titre A-Z{% endif %}
+            </a>
+        {% endfor %}
+    </nav>
+    {% if can_bulk %}
+        <a class="btn-ghost" href="{{ export_url }}">Exporter CSV</a>
+    {% endif %}
+</div>
+
+{% if courses %}
+    {% if can_bulk %}<form method="post" action="?{{ query_string }}" class="bulk-actions">{% csrf_token %}{% endif %}
+        {% if can_bulk %}
+            <div class="bulk-toolbar">
+                <label for="bulk_action">Action groupée</label>
+                <select id="bulk_action" name="bulk_action">
+                    <option value="">Choisir une action</option>
+                    <option value="publish">Publier</option>
+                    <option value="archive">Archiver</option>
+                    <option value="delete">Supprimer logiquement</option>
+                </select>
+                <button class="btn-ghost" type="submit">Appliquer</button>
+            </div>
+        {% endif %}
+        <div class="card-grid">
+            {% for course in courses %}
+                <article class="card">
+                    {% if can_bulk %}
+                        <div class="card-select">
+                            <input id="course-{{ course.pk }}" type="checkbox" name="selected_courses" value="{{ course.pk }}" aria-label="Sélectionner {{ course.title }}">
+                        </div>
+                    {% endif %}
+                    {% if course.image %}
+                        <img class="card-media" src="{{ course.image.url }}" alt="Illustration du cours « {{ course.title }} »" loading="lazy">
+                    {% else %}
+                        <div class="card-media card-media-placeholder" aria-hidden="true">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+                                <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"></path>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <p class="card-badges">
+                            <span class="badge">{{ course.get_level_display }}</span>
+                            <span class="badge {% if course.is_deleted %}badge-draft{% elif course.status == 'published' %}badge-published{% else %}badge-draft{% endif %}">{{ course.get_status_display }}</span>
+                            {% if course.category %}<span class="badge">{{ course.category.name }}</span>{% endif %}
+                        </p>
+                        <h2 class="card-title"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a></h2>
+                        <p class="card-text">{{ course.short_description|default:course.description|truncatewords:24 }}</p>
+                        <p class="card-meta">
+                            {{ course.modules_count }} module{{ course.modules_count|pluralize }}
+                            {% if course.owner %} · {{ course.owner.get_full_name|default:course.owner.username }}{% endif %}
+                            · {{ course.duration_hours }}h
+                        </p>
+                    </div>
+                    <footer class="card-footer">
+                        <a class="card-link" href="{{ course.get_absolute_url }}">Voir le cours →</a>
+                    </footer>
+                </article>
+            {% endfor %}
+        </div>
+    {% if can_bulk %}</form>{% endif %}
+    {% include "users/learning/_pagination.html" %}
+{% else %}
+    <div class="empty-state">
+        <h2>Aucun cours trouvé</h2>
+        <p>Essayez d'ajuster vos filtres ou commencez par créer un nouveau cours.</p>
+        {% if request.user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'users:course_create' %}">Créer un cours</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

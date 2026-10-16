@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<article class="detail">
+    <header class="detail-header">
+        <div class="detail-header-text">
+            <p class="page-eyebrow">
+                <span class="badge">{{ quiz.course.title }}</span>
+                {% if quiz.is_published %}<span class="badge badge-published">Publié</span>{% else %}<span class="badge badge-draft">Brouillon</span>{% endif %}
+            </p>
+            <h1>{{ quiz.title }}</h1>
+            <p class="detail-meta">
+                {{ questions|length }} question{{ questions|length|pluralize }}
+                · {{ total_score }} point{{ total_score|pluralize }}
+                · Cours <a href="{{ quiz.course.get_absolute_url }}">« {{ quiz.course.title }} »</a>
+            </p>
+            {% if can_edit %}
+                <div class="detail-actions">
+                    <a class="btn btn-primary" href="{% url 'users:question_create' quiz.pk %}">Ajouter une question</a>
+                    <a class="btn btn-secondary" href="{% url 'users:quiz_update' quiz.pk %}">Modifier</a>
+                    <a class="btn btn-danger" href="{% url 'users:quiz_delete' quiz.pk %}">Supprimer</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if quiz.description %}
+        <section class="detail-section">
+            <h2>Objectifs</h2>
+            <p class="detail-description">{{ quiz.description|linebreaks }}</p>
+        </section>
+    {% endif %}
+
+    <section class="detail-section">
+        <h2>Questions</h2>
+        <ol class="item-list question-list">
+            {% for question in questions %}
+                <li>
+                    <div class="item-main">
+                        <p class="item-title">{{ question.text }}</p>
+                        <ul class="answer-list">
+                            {% for answer in question.answers.all %}
+                                <li class="{% if answer.is_correct and can_edit %}answer-correct{% endif %}">
+                                    {{ answer.text }}
+                                    {% if answer.is_correct and can_edit %}<span class="badge badge-published">Bonne réponse</span>{% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <p class="item-subtitle">{{ question.score }} point{{ question.score|pluralize }}</p>
+                    </div>
+                    {% if can_edit %}
+                        <span class="item-actions">
+                            <a href="{% url 'users:question_update' question.pk %}">Modifier</a>
+                            <a href="{% url 'users:question_delete' question.pk %}">Supprimer</a>
+                        </span>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="empty-note">Aucune question pour l'instant.
+                    {% if can_edit %}<a href="{% url 'users:question_create' quiz.pk %}">Ajoutez la première</a>.{% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <footer class="detail-footer">
+        <a class="btn btn-ghost" href="{% url 'users:quiz' %}">← Retour aux quiz</a>
+    </footer>
+</article>
+{% endblock %}

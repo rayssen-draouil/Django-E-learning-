@@ -27,18 +27,19 @@ def user_document(**overrides):
 
 
 class UsersViewsTests(TestCase):
-    def test_home_redirects_to_login_without_a_session(self):
+    def test_home_renders_the_landing_page_for_anonymous_visitors(self):
         response = self.client.get("/")
-        self.assertRedirects(response, "/users/login/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "SkillForge")
 
-    def test_home_redirects_authenticated_users_to_profile(self):
+    def test_home_renders_the_landing_page_for_authenticated_users(self):
         session = self.client.session
         session["user_id"] = str(ObjectId())
         session.save()
         self.client.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
         response = self.client.get("/")
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/users/profile/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "SkillForge")
 
     def test_register_creates_session_and_never_exposes_password(self):
         created = user_document()

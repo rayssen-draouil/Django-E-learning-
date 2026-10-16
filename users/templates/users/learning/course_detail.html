@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<article class="detail">
+    <header class="detail-header">
+        <div class="detail-header-text">
+            <p class="page-eyebrow">
+                <span class="badge">{{ course.get_level_display }}</span>
+                <span class="badge {% if course.is_deleted %}badge-draft{% elif course.status == 'published' %}badge-published{% else %}badge-draft{% endif %}">{{ course.get_status_display }}</span>
+                {% if course.category %}<span class="badge">{{ course.category.name }}</span>{% endif %}
+            </p>
+            <h1>{{ course.title }}</h1>
+            <p class="detail-meta">
+                Mis à jour le {{ course.updated_at|date:"d/m/Y" }}
+                · {{ course.modules_count }} module{{ course.modules_count|pluralize }}
+                · {{ course.duration_hours }}h
+                {% if course.owner %} · par {{ course.owner.get_full_name|default:course.owner.username }}{% endif %}
+            </p>
+            {% if can_edit %}
+                <div class="detail-actions">
+                    {% if not course.is_deleted %}
+                        <form method="post" action="{% url 'users:course_toggle_publish' course.slug %}">
+                            {% csrf_token %}
+                            <button class="btn-ghost" type="submit">{% if course.status == 'published' %}Dépublier{% else %}Publier{% endif %}</button>
+                        </form>
+                        <form method="post" action="{% url 'users:course_duplicate' course.slug %}">
+                            {% csrf_token %}
+                            <button class="btn-ghost" type="submit">Dupliquer</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'users:course_restore' course.slug %}">
+                            {% csrf_token %}
+                            <button class="btn-ghost" type="submit">Restaurer</button>
+                        </form>
+                    {% endif %}
+                    <a class="btn-ghost" href="{% url 'users:course_update' course.slug %}">Modifier</a>
+                    {% if not course.is_deleted %}<a class="btn btn-danger" href="{% url 'users:course_delete' course.slug %}">Archiver</a>{% endif %}
+                </div>
+            {% endif %}
+        </div>
+        {% if course.image %}
+            <img class="detail-media" src="{{ course.image.url }}" alt="Illustration du cours « {{ course.title }} »">
+        {% else %}
+            <div class="detail-media card-media-placeholder" aria-hidden="true">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+                    <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"></path>
+                </svg>
+            </div>
+        {% endif %}
+    </header>
+
+    <section class="detail-section">
+        <h2>À propos de ce cours</h2>
+        <p class="detail-description">{{ course.short_description|default:course.description|linebreaks }}</p>
+        <p class="detail-description">{{ course.description|linebreaks }}</p>
+    </section>
+
+    <section class="detail-section">
+        <div class="section-heading">
+            <h2>Modules ({{ course.modules_count }})</h2>
+            {% if can_edit %}
+                <a class="btn-ghost" href="{% url 'users:module_create' %}?course={{ course.pk }}">Ajouter un module</a>
+            {% endif %}
+        </div>
+        <ol class="item-list">
+            {% for module in course.modules.all %}
+                <li>
+                    <span class="item-order">{{ module.order }}</span>
+                    <a href="{{ module.get_absolute_url }}">{{ module.title }}</a>
+                    {% if can_edit %}
+                        <span class="item-actions">
+                            <a href="{% url 'users:module_update' module.pk %}">Modifier</a>
+                            <a href="{% url 'users:module_delete' module.pk %}">Supprimer</a>
+                        </span>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="empty-note">Aucun module pour l'instant.
+                    {% if can_edit %}<a href="{% url 'users:module_create' %}?course={{ course.pk }}">Ajoutez le premier</a>.{% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    {% if related_courses %}
+        <section class="detail-section">
+            <h2>Cours associés</h2>
+            <div class="card-grid">
+                {% for related in related_courses %}
+                    <article class="card">
+                        {% if related.image %}
+                            <img class="card-media" src="{{ related.image.url }}" alt="Illustration du cours « {{ related.title }} »" loading="lazy">
+                        {% else %}
+                            <div class="card-media card-media-placeholder" aria-hidden="true">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                                    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"></path>
+                                    <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"></path>
+                                </svg>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <p class="card-badges"><span class="badge">{{ related.get_level_display }}</span></p>
+                            <h3 class="card-title"><a href="{{ related.get_absolute_url }}">{{ related.title }}</a></h3>
+                            <p class="card-text">{{ related.short_description|default:related.description|truncatewords:18 }}</p>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</article>
+{% endblock %}

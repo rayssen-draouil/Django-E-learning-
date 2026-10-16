@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }} | SkillForge{% endblock %}
+{% block main_class %}learning-page{% endblock %}
+{% block content %}
+<article class="detail">
+    <header class="detail-header">
+        <div class="detail-header-text">
+            <p class="page-eyebrow">Module {{ module.order }}</p>
+            <h1>{{ module.title }}</h1>
+            <p class="detail-meta">
+                Cours <a href="{{ module.course.get_absolute_url }}">« {{ module.course.title }} »</a>
+                · Mis à jour le {{ module.updated_at|date:"d/m/Y" }}
+            </p>
+            {% if can_edit %}
+                <div class="detail-actions">
+                    <a class="btn btn-secondary" href="{% url 'users:module_update' module.pk %}">Modifier</a>
+                    <a class="btn btn-danger" href="{% url 'users:module_delete' module.pk %}">Supprimer</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="detail-section">
+        <h2>Contenu de la leçon</h2>
+        <div class="lesson-content">{{ module.content|linebreaks }}</div>
+    </section>
+
+    <footer class="detail-footer">
+        <a class="btn btn-ghost" href="{% url 'users:module_list' %}">← Retour aux modules</a>
+    </footer>
+</article>
+{% endblock %}

@@ -41,6 +41,7 @@
                 </div>
                 <div class="header-actions">
                     <a href="{% url 'users:backoffice' %}" class="outline-button">Vue générale</a>
+                    {% if section == 'courses' %}<a href="{% url 'users:course_create' %}" class="primary-button">Créer un cours</a>{% endif %}
                     <a href="{% url 'users:profile' %}" class="profile-chip"><span>{{ user.first_name|default:"S"|first|upper }}</span>{{ user.first_name|default:"Mon profil" }}</a>
                 </div>
             </header>
@@ -66,18 +67,40 @@
                     <span class="trend">À jour</span>
                 </div>
                 <div class="section-item-list">
-                    {% for name, category, progress, detail, image in items %}
-                        <article class="section-item">
-                            <img src="{% static 'backoffice/images/' %}{{ image }}" alt="">
-                            <div class="section-item-content">
-                                <p class="item-category">{{ category }}</p>
-                                <h3>{{ name }}</h3>
-                                <p class="item-detail">{{ detail }}</p>
-                                {% if section != 'mentors' %}<div class="bar"><i style="width: {{ progress }};"></i></div>{% endif %}
-                            </div>
-                            <a href="{% if section == 'mentors' %}{% url 'users:mentors' %}{% elif section == 'quizzes' %}{% url 'users:quiz' %}{% else %}{% url 'users:courses' %}{% endif %}" class="continue-button">{% if section == 'mentors' %}Voir le profil{% elif section == 'quizzes' %}Commencer{% else %}Continuer{% endif %}</a>
-                        </article>
-                    {% endfor %}
+                    {% if section == 'courses' %}
+                        {% for course in items %}
+                            <article class="section-item">
+                                {% if course.image %}
+                                    <img src="{{ course.image.url }}" alt="">
+                                {% else %}
+                                    <div class="section-item-placeholder" aria-hidden="true">{{ course.title|first|upper }}</div>
+                                {% endif %}
+                                <div class="section-item-content">
+                                    <p class="item-category">{{ course.get_level_display }}</p>
+                                    <h3>{{ course.title }}</h3>
+                                    <p class="item-detail">{{ course.module_count }} module{{ course.module_count|pluralize }}{% if course.mentor %} · avec {{ course.mentor.display_name }}{% endif %}</p>
+                                </div>
+                                <a href="{{ course.get_absolute_url }}" class="continue-button">Voir le cours</a>
+                            </article>
+                        {% empty %}
+                            <p class="empty-note">Aucun cours disponible pour le moment.</p>
+                        {% endfor %}
+                    {% else %}
+                        {% for name, category, progress, detail, image in items %}
+                            <article class="section-item">
+                                <img src="{% static 'backoffice/images/' %}{{ image }}" alt="">
+                                <div class="section-item-content">
+                                    <p class="item-category">{{ category }}</p>
+                                    <h3>{{ name }}</h3>
+                                    <p class="item-detail">{{ detail }}</p>
+                                    {% if section == 'quizzes' %}<div class="bar"><i style="width: {{ progress }};"></i></div>{% endif %}
+                                </div>
+                                <a href="{% if section == 'mentors' %}{% url 'users:mentors' %}{% else %}{% url 'users:quiz' %}{% endif %}" class="continue-button">{% if section == 'mentors' %}Voir le profil{% else %}Commencer{% endif %}</a>
+                            </article>
+                        {% empty %}
+                            <p class="empty-note">{% if section == 'mentors' %}Aucun mentor pour le moment.{% else %}Aucun quiz pour le moment.{% endif %}</p>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </section>
         </main>

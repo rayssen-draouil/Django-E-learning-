@@ -118,16 +118,21 @@
                     <a href="{% url 'users:courses' %}" class="text-link">Tous les cours →</a>
                 </div>
                 <div class="course-list">
-                    {% for title, progress, status in courses %}
+                    {% for course in courses %}
                         <div class="course-row">
-                            <div class="course-image course-image-{{ forloop.counter }}"></div>
+                            {% if course.image %}
+                                <img class="course-image" src="{{ course.image.url }}" alt="">
+                            {% else %}
+                                <div class="course-image course-image-placeholder" aria-hidden="true">{{ course.title|first|upper }}</div>
+                            {% endif %}
                             <div class="course-info">
-                                <h3>{{ title }}</h3>
-                                <div class="course-meta"><span>{{ progress }} terminé</span><span>{{ status }}</span></div>
-                                <div class="bar"><i style="width: {{ progress }};"></i></div>
+                                <h3>{{ course.title }}</h3>
+                                <div class="course-meta"><span>{{ course.get_level_display }}</span><span>{{ course.module_count }} module{{ course.module_count|pluralize }}</span></div>
                             </div>
-                            <a href="{% url 'users:courses' %}" class="continue-button">Continuer</a>
+                            <a href="{{ course.get_absolute_url }}" class="continue-button">Continuer</a>
                         </div>
+                    {% empty %}
+                        <p class="empty-note">Aucun cours disponible pour le moment.</p>
                     {% endfor %}
                 </div>
             </section>
