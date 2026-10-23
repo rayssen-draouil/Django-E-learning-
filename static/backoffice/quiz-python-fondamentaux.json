@@ -1,0 +1,67 @@
+{
+  "title": "Python — fondamentaux",
+  "description": "Un quiz pour vérifier les bases de Python : variables, types, conditions et collections.",
+  "status": "draft",
+  "duration_seconds": 600,
+  "passing_score": 60,
+  "questions": [
+    {
+      "type": "single_choice",
+      "prompt": "Quel mot-clé permet de déclarer une fonction en Python ?",
+      "points": 1,
+      "options": [
+        { "text": "function" },
+        { "text": "def" },
+        { "text": "fun" },
+        { "text": "func" }
+      ],
+      "correct_option_ids": [1]
+    },
+    {
+      "type": "single_choice",
+      "prompt": "Quel est le type de la valeur 3.14 ?",
+      "points": 1,
+      "options": [
+        { "text": "int" },
+        { "text": "str" },
+        { "text": "float" },
+        { "text": "bool" }
+      ],
+      "correct_option_ids": [2]
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Quelles valeurs sont évaluées comme fausses en Python ?",
+      "points": 2,
+      "options": [
+        { "text": "0" },
+        { "text": "[]" },
+        { "text": "'bonjour'" },
+        { "text": "None" }
+      ],
+      "correct_option_ids": [0, 1, 3]
+    },
+    {
+      "type": "true_false",
+      "prompt": "Une liste Python peut contenir des valeurs de types différents.",
+      "points": 1,
+      "options": [
+        { "text": "Vrai" },
+        { "text": "Faux" }
+      ],
+      "correct_option_ids": [0]
+    },
+    {
+      "type": "single_choice",
+      "prompt": "Quelle méthode ajoute un élément à la fin d’une liste ?",
+      "points": 1,
+      "options": [
+        { "text": "add()" },
+        { "text": "append()" },
+        { "text": "insert_end()" },
+        { "text": "push()" }
+      ],
+      "correct_option_ids": [1]
+    }
+  ]
+}

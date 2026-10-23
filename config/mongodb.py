@@ -1,6 +1,9 @@
 
+import logging
+
 from django.conf import settings
 from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 client = MongoClient(
     settings.MONGODB_URI,
@@ -8,6 +11,7 @@ client = MongoClient(
 )
 
 db = client[settings.MONGODB_DATABASE]
+logger = logging.getLogger(__name__)
 
 
 def test_connection():
@@ -16,6 +20,6 @@ def test_connection():
         print("Connexion MongoDB réussie !")
         print(f"Base de données : {db.name}")
         return True
-    except Exception as error:
-        print(f"Erreur MongoDB : {error}")
+    except PyMongoError:
+        logger.warning("MongoDB health check failed.")
         return False

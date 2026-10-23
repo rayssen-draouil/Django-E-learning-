@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a>
+        <p class="sidebar-label">GESTION DES QUIZ</p>
+        <nav class="dashboard-nav"><a href="{% url 'users:quiz_manage_list' %}">Mes quiz</a><a class="active" href="{% url 'users:quiz_manage_create' %}">Créer un quiz</a></nav>
+        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Déconnexion</button></form>
+    </aside>
+    <main class="dashboard-main">
+        <header class="dashboard-header"><div><p class="eyebrow">ESPACE INSTRUCTEUR</p><h1>Créer un quiz</h1><p class="header-subtitle">Renseignez le quiz, ajoutez vos questions et définissez les bonnes réponses.</p></div></header>
+        {% for message in messages %}<div class="panel">{{ message }}</div>{% endfor %}
+        <form method="post" enctype="multipart/form-data" class="panel" novalidate>
+            {% csrf_token %}{{ form.non_field_errors }}
+            <section class="quiz-import-panel">
+                <h2>Importer un quiz existant</h2>
+                <p>Le fichier sera vérifié, créé en brouillon et ouvert pour prévisualisation.</p>
+                <label for="quiz-json-file">Fichier JSON</label>
+                <input id="quiz-json-file" type="file" name="quiz_file" accept=".json,application/json">
+                {{ import_form.quiz_file.errors }}
+                <button class="outline-button" type="submit" name="import_json" value="1" formnovalidate>Importer en brouillon et prévisualiser</button>
+                <a class="text-link" href="{% static 'backoffice/quiz-example.json' %}" download>Télécharger un exemple JSON</a>
+            </section>
+            {% for field in form %}<div class="quiz-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endfor %}
+            <button class="primary-button" type="submit">Créer le quiz</button>
+            <a class="outline-button" href="{% url 'users:quiz_manage_list' %}">Annuler</a>
+        </form>
+    </main>
+</div>
+<script src="{% static 'backoffice/quizzes.js' %}?v=3" defer></script>
+</body>
+</html>

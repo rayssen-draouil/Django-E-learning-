@@ -1,0 +1,41 @@
+{
+  "title": "Quiz de démonstration",
+  "description": "Exemple de quiz importable dans SkillForge.",
+  "status": "draft",
+  "duration_seconds": 600,
+  "passing_score": 60,
+  "questions": [
+    {
+      "type": "single_choice",
+      "prompt": "Combien font 2 + 2 ?",
+      "points": 1,
+      "options": [
+        { "text": "3" },
+        { "text": "4" },
+        { "text": "5" }
+      ],
+      "correct_option_ids": [1]
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Quels nombres sont pairs ?",
+      "points": 2,
+      "options": [
+        { "text": "2" },
+        { "text": "3" },
+        { "text": "4" }
+      ],
+      "correct_option_ids": [0, 2]
+    },
+    {
+      "type": "true_false",
+      "prompt": "La Terre tourne autour du Soleil.",
+      "points": 1,
+      "options": [
+        { "text": "Vrai" },
+        { "text": "Faux" }
+      ],
+      "correct_option_ids": [0]
+    }
+  ]
+}
