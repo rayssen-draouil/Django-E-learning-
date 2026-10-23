@@ -1,0 +1,21 @@
+{% extends "users/base.html" %}
+{% block title %}Connexion | SkillForge{% endblock %}
+{% block main_class %}auth-container{% endblock %}
+{% block content %}
+<section class="auth-card">
+    <div class="auth-brand-mark"><span>S</span></div>
+    <p class="auth-eyebrow">Bienvenue sur SkillForge</p>
+    <h1>Ravi de vous revoir</h1>
+    <p class="auth-subtitle">Connectez-vous pour continuer votre parcours d'apprentissage.</p>
+    <form method="post" novalidate>
+        {% csrf_token %}{{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="field">
+                {{ field.label_tag }}{{ field }}{{ field.errors }}
+            </div>
+        {% endfor %}
+        <button class="auth-button" type="submit">Se connecter</button>
+    </form>
+    <p class="auth-switch">Pas encore de compte ? <a href="{% url 'users:register' %}">Créer un compte</a></p>
+</section>
+{% endblock %}

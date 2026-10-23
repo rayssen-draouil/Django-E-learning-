@@ -1,0 +1,40 @@
+{% load static %}
+<aside class="dashboard-sidebar">
+    <a href="{% url 'home' %}" class="dashboard-logo">
+        <span class="logo-shape">S</span>
+        <span>SkillForge</span>
+    </a>
+    <p class="sidebar-label">{{ role_label|default:"ESPACE APPRENANT"|upper }}</p>
+    <nav class="dashboard-nav">
+        <a href="{% url 'users:backoffice' %}" class="{% if section == 'overview' %}active{% endif %}">
+            <span class="nav-icon">⌂</span> Tableau de bord
+        </a>
+        <a href="{% if user.role == 'student' %}{% url 'users:backoffice_courses' %}{% else %}{% url 'users:courses' %}{% endif %}" class="{% if section == 'courses' %}active{% endif %}">
+            <span class="nav-icon">▣</span> Mes cours
+        </a>
+        <a href="{% if user.role == 'student' %}{% url 'users:backoffice_mentors' %}{% else %}{% url 'users:mentors' %}{% endif %}" class="{% if section == 'mentors' %}active{% endif %}">
+            <span class="nav-icon">♧</span> Mentors
+        </a>
+        <a href="{% url 'users:backoffice' %}#quiz-dashboard" class="{% if section == 'quizzes' %}active{% endif %}">
+            <span class="nav-icon">✓</span> Quiz
+        </a>
+    </nav>
+    <div class="sidebar-promo">
+        <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
+        <strong>Continuez votre élan !</strong>
+        <p>Un petit pas chaque jour crée de grandes compétences.</p>
+        {% if user.role == 'instructor' or user.role == 'admin' %}
+            <a href="{% url 'users:quiz_manage_list' %}">Ouvrir la gestion</a>
+        {% elif section == 'overview' and user.role == 'student' %}
+            <a href="{% url 'users:courses' %}">Voir les cours</a>
+        {% elif user.role == 'student' %}
+            <a href="{% url 'users:backoffice_courses' %}">Voir les cours</a>
+        {% else %}
+            <a href="{% url 'users:courses' %}">Voir les cours</a>
+        {% endif %}
+    </div>
+    <form method="post" action="{% url 'users:logout' %}" class="logout-form">
+        {% csrf_token %}
+        <button type="submit"><span class="nav-icon">↪</span> Déconnexion</button>
+    </form>
+</aside>

@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a>
+        <p class="sidebar-label">GESTION DES QUIZ</p>
+        <nav class="dashboard-nav"><a class="active" href="{% url 'users:quiz_manage_list' %}">Mes quiz</a><a href="{% url 'users:quiz_manage_create' %}">Créer un quiz</a></nav>
+        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Déconnexion</button></form>
+    </aside>
+    <main class="dashboard-main">
+        {% for message in messages %}<div class="panel">{{ message }}</div>{% endfor %}
+        <header class="dashboard-header">
+            <div><p class="eyebrow">{{ quiz.status }}</p><h1>{{ quiz.title }}</h1><p class="header-subtitle">{{ quiz.description }}</p></div>
+            <div class="header-actions">
+                <a class="outline-button" href="{% url 'users:quiz_manage_edit' quiz_id=quiz.id %}">Modifier</a>
+                {% if quiz.status == "draft" %}<form method="post" action="{% url 'users:quiz_manage_publish' quiz_id=quiz.id %}">{% csrf_token %}<button class="primary-button" type="submit">Soumettre le quiz</button></form>{% endif %}
+                <a class="primary-button" href="{% url 'users:quiz_manage_delete' quiz_id=quiz.id %}">Supprimer</a>
+            </div>
+        </header>
+        <section class="panel">
+            <h2>Paramètres</h2>
+            <p>Durée : {% if quiz.duration_seconds %}{{ quiz.duration_seconds }} secondes{% else %}sans limite{% endif %}</p>
+            <p>Score minimal : {% if quiz.passing_score != None %}{{ quiz.passing_score }} %{% else %}non défini{% endif %}</p>
+            <h2>Questions ({{ quiz.questions|length }})</h2>
+            {% for question in quiz.questions %}
+                <article class="course-row"><div class="course-info"><h3>{{ question.position }}. {{ question.prompt }}</h3><p>{{ question.type }} · {{ question.points }} point(s)</p>
+                    <ul>{% for option in question.options %}<li>{{ option.text }}{% if option.id in question.correct_option_ids %} — réponse correcte{% endif %}</li>{% endfor %}</ul>
+                </div></article>
+            {% endfor %}
+        </section>
+    </main>
+</div>
+</body>
+</html>

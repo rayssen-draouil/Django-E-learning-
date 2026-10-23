@@ -12,25 +12,7 @@
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
-        <aside class="dashboard-sidebar">
-            <a href="{% url 'home' %}" class="dashboard-logo"><span class="logo-shape">S</span><span>SkillForge</span></a>
-            <p class="sidebar-label">ESPACE APPRENANT</p>
-            <nav class="dashboard-nav">
-                <a href="{% url 'users:backoffice' %}"><span class="nav-icon">⌂</span> Tableau de bord</a>
-                <a href="{% url 'users:backoffice_courses' %}" class="{% if section == 'courses' %}active{% endif %}"><span class="nav-icon">▣</span> Mes cours</a>
-                <a href="{% url 'users:backoffice_mentors' %}" class="{% if section == 'mentors' %}active{% endif %}"><span class="nav-icon">♧</span> Mentors</a>
-                <a href="{% url 'users:backoffice_quizzes' %}" class="{% if section == 'quizzes' %}active{% endif %}"><span class="nav-icon">✓</span> Quiz</a>
-            </nav>
-            <div class="sidebar-promo">
-                <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
-                <strong>Continuez votre élan !</strong>
-                <p>Un petit pas chaque jour crée de grandes compétences.</p>
-                <a href="{% url 'users:backoffice_courses' %}">Voir les cours</a>
-            </div>
-            <form method="post" action="{% url 'users:logout' %}" class="logout-form">
-                {% csrf_token %}<button type="submit"><span class="nav-icon">↪</span> Déconnexion</button>
-            </form>
-        </aside>
+        {% include "backoffice/partials/sidebar.html" with section=section %}
 
         <main class="dashboard-main">
             <header class="dashboard-header">
@@ -66,6 +48,21 @@
                     <span class="trend">À jour</span>
                 </div>
                 <div class="section-item-list">
+                    {% if section == "quizzes" %}
+                        {% for quiz in available_quizzes %}
+                            <article class="section-item">
+                                <img src="{% static 'backoffice/images/unlimited-bg.png' %}" alt="">
+                                <div class="section-item-content">
+                                    <p class="item-category">Quiz publié</p>
+                                    <h3>{{ quiz.title }}</h3>
+                                    <p class="item-detail">{{ quiz.question_count }} questions · {{ quiz.description }}</p>
+                                </div>
+                                <a href="{% url 'users:quiz_take' quiz_id=quiz.id %}" class="continue-button">Répondre</a>
+                            </article>
+                        {% empty %}
+                            <p>Aucun quiz publié pour le moment.</p>
+                        {% endfor %}
+                    {% else %}
                     {% for name, category, progress, detail, image in items %}
                         <article class="section-item">
                             <img src="{% static 'backoffice/images/' %}{{ image }}" alt="">
@@ -78,8 +75,27 @@
                             <a href="{% if section == 'mentors' %}{% url 'users:mentors' %}{% elif section == 'quizzes' %}{% url 'users:quiz' %}{% else %}{% url 'users:courses' %}{% endif %}" class="continue-button">{% if section == 'mentors' %}Voir le profil{% elif section == 'quizzes' %}Commencer{% else %}Continuer{% endif %}</a>
                         </article>
                     {% endfor %}
+                    {% endif %}
                 </div>
             </section>
+            {% if section == "quizzes" %}
+                <section class="panel section-items">
+                    <div class="panel-heading"><div><h2>Mes tentatives récentes</h2><p>Vos derniers scores enregistrés.</p></div><span class="trend">{{ quiz_attempts|length }} résultat(s)</span></div>
+                    <div class="section-item-list">
+                        {% for attempt in quiz_attempts %}
+                            <article class="section-item"><div class="section-item-content"><p class="item-category">{{ attempt.submitted_at|date:"d/m/Y H:i" }}</p><h3>{{ attempt.quiz_title }}</h3><p class="item-detail">Score : {{ attempt.score_percentage }} % · {% if attempt.passed %}Réussi{% else %}À réviser{% endif %}</p></div><a class="continue-button" href="{% url 'users:quiz_result' attempt_id=attempt.id %}">Voir le résultat</a></article>
+                        {% empty %}<p>Vous n'avez pas encore répondu à un quiz.</p>{% endfor %}
+                    </div>
+                </section>
+                <section class="panel section-items">
+                    <div class="panel-heading"><div><h2>Statistiques par question</h2><p>Votre taux de bonnes réponses sur les questions déjà rencontrées.</p></div></div>
+                    <div class="section-item-list">
+                        {% for question in question_stats %}
+                            <article class="section-item"><div class="section-item-content"><h3>{{ question.prompt }}</h3><p class="item-detail">{{ question.correct }} bonne(s) réponse(s) sur {{ question.answered }} · {{ question.accuracy }} %</p></div></article>
+                        {% empty %}<p>Les statistiques apparaîtront après votre première tentative.</p>{% endfor %}
+                    </div>
+                </section>
+            {% endif %}
         </main>
     </div>
 </body>

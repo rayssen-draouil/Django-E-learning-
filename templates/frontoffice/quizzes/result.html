@@ -1,0 +1,15 @@
+{% extends "users/base.html" %}
+{% block title %}Résultat du quiz | SkillForge{% endblock %}
+{% block content %}
+<section class="profile-layout">
+    <header class="profile-hero"><div class="profile-cover"></div><div class="profile-hero-content"><div class="profile-identity"><p class="profile-eyebrow">RÉSULTAT DU QUIZ</p><h1>{{ attempt.quiz_title }}</h1><p>{{ attempt.submitted_at|date:"d/m/Y à H:i" }}</p></div></div></header>
+    <section class="profile-card profile-info-card">
+        <div class="profile-card-heading"><div><p class="profile-eyebrow">VOTRE SCORE</p><h2>{{ attempt.score_percentage }} %</h2></div><span class="status-pill">{% if attempt.passed %}Réussi{% else %}À réviser{% endif %}</span></div>
+        <p>{{ attempt.score }} point(s) sur {{ attempt.max_score }}. Seuil de réussite : {% if attempt.passing_score != None %}{{ attempt.passing_score }} %{% else %}50 %{% endif %}.</p>
+        {% for answer in attempt.answers %}
+            <article class="profile-details"><h3>{{ forloop.counter }}. {{ answer.prompt }}</h3><p>{% if answer.is_correct %}Bonne réponse{% else %}Réponse incorrecte{% endif %} · {{ answer.points_awarded }}/{{ answer.points_possible }} point(s)</p><ul>{% for option in answer.options %}<li>{{ option.text }} — {% if option.id in answer.correct_option_ids %}réponse correcte{% endif %}{% if option.id in answer.selected_option_ids %} · votre choix{% endif %}</li>{% endfor %}</ul></article>
+        {% endfor %}
+        <a class="profile-dashboard-link" href="{% url 'users:backoffice_quizzes' %}">Retour à mes statistiques</a>
+    </section>
+</section>
+{% endblock %}

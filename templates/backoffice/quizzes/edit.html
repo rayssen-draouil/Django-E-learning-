@@ -1,0 +1,30 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a>
+        <p class="sidebar-label">GESTION DES QUIZ</p>
+        <nav class="dashboard-nav"><a href="{% url 'users:quiz_manage_list' %}">Mes quiz</a><a class="active" href="{% url 'users:quiz_manage_detail' quiz_id=quiz.id %}">Détail du quiz</a></nav>
+        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Déconnexion</button></form>
+    </aside>
+    <main class="dashboard-main">
+        <header class="dashboard-header"><div><p class="eyebrow">ESPACE INSTRUCTEUR</p><h1>Modifier le quiz</h1><p class="header-subtitle">{{ quiz.title }}</p></div></header>
+        <form method="post" class="panel" novalidate>
+            {% csrf_token %}{{ form.non_field_errors }}
+            {% for field in form %}<div class="quiz-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>{% endfor %}
+            <button class="primary-button" type="submit">Enregistrer</button>
+            <a class="outline-button" href="{% url 'users:quiz_manage_detail' quiz_id=quiz.id %}">Annuler</a>
+        </form>
+    </main>
+</div>
+<script src="{% static 'backoffice/quizzes.js' %}?v=3" defer></script>
+</body>
+</html>

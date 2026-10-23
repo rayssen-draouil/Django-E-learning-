@@ -12,42 +12,12 @@
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
-        <aside class="dashboard-sidebar">
-            <a href="{% url 'home' %}" class="dashboard-logo">
-                <span class="logo-shape">S</span>
-                <span>SkillForge</span>
-            </a>
-            <p class="sidebar-label">ESPACE APPRENANT</p>
-            <nav class="dashboard-nav">
-                <a href="{% url 'users:backoffice' %}" class="active">
-                    <span class="nav-icon">⌂</span> Tableau de bord
-                </a>
-                <a href="{% url 'users:backoffice_courses' %}">
-                    <span class="nav-icon">▣</span> Mes cours
-                </a>
-                <a href="{% url 'users:backoffice_mentors' %}">
-                    <span class="nav-icon">♧</span> Mentors
-                </a>
-                <a href="{% url 'users:backoffice_quizzes' %}">
-                    <span class="nav-icon">✓</span> Quiz
-                </a>
-            </nav>
-            <div class="sidebar-promo">
-                <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
-                <strong>Continuez votre élan !</strong>
-                <p>Un petit pas chaque jour crée de grandes compétences.</p>
-                <a href="{% url 'users:courses' %}">Voir les cours</a>
-            </div>
-            <form method="post" action="{% url 'users:logout' %}" class="logout-form">
-                {% csrf_token %}
-                <button type="submit"><span class="nav-icon">↪</span> Déconnexion</button>
-            </form>
-        </aside>
+        {% include "backoffice/partials/sidebar.html" with section="overview" %}
 
         <main class="dashboard-main">
             <header class="dashboard-header">
                 <div>
-                    <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                    <p class="eyebrow">VOTRE ESPACE SKILLFORGE · {{ role_label }}</p>
                     <h1>Bonjour {{ user.first_name|default:"apprenant" }} <span aria-hidden="true">👋</span></h1>
                     <p class="header-subtitle">Voici un aperçu de votre progression.</p>
                 </div>
@@ -70,6 +40,44 @@
                         </div>
                     </article>
                 {% endfor %}
+            </section>
+
+            {% if quiz_storage_error %}<div class="panel">Les données Quiz sont temporairement indisponibles.</div>{% endif %}
+            <section class="panel courses-panel" id="quiz-dashboard">
+                <div class="panel-heading">
+                    <div><h2>{% if is_quiz_manager %}Gestion des quiz{% else %}Quiz et évaluations{% endif %}</h2>
+                        <p>{% if is_quiz_manager %}Vos quiz, leur statut et les actions de gestion.{% else %}Répondez aux quiz publiés et consultez vos résultats.{% endif %}</p></div>
+                    {% if is_quiz_manager %}<div class="header-actions"><a href="{% url 'users:quiz' %}" class="text-link">Voir les quiz côté apprenant</a><a href="{% url 'users:quiz_manage_list' %}" class="text-link">Ouvrir la gestion →</a></div>
+                    {% else %}<a href="{% url 'users:quiz' %}" class="text-link">Tous les quiz →</a>{% endif %}
+                </div>
+                <div class="course-list">
+                    {% for item in dashboard_quizzes %}
+                        <article class="course-row">
+                            <div class="course-info"><h3>{{ item.title }}</h3>
+                                <div class="course-meta"><span>{{ item.question_count }} question(s)</span><span>{% if is_quiz_manager %}{{ item.status }}{% else %}Publié{% endif %}</span></div>
+                                {% if item.description %}<p>{{ item.description }}</p>{% endif %}
+                            </div>
+                            {% if is_quiz_manager %}<a href="{% url 'users:quiz_manage_detail' quiz_id=item.id %}" class="continue-button">Gérer</a>
+                            {% else %}<a href="{% url 'users:quiz_take' quiz_id=item.id %}" class="continue-button">Répondre</a>{% endif %}
+                        </article>
+                    {% empty %}<p>{% if is_quiz_manager %}Aucun quiz créé. Créez ou importez votre premier quiz.{% else %}Aucun quiz publié pour le moment.{% endif %}</p>{% endfor %}
+                </div>
+                {% if is_quiz_manager %}<a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Créer ou importer un quiz</a>{% endif %}
+            </section>
+
+            <section class="panel courses-panel">
+                <div class="panel-heading"><div><h2>Mes résultats Quiz</h2><p>Vos tentatives récentes et vos statistiques personnelles.</p></div>
+                    <span class="trend">{{ quiz_stats.attempt_count }} tentative(s)</span></div>
+                <div class="course-list">
+                    {% for attempt in quiz_attempts %}
+                        <article class="course-row"><div class="course-info"><h3>{{ attempt.quiz_title }}</h3>
+                            <div class="course-meta"><span>{{ attempt.submitted_at|date:"d/m/Y H:i" }}</span><span>{{ attempt.score_percentage }} % · {% if attempt.passed %}Réussi{% else %}À revoir{% endif %}</span></div>
+                        </div><a class="continue-button" href="{% url 'users:quiz_result' attempt_id=attempt.id %}">Voir résultat</a></article>
+                    {% empty %}<p>Aucune tentative enregistrée. Répondez à un quiz publié pour voir vos résultats ici.</p>{% endfor %}
+                </div>
+                {% if question_stats %}<h3>Statistiques par question</h3><div class="course-list">
+                    {% for question in question_stats %}<article class="course-row"><div class="course-info"><h3>{{ question.prompt }}</h3><p>{{ question.correct }} bonne(s) réponse(s) sur {{ question.answered }} · {{ question.accuracy }} %</p></div></article>{% endfor %}
+                </div>{% endif %}
             </section>
 
             <section class="dashboard-grid">
