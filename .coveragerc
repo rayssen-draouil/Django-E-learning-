@@ -1,0 +1,12 @@
+[run]
+source = apps.courses
+omit =
+    apps/courses/tests/*
+    apps/courses/migrations/*
+
+[report]
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

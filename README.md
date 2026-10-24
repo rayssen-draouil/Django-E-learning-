@@ -37,6 +37,11 @@ the following routes (the existing `users:*` names are preserved):
 | `/users/backoffice/cours/manage/<id>/publish/` | POST-only publish/unpublish toggle |
 | `/users/backoffice/cours/manage/<id>/delete/` | POST-only deletion with a confirmation page |
 
+The same course routes are also mounted at the project root (`/cours/`,
+`/backoffice/cours/manage/`, ...) through the `courses:` URL namespace in
+`config/urls.py`. The historical `/users/...` routes and their `users:*` names
+remain unchanged for existing templates and links.
+
 Course documents contain `title`, unique `slug`, `description`, `category`,
 `level`, `duration_hours`, non-negative `price`, `language`, optional
 `thumbnail_url`, `status`, `instructor_id`, `created_at`, and `updated_at`.
@@ -151,7 +156,7 @@ Restaurer avec `mongorestore` vers une instance contrôlée et vérifier les col
 .\.venv\Scripts\python.exe manage.py ai_report
 ```
 
-La configuration `.coveragerc` mesure le module `apps/courses` et exclut ses tests. La suite couvre les formulaires, le dépôt MongoDB, les services, les permissions, les routes, l'IA (succès, délai, clé absente, réponse invalide, stockage) et les commandes de gestion. La CI GitHub Actions démarre MongoDB, exécute les tests, vérifie un seuil de couverture de 90 %, lance `check --deploy` avec les paramètres de production et construit l'image Docker.
+La configuration `.coveragerc` mesure le module `apps/courses` et exclut ses tests. La suite couvre les formulaires, le dépôt MongoDB, les services, une matrice explicite de permissions (anonyme, étudiant, instructeur propriétaire, instructeur non propriétaire, administrateur), les routes, les cas limites (ObjectId invalide, brouillons privés, panne MongoDB, CSRF, suppression en GET), l'IA (succès, délai, clé absente, réponse invalide, stockage) et les commandes de gestion. Les tests utilisent la base dédiée `e_learning_test`, supprimée à la fin de chaque classe de tests ; la base de développement n'est jamais utilisée. La CI GitHub Actions démarre MongoDB, exécute les tests, vérifie un seuil de couverture de 90 %, lance `check --deploy` avec les paramètres de production et construit l'image Docker.
 
 Pour les contrôles de déploiement, configurer les variables de production puis exécuter `python manage.py check --deploy`. Les preuves d'accessibilité et d'évaluation IA sont documentées dans `docs/accessibilite.md` et `docs/ia-evaluation.md`.
 

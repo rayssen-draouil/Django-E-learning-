@@ -20,6 +20,8 @@ env/
 # Local databases and runtime artifacts
 *.sqlite3
 *.log
+.coverage
+htmlcov/
 
 # Editors and operating systems
 .vscode/
