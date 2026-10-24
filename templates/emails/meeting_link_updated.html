@@ -1,0 +1,16 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">Meeting Details Updated</h2>
+<p>Hello {{ student_name }},</p>
+<p><strong>{{ mentor_name }}</strong> has added or updated the online meeting link for your upcoming session on <strong>{{ date }} at {{ start_time }}</strong>.</p>
+
+<div class="info-card" style="border-left-color: #6366f1;">
+    <div class="info-row"><span class="info-label">Topic:</span> {{ topic }}</div>
+    <div class="info-row"><span class="info-label">Date & Time:</span> {{ date }} from {{ start_time }} to {{ end_time }}</div>
+    <div class="info-row"><span class="info-label">Meeting URL:</span> <a href="{{ meeting_link }}">{{ meeting_link }}</a></div>
+</div>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">View Session Details</a>
+</p>
+{% endblock %}

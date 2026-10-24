@@ -1,0 +1,156 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}Leave a Verified Review | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .review-wrapper {
+        max-width: 620px;
+        margin: 2rem auto 4rem;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2.25rem;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+    .review-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .review-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.35rem;
+    }
+    .review-header p {
+        font-size: 0.92rem;
+        color: #64748b;
+        margin: 0;
+    }
+    .session-recap {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #10b981;
+        border-radius: 0.5rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .session-recap p {
+        margin: 0.25rem 0;
+        font-size: 0.88rem;
+        color: #334155;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+    }
+    .availability-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        font-family: inherit;
+        font-size: 0.95rem;
+        color: #0f172a;
+        background: #fff;
+    }
+    .availability-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .char-counter {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+    .btn-submit-review {
+        background: #10b981;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.8rem 1.75rem;
+        border-radius: 0.6rem;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.15s ease;
+    }
+    .btn-submit-review:hover {
+        background: #059669;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-wrapper">
+    <header class="review-header">
+        <h1>Leave a Verified Review</h1>
+        <p>Your feedback helps mentors improve and assists other learners in finding great guidance.</p>
+    </header>
+
+    <div class="session-recap">
+        <p><strong>Mentor:</strong> {{ booking.mentor_name }}</p>
+        <p><strong>Topic:</strong> {{ booking.topic }}</p>
+        <p><strong>Date:</strong> {{ booking.date }} ({{ booking.start_time }} &ndash; {{ booking.end_time }})</p>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 0.85rem; border-radius: 0.4rem; color: #991b1b; margin-bottom: 1.25rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.rating.id_for_label }}">{{ form.rating.label }} *</label>
+            {{ form.rating }}
+            {% if form.rating.errors %}
+                <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.rating.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.review_text.id_for_label }}">{{ form.review_text.label }} *</label>
+            {{ form.review_text }}
+            <div id="review-counter" class="char-counter">0 / 1000</div>
+            {% if form.review_text.errors %}
+                <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.review_text.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-submit-review">Publish Verified Review</button>
+        <p style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'users:profile' %}" style="color: #64748b; font-size: 0.88rem; text-decoration: none;">Cancel &amp; Return to Profile</a>
+        </p>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.querySelector("[data-char-counter='review-counter']");
+        const counter = document.getElementById("review-counter");
+        if (input && counter) {
+            function update() {
+                counter.textContent = `${input.value.length} / 1000`;
+            }
+            input.addEventListener("input", update);
+            update();
+        }
+    });
+</script>
+{% endblock %}

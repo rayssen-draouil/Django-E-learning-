@@ -1,0 +1,21 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">New Time Proposed for Mentorship Session</h2>
+<p>Hello {{ student_name }},</p>
+<p><strong>{{ mentor_name }}</strong> has proposed an alternative time for your coaching session:</p>
+
+<div class="info-card" style="border-left-color: #f59e0b;">
+    <div class="info-row"><span class="info-label">Original Time:</span> {{ original_date }} at {{ original_start_time }}</div>
+    <div class="info-row"><span class="info-label">Proposed Date:</span> {{ proposed_date }}</div>
+    <div class="info-row"><span class="info-label">Proposed Time:</span> {{ proposed_start_time }} - {{ proposed_end_time }}</div>
+    {% if note %}
+    <div class="info-row"><span class="info-label">Note:</span> {{ note }}</div>
+    {% endif %}
+</div>
+
+<p>Please log in to accept or decline this reschedule proposal:</p>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">Respond to Proposal</a>
+</p>
+{% endblock %}

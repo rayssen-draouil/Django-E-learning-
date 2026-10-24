@@ -1,0 +1,64 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="availability" role_label="MENTOR SPACE" %}
+
+        <main class="dashboard-main">
+            <header class="dashboard-header availability-header">
+                <div>
+                    <p class="eyebrow">AVAILABILITY MANAGEMENT · {% if mode == 'edit' %}EDIT SLOT{% else %}NEW SLOT{% endif %}</p>
+                    <h1>{{ title }}</h1>
+                    <p class="header-subtitle">{{ subtitle }}</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'users:mentor_availability_list' %}" class="outline-button">← Back to My Availability</a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
+                </div>
+            </header>
+
+            {% if messages %}
+                <div class="availability-toast-stack" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        {% if message and message|stringformat:"s"|striptags|cut:" "|length > 0 %}
+                            <div class="availability-alert availability-alert-{{ message.tags|default:'info' }}">
+                                <span class="alert-icon" aria-hidden="true">
+                                    {% if 'error' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    {% elif 'success' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% else %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                    {% endif %}
+                                </span>
+                                <div class="alert-content">{{ message }}</div>
+                                <button type="button" class="alert-dismiss" data-dismiss-alert aria-label="Dismiss notification">×</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <section class="panel availability-form-panel">
+                <form method="post" novalidate data-availability-form>
+                    {% csrf_token %}
+                    {% include "backoffice/mentors/_form_fields.html" %}
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="{% static 'backoffice/mentor-availability.js' %}" defer></script>
+</body>
+</html>

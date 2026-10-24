@@ -1,0 +1,343 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="availability" role_label="MENTOR SPACE" %}
+
+        <main class="dashboard-main">
+            <!-- Header -->
+            <header class="dashboard-header availability-header">
+                <div>
+                    <p class="eyebrow">AVAILABILITY MANAGEMENT · MENTOR</p>
+                    <h1>My Availability</h1>
+                    <p class="header-subtitle">Create and manage your coaching time slots.</p>
+                </div>
+                <div class="header-actions">
+                    <a
+                        href="{% url 'users:mentor_availability_create' %}"
+                        class="primary-button btn-create-availability"
+                        data-open-create-modal
+                    >
+                        <span class="btn-plus-icon" aria-hidden="true">+</span>
+                        <span>Create Availability</span>
+                    </a>
+                    <a href="{% url 'users:backoffice' %}" class="outline-button">Overview</a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
+                </div>
+            </header>
+
+            <!-- Notifications / Messages -->
+            {% if messages %}
+                <div class="availability-toast-stack" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        {% if message and message|stringformat:"s"|striptags|cut:" "|length > 0 %}
+                            <div class="availability-alert availability-alert-{{ message.tags|default:'info' }}">
+                                <span class="alert-icon" aria-hidden="true">
+                                    {% if 'error' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    {% elif 'success' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% else %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                    {% endif %}
+                                </span>
+                                <div class="alert-content">{{ message }}</div>
+                                <button type="button" class="alert-dismiss" data-dismiss-alert aria-label="Dismiss notification">×</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if storage_error %}
+                <div class="availability-alert availability-alert-error" role="alert">
+                    <span class="alert-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <div class="alert-content">
+                        We couldn't load your availability right now. Please check your connection and try again.
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Summary Statistics Cards -->
+            <section class="stats-grid availability-stats-grid" aria-label="Availability statistics">
+                {% for label, value, color in stats %}
+                    <article class="stat-card {{ color }}">
+                        <div class="stat-icon" aria-hidden="true">
+                            {% if forloop.counter == 1 %}
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            {% elif forloop.counter == 2 %}
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            {% elif forloop.counter == 3 %}
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            {% else %}
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p>{{ label }}</p>
+                            <strong>{{ value }}</strong>
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+
+            <!-- Filter Panel -->
+            <section class="panel availability-filter-panel" aria-label="Filter availability slots">
+                <form method="get" action="{% url 'users:mentor_availability_list' %}" class="availability-filter-form">
+                    <div class="filter-group">
+                        <label for="{{ filter_form.date.id_for_label }}">Date</label>
+                        {{ filter_form.date }}
+                    </div>
+                    <div class="filter-group">
+                        <label for="{{ filter_form.topic.id_for_label }}">Mentoring topic</label>
+                        {{ filter_form.topic }}
+                    </div>
+                    <div class="filter-group">
+                        <label for="{{ filter_form.session_type.id_for_label }}">Session format</label>
+                        {{ filter_form.session_type }}
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="primary-button btn-filter-apply">Apply Filters</button>
+                        <a href="{% url 'users:mentor_availability_list' %}?reset=1" class="outline-button btn-filter-reset">
+                            Reset Filters
+                        </a>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Availability Listing Panel -->
+            <section class="panel availability-list-panel" aria-labelledby="schedule-heading">
+                <div class="panel-heading">
+                    <div>
+                        <h2 id="schedule-heading">Scheduled Time Slots</h2>
+                        <p>
+                            {% if has_active_filters %}
+                                Showing filtered results ({{ slots|length }} slot{{ slots|length|pluralize }} found).
+                            {% else %}
+                                Manage your upcoming and active coaching sessions.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <span class="trend">{{ slots|length }} slot{{ slots|length|pluralize }}</span>
+                </div>
+
+                {% if slots %}
+                    <div class="availability-slot-grid">
+                        {% for slot in slots %}
+                            <article class="availability-slot-card" data-slot-card="{{ slot.id }}">
+                                <div class="slot-card-left">
+                                    <div class="slot-date-badge">
+                                        <span class="slot-date-icon" aria-hidden="true">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        </span>
+                                        <div>
+                                            <strong class="slot-date-primary">
+                                                {% if slot.date_obj %}{{ slot.date_obj|date:"M d, Y" }}{% else %}{{ slot.date }}{% endif %}
+                                            </strong>
+                                            <span class="slot-date-iso">{{ slot.date }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="slot-details">
+                                        <div class="slot-title-row">
+                                            <h3 class="slot-topic">{{ slot.display_topic }}</h3>
+                                            {% if slot.topic == "Other" and slot.custom_topic %}
+                                                <span class="slot-pill slot-pill-custom">Custom Topic</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="slot-meta-row">
+                                            <span class="slot-time-range" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                {{ slot.start_time }} – {{ slot.end_time }}
+                                            </span>
+                                            <span class="slot-duration-badge" title="Session duration">
+                                                {{ slot.duration_badge }}
+                                            </span>
+                                            <span class="slot-format-badge {% if slot.session_type == 'online' %}badge-online{% else %}badge-in-person{% endif %}" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                                {% if slot.session_type == 'online' %}
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                                {% else %}
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                {% endif %}
+                                                {{ slot.session_type_label }}
+                                            </span>
+                                            <span class="slot-status-badge {% if slot.is_booked %}status-booked{% else %}status-available{% endif %}">
+                                                {{ slot.status_label }}
+                                            </span>
+                                        </div>
+
+                                        {% if slot.session_type == "in_person" and slot.location %}
+                                            <p class="slot-location" style="display: flex; align-items: center; gap: 0.35rem;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Venue: {{ slot.location }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="slot-card-actions">
+                                    <a
+                                        href="{% url 'users:mentor_availability_edit' slot_id=slot.id %}"
+                                        class="btn-slot-edit"
+                                        title="Edit availability slot"
+                                        aria-label="Edit availability slot on {{ slot.date }} from {{ slot.start_time }} to {{ slot.end_time }}"
+                                        style="display: inline-flex; align-items: center; gap: 0.35rem;"
+                                    >
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                        <span>Edit</span>
+                                    </a>
+                                    <a
+                                        href="{% url 'users:mentor_availability_delete' slot_id=slot.id %}"
+                                        class="btn-slot-delete"
+                                        title="Delete availability slot"
+                                        aria-label="Delete availability slot on {{ slot.date }} from {{ slot.start_time }} to {{ slot.end_time }}"
+                                        data-delete-trigger
+                                        data-slot-id="{{ slot.id }}"
+                                        data-slot-date="{% if slot.date_obj %}{{ slot.date_obj|date:'M d, Y' }} ({{ slot.date }}){% else %}{{ slot.date }}{% endif %}"
+                                        data-slot-time="{{ slot.start_time }} – {{ slot.end_time }}"
+                                        data-slot-topic="{{ slot.display_topic }}"
+                                        data-delete-url="{% url 'users:mentor_availability_delete' slot_id=slot.id %}"
+                                        style="display: inline-flex; align-items: center; gap: 0.35rem;"
+                                    >
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        <span>Delete</span>
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="availability-empty-state">
+                        <div class="empty-calendar-illustration" aria-hidden="true">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="8" y="14" width="48" height="42" rx="10" fill="#FFF2E1" stroke="#F48C06" stroke-width="2.5"/>
+                                <path d="M8 26H56" stroke="#F48C06" stroke-width="2.5"/>
+                                <path d="M20 8V18" stroke="#2F327D" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M44 8V18" stroke="#2F327D" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="22" cy="36" r="3" fill="#23BDEE"/>
+                                <circle cx="32" cy="36" r="3" fill="#F48C06"/>
+                                <circle cx="42" cy="36" r="3" fill="#2F327D"/>
+                                <circle cx="22" cy="46" r="3" fill="#2F327D"/>
+                                <circle cx="32" cy="46" r="3" fill="#23BDEE"/>
+                            </svg>
+                        </div>
+                        <h3>No Availability Found</h3>
+                        <p class="empty-state-message">
+                            No availability scheduled yet. Create your first time slot and make it easier for students to book a coaching session.
+                        </p>
+                        <div class="empty-state-actions">
+                            <a
+                                href="{% url 'users:mentor_availability_create' %}"
+                                class="primary-button btn-create-availability"
+                                data-open-create-modal
+                            >
+                                <span class="btn-plus-icon" aria-hidden="true">+</span>
+                                <span>Create your first slot</span>
+                            </a>
+                            {% if has_active_filters %}
+                                <a href="{% url 'users:mentor_availability_list' %}?reset=1" class="outline-button">
+                                    Reset Filters
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+
+    <!-- Create Availability Modal -->
+    <div
+        class="availability-modal-backdrop"
+        id="create-availability-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-modal-title"
+        hidden
+    >
+        <div class="availability-modal-card">
+            <div class="modal-card-header">
+                <div>
+                    <p class="eyebrow">NEW COACHING SLOT</p>
+                    <h2 id="create-modal-title">Create Availability</h2>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-modal aria-label="Close modal">×</button>
+            </div>
+            <form
+                method="post"
+                action="{% url 'users:mentor_availability_create' %}"
+                novalidate
+                data-availability-form
+            >
+                {% csrf_token %}
+                {% include "backoffice/mentors/_form_fields.html" with submit_label="Create Availability" %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div
+        class="availability-modal-backdrop"
+        id="delete-availability-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-modal-title"
+        hidden
+    >
+        <div class="availability-modal-card delete-modal-card">
+            <div class="modal-card-header">
+                <div>
+                    <p class="eyebrow eyebrow-danger">CONFIRM REMOVAL</p>
+                    <h2 id="delete-modal-title">Remove Availability Slot?</h2>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-delete-modal aria-label="Close confirmation dialog">×</button>
+            </div>
+            <div class="delete-modal-body">
+                <p>
+                    You are about to remove the coaching slot on
+                    <strong data-delete-slot-date>selected date</strong>
+                    at <strong data-delete-slot-time>selected time</strong>
+                    (<span data-delete-slot-topic>topic</span>).
+                </p>
+                <p class="delete-modal-warning">
+                    This action will remove the slot from future availability so students will no longer be able to book it.
+                </p>
+            </div>
+            <form method="post" action="" id="delete-availability-form" data-delete-form>
+                {% csrf_token %}
+                <div class="availability-form-actions delete-modal-actions">
+                    <button type="button" class="outline-button" data-close-delete-modal>
+                        Keep Slot
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn-danger-confirm"
+                        data-delete-confirm-btn
+                        data-default-text="Delete Availability"
+                        data-loading-text="Deleting..."
+                    >
+                        <span class="btn-spinner" aria-hidden="true" hidden></span>
+                        <span data-submit-label>Delete Availability</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'backoffice/mentor-availability.js' %}" defer></script>
+</body>
+</html>

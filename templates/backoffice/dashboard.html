@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
@@ -18,15 +19,16 @@
             <header class="dashboard-header">
                 <div>
                     <p class="eyebrow">VOTRE ESPACE SKILLFORGE · {{ role_label }}</p>
-                    <h1>Bonjour {{ user.first_name|default:"apprenant" }} <span aria-hidden="true">👋</span></h1>
-                    <p class="header-subtitle">Voici un aperçu de votre progression.</p>
+                    <h1>Bonjour {{ user.first_name|default:"apprenant" }}</h1>
+                    <p class="header-subtitle">{% if is_mentor %}Create and manage your coaching time slots.{% else %}Voici un aperçu de votre progression.{% endif %}</p>
                 </div>
                 <div class="header-actions">
+                    {% if is_mentor %}
+                        <a href="{% url 'users:mentor_sessions_list' %}" class="outline-button">Coaching Sessions</a>
+                        <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability">+ Create Availability</a>
+                    {% endif %}
                     <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
-                    <a href="{% url 'users:profile' %}" class="profile-chip">
-                        <span>{{ user.first_name|default:"S"|first|upper }}</span>
-                        {{ user.first_name|default:"Mon profil" }}
-                    </a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
                 </div>
             </header>
 
@@ -41,6 +43,38 @@
                     </article>
                 {% endfor %}
             </section>
+
+            {% if is_mentor %}
+            <section class="panel courses-panel" id="availability-management">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Availability Management</h2>
+                        <p>Create and manage your coaching time slots.</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="{% url 'users:mentor_availability_create' %}" class="text-link">+ Create Availability</a>
+                        <a href="{% url 'users:mentor_availability_list' %}" class="text-link">Open My Availability →</a>
+                    </div>
+                </div>
+                <div class="course-list">
+                    {% for slot in mentor_slots %}
+                        <article class="course-row">
+                            <div class="course-info">
+                                <h3>{{ slot.display_topic }}</h3>
+                                <div class="course-meta">
+                                    <span>{{ slot.date }} · {{ slot.start_time }} – {{ slot.end_time }} ({{ slot.duration_badge }})</span>
+                                    <span>{{ slot.session_type_label }} · {{ slot.status_label }}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'users:mentor_availability_edit' slot_id=slot.id %}" class="continue-button">Edit</a>
+                        </article>
+                    {% empty %}
+                        <p>No availability scheduled yet. Create your first time slot and make it easier for students to book a coaching session.</p>
+                    {% endfor %}
+                </div>
+                <a class="primary-button" href="{% url 'users:mentor_availability_list' %}">Manage My Availability</a>
+            </section>
+            {% endif %}
 
             {% if quiz_storage_error %}<div class="panel">Les données Quiz sont temporairement indisponibles.</div>{% endif %}
             <section class="panel courses-panel" id="quiz-dashboard">

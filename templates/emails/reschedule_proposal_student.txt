@@ -1,0 +1,14 @@
+New Time Proposed for Mentorship Session
+
+Hello {{ student_name }},
+
+{{ mentor_name }} has proposed an alternative time for your coaching session:
+
+Original: {{ original_date }} at {{ original_start_time }}
+Proposed: {{ proposed_date }} at {{ proposed_start_time }} - {{ proposed_end_time }}
+{% if note %}Note: {{ note }}{% endif %}
+
+Respond to this proposal:
+{{ action_url }}
+
+SkillForge Platform

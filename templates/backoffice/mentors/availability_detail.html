@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="availability" role_label="MENTOR SPACE" %}
+
+        <main class="dashboard-main">
+            <header class="dashboard-header availability-header">
+                <div>
+                    <p class="eyebrow">AVAILABILITY MANAGEMENT · SLOT DETAILS</p>
+                    <h1>{{ slot.display_topic }}</h1>
+                    <p class="header-subtitle">{{ slot.date }} · {{ slot.start_time }} – {{ slot.end_time }} ({{ slot.duration_badge }})</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'users:mentor_availability_edit' slot_id=slot.id %}" class="primary-button">Edit Slot</a>
+                    <a href="{% url 'users:mentor_availability_delete' slot_id=slot.id %}" class="btn-slot-delete">Delete</a>
+                    <a href="{% url 'users:mentor_availability_list' %}" class="outline-button">← Back to My Availability</a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
+                </div>
+            </header>
+
+            <section class="panel availability-detail-panel">
+                <div class="detail-grid">
+                    <div>
+                        <span class="detail-label">Date</span>
+                        <strong>{{ slot.date }}</strong>
+                    </div>
+                    <div>
+                        <span class="detail-label">Time &amp; Duration</span>
+                        <strong>{{ slot.start_time }} – {{ slot.end_time }} ({{ slot.duration_badge }})</strong>
+                    </div>
+                    <div>
+                        <span class="detail-label">Mentoring Topic</span>
+                        <strong>{{ slot.display_topic }}</strong>
+                    </div>
+                    <div>
+                        <span class="detail-label">Session Format</span>
+                        <strong>{{ slot.session_type_label }}</strong>
+                    </div>
+                    <div>
+                        <span class="detail-label">Status</span>
+                        <strong>{{ slot.status_label }}</strong>
+                    </div>
+                    {% if slot.session_type == "in_person" and slot.location %}
+                        <div>
+                            <span class="detail-label">Venue / Location</span>
+                            <strong>{{ slot.location }}</strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

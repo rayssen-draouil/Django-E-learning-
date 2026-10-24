@@ -2,10 +2,24 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 
 
+REGISTRATION_ROLE_CHOICES = (
+    ("student", "Étudiant"),
+    ("mentor", "Mentor"),
+    ("instructor", "Instructeur"),
+)
+
+
 class RegistrationForm(forms.Form):
     first_name = forms.CharField(label="Prénom", max_length=100)
     last_name = forms.CharField(label="Nom", max_length=100)
     email = forms.EmailField(label="Adresse e-mail")
+    role = forms.ChoiceField(
+        label="Rôle",
+        choices=REGISTRATION_ROLE_CHOICES,
+        required=False,
+        initial="student",
+        widget=forms.Select(attrs={"class": "auth-select", "id": "id_role"}),
+    )
     password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)
     password_confirm = forms.CharField(
         label="Confirmation du mot de passe", widget=forms.PasswordInput
@@ -13,6 +27,10 @@ class RegistrationForm(forms.Form):
 
     def clean_email(self) -> str:
         return self.cleaned_data["email"].strip().lower()
+
+    def clean_role(self) -> str:
+        value = self.cleaned_data.get("role")
+        return value if value else "student"
 
     def clean(self) -> dict[str, str]:
         cleaned_data = super().clean()

@@ -1,0 +1,12 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">How was your session with {{ mentor_name }}?</h2>
+<p>Hello {{ student_name }},</p>
+<p>Your mentorship session on <strong>{{ topic }}</strong> has concluded. We hope it was productive and gave you actionable insights!</p>
+
+<p>Your feedback helps mentors improve and assists other students in finding the right guidance. Please take 60 seconds to share your review.</p>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">Leave a Verified Review</a>
+</p>
+{% endblock %}

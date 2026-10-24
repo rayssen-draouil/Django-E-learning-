@@ -20,6 +20,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+def _load_env_file(path: Path) -> None:
+    if not path.is_file():
+        return
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                k, _, v = line.partition('=')
+                k = k.strip()
+                v = v.strip().strip('"').strip("'")
+                os.environ.setdefault(k, v)
+    except Exception:
+        pass
+
+
+_load_env_file(BASE_DIR / '.env')
+
+
 def _env_bool(name: str, default: bool) -> bool:
     value = os.environ.get(name)
     if value is None:
@@ -67,6 +87,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.messages.context_processors.messages',
+                'apps.users.context_processors.auth_user_context',
             ],
         },
     },
@@ -127,4 +148,39 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 # Optional token used only by the controlled admin-account provisioning service.
 # Keep it outside source control in production.
 USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "")
+
+# Email Configuration (Brevo / SMTP / Console)
+_smtp_host = os.environ.get("SMTP_HOST") or os.environ.get("EMAIL_HOST")
+_default_backend = (
+    "apps.mentors.email_backend.BrevoEmailBackend"
+    if _smtp_host
+    else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", _default_backend)
+EMAIL_HOST = _smtp_host or "smtp-relay.brevo.com"
+EMAIL_PORT = int(os.environ.get("SMTP_PORT") or os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
+EMAIL_HOST_USER = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = (
+    os.environ.get("SMTP_PASS")
+    or os.environ.get("EMAIL_HOST_PASSWORD")
+    or os.environ.get("brevo_smtp_key", "")
+)
+EMAIL_SSL_VERIFY = (
+    _env_bool("BREVO_SSL_VERIFY", True)
+    if "BREVO_SSL_VERIFY" in os.environ
+    else _env_bool("EMAIL_SSL_VERIFY", True)
+)
+
+_sender_name = os.environ.get("BREVO_SENDER_NAME", "").strip('"').strip("'") or "AquaSecure"
+_sender_email = (
+    os.environ.get("EMAIL_FROM")
+    or os.environ.get("BREVO_SENDER_EMAIL")
+    or os.environ.get("DEFAULT_FROM_EMAIL")
+    or "miladiadem58@gmail.com"
+)
+DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else _sender_email
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
