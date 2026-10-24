@@ -1,13 +1,20 @@
 import json
+import hashlib
+import logging
 import time
 
+from django.conf import settings
+from django.core.cache import cache
 from django.contrib import messages
-from django.http import Http404, HttpResponseForbidden, HttpResponseServerError
+from django.http import Http404, HttpResponseForbidden, HttpResponseServerError, JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET, require_http_methods
+from django.urls import reverse
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.users.decorators import roles_required, user_required
-from .forms import QuizForm, QuizImportForm, QuizSubmissionForm
+from .ai.gemini_client import GeminiConfigurationError, GeminiGenerationError
+from .ai.quiz_generator import InvalidGeneratedQuiz, generate_quiz
+from .forms import QuizAIGenerationForm, QuizForm, QuizImportForm, QuizSubmissionForm
 from .services import (
     QuizNotFoundError,
     QuizPermissionError,
@@ -24,6 +31,37 @@ from .services import (
     submit_quiz,
     update_managed_quiz,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+class QuizAIRateLimitError(Exception):
+    pass
+
+
+def _consume_ai_generation_slot(user):
+    user_digest = hashlib.sha256(str(user["_id"]).encode("utf-8")).hexdigest()
+    key = f"quiz-ai-generation:{user_digest}"
+    window = settings.QUIZ_AI_GENERATION_WINDOW_SECONDS
+    def increment_or_recover():
+        try:
+            count = cache.incr(key)
+        except ValueError:
+            if cache.add(key, 1, timeout=window):
+                return 1 <= settings.QUIZ_AI_GENERATION_LIMIT
+            count = cache.incr(key)
+        if count > settings.QUIZ_AI_GENERATION_LIMIT:
+            cache.decr(key)
+            return False
+        return True
+
+    try:
+        if cache.add(key, 1, timeout=window):
+            return settings.QUIZ_AI_GENERATION_LIMIT >= 1
+        return increment_or_recover()
+    except Exception as error:
+        raise QuizAIRateLimitError from error
 
 
 def _template_quiz(document):
@@ -50,10 +88,10 @@ def quiz(request):
         items = [(item["title"], item["description"], f'{item["question_count"]} questions') for item in quizzes]
     except QuizStorageError:
         quizzes, items = [], []
-        messages.error(request, "Les quiz sont temporairement indisponibles.")
+        messages.error(request, "Quiz management is temporarily unavailable.")
     return render(request, "frontoffice/learning_page.html", {
-        "page_title": "Quiz",
-        "page_intro": "Testez vos connaissances et identifiez les compétences à renforcer.",
+        "page_title": "Quiz management",
+        "page_intro": "Test your knowledge and find skills to improve.",
         "items": items,
         "quizzes": quizzes,
         "item_label": "quiz",
@@ -73,7 +111,7 @@ def take_quiz(request, quiz_id):
     except QuizNotFoundError:
         raise Http404
     except QuizStorageError:
-        return HttpResponseServerError("Les quiz sont temporairement indisponibles.")
+        return HttpResponseServerError("Quiz management is temporarily unavailable.")
 
     form = QuizSubmissionForm(request.POST or None, quiz=document)
     duration_seconds = document.get("duration_seconds")
@@ -90,7 +128,7 @@ def take_quiz(request, quiz_id):
         time_expired = request.method == "POST" and time.time() > deadline + 30
 
     if time_expired:
-        form.add_error(None, "Le délai est dépassé. Rechargez la page pour démarrer une nouvelle tentative.")
+        form.add_error(None, "Time is up. Reload the page to start a new attempt.")
     elif request.method == "POST" and form.is_valid():
         try:
             attempt_id = submit_quiz(
@@ -103,7 +141,7 @@ def take_quiz(request, quiz_id):
         except QuizSubmissionError as error:
             form.add_error(None, str(error))
         except QuizStorageError:
-            return HttpResponseServerError("Impossible d'enregistrer votre résultat pour le moment.")
+            return HttpResponseServerError("Your result could not be saved right now.")
         else:
             if duration_seconds:
                 request.session.pop(f"quiz_deadline_{document['_id']}", None)
@@ -146,7 +184,7 @@ def quiz_result(request, attempt_id):
     except QuizNotFoundError:
         raise Http404
     except QuizStorageError:
-        return HttpResponseServerError("Vos résultats sont temporairement indisponibles.")
+        return HttpResponseServerError("Your results are temporarily unavailable.")
 
     for answer in attempt["answers"]:
         answer["selected_option_ids"] = [str(value) for value in answer["selected_option_ids"]]
@@ -162,17 +200,25 @@ def quiz_result(request, attempt_id):
 @require_GET
 def manage_quiz_list(request):
     try:
-        quizzes = list_author_quizzes(request.mongo_user)
+        quizzes = [_template_quiz(item) for item in list_author_quizzes(request.mongo_user)]
     except QuizStorageError:
         return render(request, "backoffice/quizzes/list.html", {
-            "user": request.mongo_user, "quizzes": [], "title": "Mes quiz",
+            "user": request.mongo_user, "quizzes": [], "title": "Quiz management",
             "section": "quizzes", "storage_error": True,
+            "quiz_summary": {"total": 0, "drafts": 0, "published": 0, "questions": 0},
         }, status=503)
+    quiz_summary = {
+        "total": len(quizzes),
+        "drafts": sum(quiz.get("status") == "draft" for quiz in quizzes),
+        "published": sum(quiz.get("status") == "published" for quiz in quizzes),
+        "questions": sum(len(quiz.get("questions", [])) for quiz in quizzes),
+    }
     return render(request, "backoffice/quizzes/list.html", {
         "user": request.mongo_user,
-        "quizzes": [_template_quiz(item) for item in quizzes],
-        "title": "Mes quiz",
+        "quizzes": quizzes,
+        "title": "Quiz management",
         "section": "quizzes",
+        "quiz_summary": quiz_summary,
     })
 
 
@@ -182,9 +228,9 @@ def _managed_or_response(request, quiz_id):
     except QuizNotFoundError:
         raise Http404
     except QuizPermissionError:
-        return None, HttpResponseForbidden("Accès refusé.")
+        return None, HttpResponseForbidden("Access denied.")
     except QuizStorageError:
-        return None, HttpResponseServerError("Le stockage des quiz est temporairement indisponible.")
+        return None, HttpResponseServerError("Quiz storage is temporarily unavailable.")
 
 
 @roles_required("instructor", "admin")
@@ -197,6 +243,7 @@ def manage_quiz_detail(request, quiz_id):
     return render(request, "backoffice/quizzes/detail.html", {
         "user": request.mongo_user, "quiz": document,
         "title": document["title"], "section": "quizzes",
+        "total_points": sum(question.get("points", 0) for question in document.get("questions", [])),
     })
 
 
@@ -224,9 +271,9 @@ def manage_quiz_create(request):
                     quiz_id = create_quiz(data=candidate.to_document(), user=request.mongo_user)
                 except QuizStorageError:
                     form = candidate
-                    messages.error(request, "Le fichier est valide, mais le brouillon n'a pas pu être enregistré.")
+                    messages.error(request, "The file is valid, but the draft could not be saved.")
                 else:
-                    messages.success(request, "Le quiz a été importé en brouillon. Vérifiez son contenu avant publication.")
+                    messages.success(request, "The quiz was imported as a draft. Review it before publishing.")
                     return redirect("users:quiz_manage_detail", quiz_id=str(quiz_id))
             else:
                 form = candidate
@@ -234,15 +281,110 @@ def manage_quiz_create(request):
         try:
             quiz_id = create_quiz(data=form.to_document(), user=request.mongo_user)
         except QuizStorageError:
-            messages.error(request, "Impossible d'enregistrer le quiz pour le moment.")
+            messages.error(request, "The quiz could not be saved right now.")
         else:
-            messages.success(request, "Le quiz a été créé.")
+            messages.success(request, "The quiz was created.")
             return redirect("users:quiz_manage_detail", quiz_id=str(quiz_id))
     return render(request, "backoffice/quizzes/create.html", {
         "user": request.mongo_user, "form": form,
         "import_form": import_form,
-        "title": "Créer un quiz", "section": "quizzes",
+        "title": "Create a quiz", "section": "quizzes",
     })
+
+
+def _json_request_data(request):
+    if len(request.body) > 500_000:
+        return None
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+@roles_required("instructor", "admin")
+@require_POST
+def generate_quiz_with_ai(request):
+    payload = _json_request_data(request)
+    if payload is None:
+        return JsonResponse({"error": "The request is invalid or too large."}, status=400)
+    form = QuizAIGenerationForm(payload)
+    if not form.is_valid():
+        return JsonResponse({
+            "error": "Check the generation settings.",
+            "field_errors": form.errors.get_json_data(),
+        }, status=400)
+
+    try:
+        if not _consume_ai_generation_slot(request.mongo_user):
+            response = JsonResponse({
+                "error": "The limit has been reached: five generations are allowed per hour. Please try again later."
+            }, status=429)
+            response["Retry-After"] = str(settings.QUIZ_AI_GENERATION_WINDOW_SECONDS)
+            return response
+    except QuizAIRateLimitError:
+        return JsonResponse({"error": "Rate limiting is temporarily unavailable."}, status=503)
+
+    try:
+        generated = generate_quiz(form.cleaned_data)
+    except GeminiConfigurationError:
+        return JsonResponse({"error": "The AI generator is not configured on this server."}, status=503)
+    except GeminiGenerationError:
+        return JsonResponse({
+            "error": "Google Gemini did not respond. Check the API key, configured model, API access, and quota. See the Django terminal for server diagnostics."
+        }, status=502)
+    except InvalidGeneratedQuiz as error:
+        reason = error.args[0] if error.args else "invalid_generated_quiz"
+        logger.warning("Rejected Gemini quiz response (reason=%s)", reason)
+        return JsonResponse({
+            "error": "Gemini responded, but the generated quiz did not pass validation. Try again or reduce the number or type of questions."
+        }, status=502)
+
+    validation_form = QuizForm({
+        "title": generated["title"],
+        "description": generated["description"],
+        "status": "draft",
+        "duration_seconds": "",
+        "passing_score": "",
+        "questions_json": json.dumps(generated["questions"], ensure_ascii=False),
+    })
+    if not validation_form.is_valid():
+        return JsonResponse({"error": "The generated response does not match the quiz format. Generate it again."}, status=502)
+    return JsonResponse({"quiz": generated}, status=200)
+
+
+@roles_required("instructor", "admin")
+@require_POST
+def create_ai_quiz_draft(request):
+    payload = _json_request_data(request)
+    if payload is None:
+        return JsonResponse({"error": "The quiz data is invalid or too large."}, status=400)
+    try:
+        questions_json = json.dumps(payload.get("questions"), ensure_ascii=False)
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "The question list is invalid."}, status=400)
+    form = QuizForm({
+        "title": payload.get("title", ""),
+        "description": payload.get("description", ""),
+        "status": "draft",
+        "duration_seconds": "",
+        "passing_score": "",
+        "questions_json": questions_json,
+    })
+    if not form.is_valid():
+        return JsonResponse({
+            "error": "The quiz contains invalid data. Fix it and try again.",
+            "field_errors": form.errors.get_json_data(),
+        }, status=400)
+    try:
+        quiz_id = create_quiz(data=form.to_document(), user=request.mongo_user)
+    except QuizStorageError:
+        return JsonResponse({"error": "The draft could not be saved right now."}, status=503)
+
+    messages.success(request, "The AI-generated quiz was saved as a draft.")
+    return JsonResponse({
+        "redirect_url": reverse("users:quiz_manage_detail", kwargs={"quiz_id": str(quiz_id)})
+    }, status=201)
 
 
 @roles_required("instructor", "admin")
@@ -258,15 +400,15 @@ def manage_quiz_edit(request, quiz_id):
         except QuizNotFoundError:
             raise Http404
         except QuizPermissionError:
-            return HttpResponseForbidden("Accès refusé.")
+            return HttpResponseForbidden("Access denied.")
         except QuizStorageError:
-            messages.error(request, "Impossible d'enregistrer les modifications.")
+            messages.error(request, "Changes could not be saved.")
         else:
-            messages.success(request, "Le quiz a été modifié.")
+            messages.success(request, "The quiz was updated.")
             return redirect("users:quiz_manage_detail", quiz_id=str(document["_id"]))
     return render(request, "backoffice/quizzes/edit.html", {
         "user": request.mongo_user, "quiz": _template_quiz(document), "form": form,
-        "title": "Modifier le quiz", "section": "quizzes",
+        "title": "Edit quiz", "section": "quizzes",
     })
 
 
@@ -278,13 +420,13 @@ def manage_quiz_publish(request, quiz_id):
     except QuizNotFoundError:
         raise Http404
     except QuizPermissionError:
-        return HttpResponseForbidden("Accès refusé.")
+        return HttpResponseForbidden("Access denied.")
     except QuizSubmissionError as error:
         messages.error(request, str(error))
     except QuizStorageError:
-        messages.error(request, "Impossible de soumettre le quiz pour le moment.")
+        messages.error(request, "The quiz could not be published right now.")
     else:
-        messages.success(request, "Le quiz a été soumis et publié.")
+        messages.success(request, "The quiz was submitted and published.")
     return redirect("users:quiz_manage_detail", quiz_id=quiz_id)
 
 
@@ -300,13 +442,13 @@ def manage_quiz_delete(request, quiz_id):
         except QuizNotFoundError:
             raise Http404
         except QuizPermissionError:
-            return HttpResponseForbidden("Accès refusé.")
+            return HttpResponseForbidden("Access denied.")
         except QuizStorageError:
-            messages.error(request, "Impossible de supprimer le quiz pour le moment.")
+            messages.error(request, "The quiz could not be deleted right now.")
         else:
-            messages.success(request, "Le quiz a été supprimé.")
+            messages.success(request, "The quiz was deleted.")
             return redirect("users:quiz_manage_list")
     return render(request, "backoffice/quizzes/delete.html", {
         "user": request.mongo_user, "quiz": _template_quiz(document),
-        "title": "Supprimer le quiz", "section": "quizzes",
+        "title": "Delete quiz", "section": "quizzes",
     })

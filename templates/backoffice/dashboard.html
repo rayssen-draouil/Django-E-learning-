@@ -8,8 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=2">
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
@@ -19,20 +18,19 @@
             <header class="dashboard-header">
                 <div>
                     <p class="eyebrow">VOTRE ESPACE SKILLFORGE · {{ role_label }}</p>
-                    <h1>Bonjour {{ user.first_name|default:"apprenant" }}</h1>
-                    <p class="header-subtitle">{% if is_mentor %}Create and manage your coaching time slots.{% else %}Voici un aperçu de votre progression.{% endif %}</p>
+                    <h1>Bonjour {{ user.first_name|default:"apprenant" }} <span aria-hidden="true">👋</span></h1>
+                    <p class="header-subtitle">Voici un aperçu de votre progression.</p>
                 </div>
                 <div class="header-actions">
-                    {% if is_mentor %}
-                        <a href="{% url 'users:mentor_sessions_list' %}" class="outline-button">Coaching Sessions</a>
-                        <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability">+ Create Availability</a>
-                    {% endif %}
                     <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
-                    {% include "backoffice/partials/user_role_chip.html" %}
+                    <a href="{% url 'users:profile' %}" class="profile-chip">
+                        <span>{{ user.first_name|default:"S"|first|upper }}</span>
+                        {{ user.first_name|default:"Mon profil" }}
+                    </a>
                 </div>
             </header>
 
-            <section class="stats-grid" aria-label="Statistiques d'apprentissage">
+            <section class="stats-grid" aria-label="Learning statistics">
                 {% for label, value, color in stats %}
                     <article class="stat-card {{ color }}">
                         <div class="stat-icon">{{ forloop.counter }}</div>
@@ -44,73 +42,41 @@
                 {% endfor %}
             </section>
 
-            {% if is_mentor %}
-            <section class="panel courses-panel" id="availability-management">
-                <div class="panel-heading">
-                    <div>
-                        <h2>Availability Management</h2>
-                        <p>Create and manage your coaching time slots.</p>
-                    </div>
-                    <div class="header-actions">
-                        <a href="{% url 'users:mentor_availability_create' %}" class="text-link">+ Create Availability</a>
-                        <a href="{% url 'users:mentor_availability_list' %}" class="text-link">Open My Availability →</a>
-                    </div>
-                </div>
-                <div class="course-list">
-                    {% for slot in mentor_slots %}
-                        <article class="course-row">
-                            <div class="course-info">
-                                <h3>{{ slot.display_topic }}</h3>
-                                <div class="course-meta">
-                                    <span>{{ slot.date }} · {{ slot.start_time }} – {{ slot.end_time }} ({{ slot.duration_badge }})</span>
-                                    <span>{{ slot.session_type_label }} · {{ slot.status_label }}</span>
-                                </div>
-                            </div>
-                            <a href="{% url 'users:mentor_availability_edit' slot_id=slot.id %}" class="continue-button">Edit</a>
-                        </article>
-                    {% empty %}
-                        <p>No availability scheduled yet. Create your first time slot and make it easier for students to book a coaching session.</p>
-                    {% endfor %}
-                </div>
-                <a class="primary-button" href="{% url 'users:mentor_availability_list' %}">Manage My Availability</a>
-            </section>
-            {% endif %}
-
-            {% if quiz_storage_error %}<div class="panel">Les données Quiz sont temporairement indisponibles.</div>{% endif %}
+            {% if quiz_storage_error %}<div class="panel">Quiz data is temporarily unavailable.</div>{% endif %}
             <section class="panel courses-panel" id="quiz-dashboard">
                 <div class="panel-heading">
-                    <div><h2>{% if is_quiz_manager %}Gestion des quiz{% else %}Quiz et évaluations{% endif %}</h2>
-                        <p>{% if is_quiz_manager %}Vos quiz, leur statut et les actions de gestion.{% else %}Répondez aux quiz publiés et consultez vos résultats.{% endif %}</p></div>
-                    {% if is_quiz_manager %}<div class="header-actions"><a href="{% url 'users:quiz' %}" class="text-link">Voir les quiz côté apprenant</a><a href="{% url 'users:quiz_manage_list' %}" class="text-link">Ouvrir la gestion →</a></div>
-                    {% else %}<a href="{% url 'users:quiz' %}" class="text-link">Tous les quiz →</a>{% endif %}
+                    <div><h2>Quiz management</h2>
+                        <p>{% if is_quiz_manager %}Your quizzes, their status, and management actions.{% else %}Take published quizzes and review your results.{% endif %}</p></div>
+                    {% if is_quiz_manager %}<div class="header-actions"><a href="{% url 'users:quiz' %}" class="text-link">View the learner quiz page</a><a href="{% url 'users:quiz_manage_list' %}" class="text-link">Open quiz management →</a></div>
+                    {% else %}<a href="{% url 'users:quiz' %}" class="text-link">All quizzes →</a>{% endif %}
                 </div>
                 <div class="course-list">
                     {% for item in dashboard_quizzes %}
                         <article class="course-row">
                             <div class="course-info"><h3>{{ item.title }}</h3>
-                                <div class="course-meta"><span>{{ item.question_count }} question(s)</span><span>{% if is_quiz_manager %}{{ item.status }}{% else %}Publié{% endif %}</span></div>
+                                <div class="course-meta"><span>{{ item.question_count }} question(s)</span><span>{% if is_quiz_manager %}{% if item.status == "draft" %}Draft{% elif item.status == "published" %}Published{% else %}Archived{% endif %}{% else %}Published{% endif %}</span></div>
                                 {% if item.description %}<p>{{ item.description }}</p>{% endif %}
                             </div>
-                            {% if is_quiz_manager %}<a href="{% url 'users:quiz_manage_detail' quiz_id=item.id %}" class="continue-button">Gérer</a>
-                            {% else %}<a href="{% url 'users:quiz_take' quiz_id=item.id %}" class="continue-button">Répondre</a>{% endif %}
+                            {% if is_quiz_manager %}<div class="quiz-row-actions"><a href="{% url 'users:quiz_manage_detail' quiz_id=item.id %}" class="continue-button">Details</a><a href="{% url 'users:quiz_manage_delete' quiz_id=item.id %}" class="quiz-row-delete">Delete</a></div>
+                            {% else %}<a href="{% url 'users:quiz_take' quiz_id=item.id %}" class="continue-button">Take quiz</a>{% endif %}
                         </article>
-                    {% empty %}<p>{% if is_quiz_manager %}Aucun quiz créé. Créez ou importez votre premier quiz.{% else %}Aucun quiz publié pour le moment.{% endif %}</p>{% endfor %}
+                    {% empty %}<p>{% if is_quiz_manager %}No quizzes yet. Create or import your first quiz.{% else %}No quizzes have been published yet.{% endif %}</p>{% endfor %}
                 </div>
-                {% if is_quiz_manager %}<a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Créer ou importer un quiz</a>{% endif %}
+                {% if is_quiz_manager %}<div class="header-actions"><button class="outline-button" type="button" data-quiz-ai-open>Generate with AI</button><a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Create or import a quiz</a></div>{% endif %}
             </section>
 
             <section class="panel courses-panel">
-                <div class="panel-heading"><div><h2>Mes résultats Quiz</h2><p>Vos tentatives récentes et vos statistiques personnelles.</p></div>
-                    <span class="trend">{{ quiz_stats.attempt_count }} tentative(s)</span></div>
+                <div class="panel-heading"><div><h2>My quiz results</h2><p>Your recent attempts and personal statistics.</p></div>
+                    <span class="trend">{{ quiz_stats.attempt_count }} attempt(s)</span></div>
                 <div class="course-list">
                     {% for attempt in quiz_attempts %}
                         <article class="course-row"><div class="course-info"><h3>{{ attempt.quiz_title }}</h3>
-                            <div class="course-meta"><span>{{ attempt.submitted_at|date:"d/m/Y H:i" }}</span><span>{{ attempt.score_percentage }} % · {% if attempt.passed %}Réussi{% else %}À revoir{% endif %}</span></div>
-                        </div><a class="continue-button" href="{% url 'users:quiz_result' attempt_id=attempt.id %}">Voir résultat</a></article>
-                    {% empty %}<p>Aucune tentative enregistrée. Répondez à un quiz publié pour voir vos résultats ici.</p>{% endfor %}
+                            <div class="course-meta"><span>{{ attempt.submitted_at|date:"M j, Y, H:i" }}</span><span>{{ attempt.score_percentage }} % · {% if attempt.passed %}Passed{% else %}Review{% endif %}</span></div>
+                        </div><a class="continue-button" href="{% url 'users:quiz_result' attempt_id=attempt.id %}">View result</a></article>
+                    {% empty %}<p>No attempts yet. Take a published quiz to see your results here.</p>{% endfor %}
                 </div>
-                {% if question_stats %}<h3>Statistiques par question</h3><div class="course-list">
-                    {% for question in question_stats %}<article class="course-row"><div class="course-info"><h3>{{ question.prompt }}</h3><p>{{ question.correct }} bonne(s) réponse(s) sur {{ question.answered }} · {{ question.accuracy }} %</p></div></article>{% endfor %}
+                {% if question_stats %}<h3>Question statistics</h3><div class="course-list">
+                    {% for question in question_stats %}<article class="course-row"><div class="course-info"><h3>{{ question.prompt }}</h3><p>{{ question.correct }} correct answer(s) out of {{ question.answered }} · {{ question.accuracy }} %</p></div></article>{% endfor %}
                 </div>{% endif %}
             </section>
 
@@ -144,7 +110,7 @@
                         <img src="{% static 'backoffice/images/user-1.jpg' %}" alt="Photo de profil" class="large-avatar">
                         <h2>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"SkillForge" }}</h2>
                         <p>{{ user.email }}</p>
-                        <div class="profile-line"><span>Niveau actuel</span><strong>Intermédiaire</strong></div>
+                        <div class="profile-line"><span>Niveau actuel</span><strong>Intermediate</strong></div>
                         <div class="profile-line"><span>Objectif hebdomadaire</span><strong>4 / 5 jours</strong></div>
                         <a href="{% url 'users:profile' %}" class="primary-button">Modifier mon profil</a>
                     </div>
@@ -174,6 +140,7 @@
                 </div>
             </section>
         </main>
+        {% if is_quiz_manager %}{% include "backoffice/quizzes/ai_generator_modal.html" %}{% endif %}
     </div>
 </body>
 </html>

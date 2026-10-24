@@ -1,4 +1,4 @@
-# SkillForge e-learning
+﻿# SkillForge e-learning
 
 Application d'apprentissage construite avec Django 5.2.18, PyMongo et MongoDB. Les comptes applicatifs et les sessions Django sont stockés dans MongoDB. Le projet n'utilise plus de base relationnelle.
 
@@ -31,7 +31,7 @@ Les templates globaux et les ressources du thème gardent leurs chemins actuels 
    pip install -r requirements.txt
    ```
 
-3. Copier `.env.example` vers `.env` et définir les variables dans l'environnement du processus. Le projet ne charge pas automatiquement `.env`.
+3. Copier `.env.example` vers `.env` puis renseigner les variables nécessaires. Les variables du processus ont priorité sur celles du fichier `.env` à la racine du projet.
 4. Démarrer MongoDB et préparer les index :
 
    ```powershell
@@ -66,7 +66,7 @@ Le module de paramètres par défaut est `config.settings` et charge les paramè
 
 Les documents utilisateurs restent dans la collection `users`; les mots de passe sont hachés et l'adresse e-mail est protégée par un index unique. La commande `create_user_indexes` prépare cet index et l'index TTL de la collection de sessions. MongoDB supprime les sessions expirées via TTL ; le backend vérifie aussi l'expiration au chargement. Une indisponibilité MongoDB interrompt les opérations de session au lieu de simuler une session vide.
 
-Les rôles applicatifs sont `student`, `instructor` et `admin`. Les tableaux de bord actuels sont réservés aux étudiants. L'administration Django native (`/admin/`) a été retirée avec les dépendances relationnelles ; aucune interface web d'administration MongoDB n'est fournie. Le provisionnement de comptes privilégiés doit être effectué par un outil d'administration contrôlé et non exposé publiquement.
+Les rôles applicatifs sont `student`, `instructor` et `admin`. Les tableaux de bord actuels sont réservés aux étudiants. L'administration Django native (`/admin/`) a été retirée avec les dépendances relationnelles ; aucune interface web d'administration MongoDB n'est fournie. Le provisionnement de comptes privilégiés doit Ãªtre effectué par un outil d'administration contrôlé et non exposé publiquement.
 
 Les messages Django sont stockés dans des cookies signés pour éviter une dépendance à la base de sessions relationnelle. Les fonctions de hachage et de validation des mots de passe fournies par Django restent utilisées ; elles ne nécessitent pas les tables Django.
 
@@ -78,7 +78,7 @@ Sauvegarder la base configurée, qui contient les comptes et les sessions :
 mongodump --uri "$env:MONGODB_URI" --db "$env:MONGODB_DATABASE" --out .\backups
 ```
 
-Restaurer avec `mongorestore` vers une instance contrôlée et vérifier les collections `users` et `django_sessions`. Les sessions peuvent être invalidées après restauration si les clés de signature ou les paramètres de sécurité ont changé. Protéger les sauvegardes comme des données sensibles et les stocker hors du dépôt.
+Restaurer avec `mongorestore` vers une instance contrôlée et vérifier les collections `users` et `django_sessions`. Les sessions peuvent Ãªtre invalidées après restauration si les clés de signature ou les paramètres de sécurité ont changé. Protéger les sauvegardes comme des données sensibles et les stocker hors du dépôt.
 
 ## Tests et vérifications
 
@@ -94,9 +94,14 @@ Pour les contrôles de déploiement, configurer les variables de production puis
 - Les cours et mentors ainsi que leurs tableaux de bord restent des exemples en mémoire. Les quiz et tentatives sont persistés dans MongoDB ; les statistiques de quiz sont calculées à partir des tentatives enregistrées.
 - Les comptes métier MongoDB ne sont pas reliés à `django.contrib.auth`; l'authentification Django native et son panneau d'administration ne sont pas disponibles.
 - L'application `enrollments`, la progression persistante, ainsi qu'une interface MongoDB d'administration restent à concevoir avec leurs règles d'accès avant leur implémentation.
-- `db.sqlite3` est conservé dans l'arborescence locale pour préserver les données préexistantes, mais n'est plus configuré ni utilisé par l'application. `.gitignore` ignore les fichiers SQLite locaux ; sans métadonnées Git, son état de suivi antérieur ne peut pas être vérifié. Il n'a pas été supprimé.
-- Le dépôt fourni dans l'espace de travail ne contient pas de dossier `.git`, donc le suivi des fichiers et les modifications locales antérieures ne peuvent pas être vérifiés ici.
+- `db.sqlite3` est conservé dans l'arborescence locale pour préserver les données préexistantes, mais n'est plus configuré ni utilisé par l'application. `.gitignore` ignore les fichiers SQLite locaux ; sans métadonnées Git, son état de suivi antérieur ne peut pas Ãªtre vérifié. Il n'a pas été supprimé.
+- Le dépôt fourni dans l'espace de travail ne contient pas de dossier `.git`, donc le suivi des fichiers et les modifications locales antérieures ne peuvent pas Ãªtre vérifiés ici.
 
 ## Crédits des thèmes
 
-La landing page utilise le thème Skilline de [ThemeWagon](https://themewagon.com/themes/skilline/), conçu par [Irvan Moses et mhaecal](https://github.com/mhaecal/) sous licence MIT. Les sources et attributions du thème de back-office sont conservées dans `backoffice/`.
+La landing page utilise le thème Skilline de [ThemeWagon](https://themewagon.com/themes/skilline/), conÃ§u par [Irvan Moses et mhaecal](https://github.com/mhaecal/) sous licence MIT. Les sources et attributions du thème de back-office sont conservées dans `backoffice/`.
+
+## Génération de quiz avec Gemini
+
+Définir GEMINI_API_KEY dans le fichier `.env` ou dans l'environnement du processus à partir d'une clé Google AI Studio. Le SDK Python google-genai est installé par requirements.txt. GEMINI_MODEL sélectionne le modèle compatible avec la sortie JSON structurée (valeur par défaut : gemini-3.8-flash) ; GEMINI_TIMEOUT_SECONDS règle le délai d'attente. La limite est de cinq générations par utilisateur et par heure par défaut (QUIZ_AI_GENERATION_LIMIT et QUIZ_AI_GENERATION_WINDOW_SECONDS). La clé reste côté serveur. La prévisualisation n'écrit rien dans MongoDB avant confirmation.
+

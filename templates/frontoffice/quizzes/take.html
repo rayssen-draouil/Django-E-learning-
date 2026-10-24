@@ -5,16 +5,16 @@
 {% block main_class %}quiz-taking-main{% endblock %}
 {% block content %}
 <div class="quiz-page-shell">
-    <a class="quiz-back-link" href="{% url 'users:quiz' %}"><span aria-hidden="true">←</span> Tous les quiz</a>
+    <a class="quiz-back-link" href="{% url 'users:quiz' %}"><span aria-hidden="true">←</span> All quizzes</a>
     <header class="quiz-page-heading">
         <div>
-            <p class="quiz-eyebrow">ÉVALUATION · {{ quiz.questions|length }} QUESTION{{ quiz.questions|length|pluralize:"S" }}</p>
+            <p class="quiz-eyebrow">ASSESSMENT · {{ quiz.questions|length }} QUESTION{{ quiz.questions|length|pluralize:"S" }}</p>
             <h1>{{ quiz.title }}</h1>
             {% if quiz.description %}<p class="quiz-description">{{ quiz.description }}</p>{% endif %}
         </div>
         <div class="quiz-meta-chips">
             <span>{{ quiz.questions|length }} questions</span>
-            {% if quiz.duration_seconds %}<span>{{ quiz.duration_seconds }} secondes</span>{% else %}<span>Sans limite de temps</span>{% endif %}
+            {% if quiz.duration_seconds %}<span>{{ quiz.duration_seconds }} seconds</span>{% else %}<span>No time limit</span>{% endif %}
         </div>
     </header>
 
@@ -22,42 +22,42 @@
         <aside class="quiz-taking-sidebar">
             {% if quiz.duration_seconds %}
                 <section class="quiz-timer-card">
-                    <div class="quiz-timer-heading"><span class="quiz-timer-icon" aria-hidden="true">◷</span><span>Temps restant</span></div>
+                    <div class="quiz-timer-heading"><span class="quiz-timer-icon" aria-hidden="true">◷</span><span>Time remaining</span></div>
                     <time id="quiz-countdown" class="quiz-countdown" aria-live="off" data-remaining="{{ quiz.remaining_seconds }}" data-duration="{{ quiz.duration_seconds }}">--:--</time>
                     <div class="quiz-timer-track"><span id="quiz-timer-progress"></span></div>
-                    <p id="quiz-timer-message">{% if quiz.timer_elapsed %}Le temps est écoulé.{% else %}Le quiz sera envoyé automatiquement à la fin du temps.{% endif %}</p>
+                    <p id="quiz-timer-message">{% if quiz.timer_elapsed %}Time is up.{% else %}Your quiz will be submitted automatically when time runs out.{% endif %}</p>
                 </section>
             {% else %}
-                <section class="quiz-timer-card quiz-no-timer"><div class="quiz-timer-heading"><span class="quiz-timer-icon" aria-hidden="true">◷</span><span>À votre rythme</span></div><p>Aucune limite de temps pour ce quiz.</p></section>
+                <section class="quiz-timer-card quiz-no-timer"><div class="quiz-timer-heading"><span class="quiz-timer-icon" aria-hidden="true">◷</span><span>Take your time</span></div><p>This quiz has no time limit.</p></section>
             {% endif %}
 
             <section class="quiz-progress-card">
-                <div class="quiz-progress-heading"><strong>Votre progression</strong><span><b id="quiz-answered-count">0</b>/{{ quiz.questions|length }}</span></div>
+                <div class="quiz-progress-heading"><strong>Your progress</strong><span><b id="quiz-answered-count">0</b>/{{ quiz.questions|length }}</span></div>
                 <div class="quiz-overall-track"><span id="quiz-overall-progress"></span></div>
-                <nav class="quiz-question-nav" aria-label="Navigation des questions">
+                <nav class="quiz-question-nav" aria-label="Question navigation">
                     {% for question in quiz.questions %}<a href="#quiz-question-{{ question.position }}" data-question-link="{{ question.position }}"><span>{{ question.position }}</span><i></i></a>{% endfor %}
                 </nav>
-                <p class="quiz-progress-help">Sélectionnez une réponse pour chaque question, puis vérifiez avant l’envoi.</p>
+                <p class="quiz-progress-help">Choose an answer for each question, then review your answers before submitting.</p>
             </section>
         </aside>
 
         <form id="quiz-answer-form" class="quiz-answer-form" method="post" novalidate data-question-count="{{ quiz.questions|length }}" {% if quiz.duration_seconds %}data-timed="true"{% endif %} {% if quiz.timer_elapsed %}data-timer-elapsed="true"{% endif %}>
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="quiz-form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-            {% if quiz.time_expired %}<div class="quiz-form-errors" role="alert">Le temps est écoulé. Cette tentative n’a pas été enregistrée.</div>{% endif %}
+            {% if quiz.time_expired %}<div class="quiz-form-errors" role="alert">Time is up. This attempt was not saved.</div>{% endif %}
             {% for question in quiz.questions %}
                 <fieldset id="quiz-question-{{ question.position }}" class="quiz-question-card" data-question-card="{{ question.position }}">
                     <div class="quiz-question-card-top"><span class="quiz-question-number">QUESTION {{ question.position|stringformat:"02d" }}</span><span class="quiz-question-points">{{ question.points }} point{{ question.points|pluralize }}</span></div>
                     <legend>{{ question.prompt }}</legend>
-                    <p class="quiz-question-hint">{% if question.type == "multiple_choice" %}Plusieurs réponses possibles{% else %}Choisissez une réponse{% endif %}</p>
+                    <p class="quiz-question-hint">{% if question.type == "multiple_choice" %}Select all that apply{% else %}Choose one answer{% endif %}</p>
                     <div class="quiz-answer-options">{{ question.form_field }}</div>
                     {{ question.form_field.errors }}
                 </fieldset>
             {% endfor %}
             <footer class="quiz-submit-panel">
-                <div><strong>Vous êtes prêt ?</strong><p>Votre résultat sera calculé après l’envoi.</p></div>
-                {% if quiz.timer_elapsed %}<a class="quiz-submit-button quiz-restart-button" href="{% url 'users:quiz_take' quiz_id=quiz.id %}?restart=1">Recommencer le quiz</a>
-                {% else %}<button id="quiz-submit-button" class="quiz-submit-button" type="submit">Envoyer mes réponses <span aria-hidden="true">→</span></button>{% endif %}
+                <div><strong>Ready to submit?</strong><p>Your score will be calculated after submission.</p></div>
+                {% if quiz.timer_elapsed %}<a class="quiz-submit-button quiz-restart-button" href="{% url 'users:quiz_take' quiz_id=quiz.id %}?restart=1">Restart quiz</a>
+                {% else %}<button id="quiz-submit-button" class="quiz-submit-button" type="submit">Submit my answers <span aria-hidden="true">→</span></button>{% endif %}
             </footer>
         </form>
     </div>
