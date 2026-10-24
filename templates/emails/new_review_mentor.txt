@@ -1,0 +1,12 @@
+Hello {{ mentor_name }},
+
+{{ student_name }} submitted verified feedback for your coaching session on {{ topic }}.
+
+Overall Rating: {{ rating }} / 5 Stars
+Helpfulness: {{ helpfulness_rating }} / 5 | Clarity: {{ clarity_rating }} / 5 | Communication: {{ communication_rating }} / 5
+Learning Outcome: {{ learning_outcome_label }}
+
+Feedback:
+"{{ review_text }}"
+
+View your sessions and feedback in your dashboard: {{ action_url }}

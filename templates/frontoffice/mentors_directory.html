@@ -149,6 +149,23 @@
     <header class="mentors-hero">
         <h1>Connect with Verified Mentors</h1>
         <p>Accelerate your learning journey with dedicated 1-on-1 coaching, code reviews, and career guidance.</p>
+
+        <!-- Intelligent AI Mentor Recommendation Quick Matcher -->
+        <div style="max-width: 760px; margin: 1.5rem auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 1rem; padding: 1.35rem 1.5rem; text-align: left; color: #ffffff; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem;">
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd;">
+                    &#10024; Intelligent AI Mentor Recommendation System
+                </span>
+                <a href="{% url 'users:mentor_recommendations' %}" style="font-size: 0.8rem; color: #bfdbfe; text-decoration: underline;">Advanced Filters &amp; Side-by-Side Compare &rarr;</a>
+            </div>
+            <form method="get" action="{% url 'users:mentor_recommendations' %}" style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                <input type="text" name="learning_goal" placeholder="Describe your goal (e.g., 'Help me debug Django REST authentication and prepare for backend interviews')..."
+                       style="flex: 1; min-width: 240px; padding: 0.7rem 0.95rem; border-radius: 0.55rem; border: 1px solid rgba(255,255,255,0.25); font-size: 0.9rem; color: #0f172a; background: #ffffff;">
+                <button type="submit" style="background: #2563eb; color: #ffffff; border: 1px solid #60a5fa; border-radius: 0.55rem; padding: 0.7rem 1.25rem; font-size: 0.88rem; font-weight: 700; cursor: pointer;">
+                    Find My Best Mentor Match
+                </button>
+            </form>
+        </div>
     </header>
 
     <div class="mentors-grid">
@@ -163,7 +180,7 @@
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="#d97706" stroke="#d97706" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         {% if mentor.rating_summary.has_reviews %}
                             <span>{{ mentor.rating_summary.average_rating }}</span>
-                            <span style="font-weight: normal; color: #92400e;">({{ mentor.rating_summary.review_count }} verified)</span>
+                            <span style="font-weight: normal; color: #92400e;">({{ mentor.rating_summary.review_count }} verified &bull; {{ mentor.rating_summary.confidence_label }})</span>
                         {% else %}
                             <span style="color: #92400e;">New Mentor</span>
                         {% endif %}

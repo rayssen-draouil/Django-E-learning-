@@ -184,3 +184,17 @@ DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else 
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
+# Groq AI Configuration (Mentor Recommendations & Goal Understanding)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_BASE_URL = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+GROQ_TIMEOUT_SECONDS = float(os.environ.get("GROQ_TIMEOUT_SECONDS", "6.0"))
+
+
+# LiveKit Real-Time Classroom Configuration
+LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "").strip()
+LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY", "").strip()
+LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "").strip()
+LIVEKIT_TOKEN_TTL_SECONDS = int(os.environ.get("LIVEKIT_TOKEN_TTL_SECONDS", "900"))
+CLASSROOM_EARLY_JOIN_MINUTES = int(os.environ.get("CLASSROOM_EARLY_JOIN_MINUTES", "15"))
+CLASSROOM_LATE_JOIN_GRACE_MINUTES = int(os.environ.get("CLASSROOM_LATE_JOIN_GRACE_MINUTES", "180"))

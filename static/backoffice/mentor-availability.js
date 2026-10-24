@@ -62,13 +62,53 @@
     const durationBadge = form.querySelector("[data-duration-preview]");
     const submitBtn = form.querySelector("[data-submit-button]");
 
+    const getCurrentMinutesForToday = () => {
+      const now = new Date();
+      const browserMin = now.getHours() * 60 + now.getMinutes();
+      const serverTimeAttr = startInput ? startInput.getAttribute("data-current-time") : "";
+      const serverMin = parseMinutes(serverTimeAttr);
+      if (serverMin !== null && Math.abs(browserMin - serverMin) > 90) {
+        return serverMin;
+      }
+      return browserMin;
+    };
+
+    const formatMinutesToHHMM = (totalMins) => {
+      const clamped = Math.min(Math.max(totalMins, 0), 23 * 60 + 59);
+      const hh = String(Math.floor(clamped / 60)).padStart(2, "0");
+      const mm = String(clamped % 60).padStart(2, "0");
+      return `${hh}:${mm}`;
+    };
+
+    const syncDateAndTimeConstraints = () => {
+      if (!dateInput || !startInput) return;
+      const minDate = dateInput.getAttribute("min") || dateInput.getAttribute("data-today") || "";
+      const dateVal = dateInput.value.trim();
+      if (dateVal && minDate && dateVal === minDate) {
+        const nextValidMin = getCurrentMinutesForToday() + 1;
+        if (nextValidMin <= 23 * 60 + 59) {
+          startInput.setAttribute("min", formatMinutesToHHMM(nextValidMin));
+        }
+      } else {
+        startInput.removeAttribute("min");
+      }
+    };
+
     const updateDurationPreview = () => {
       if (!durationBadge || !startInput || !endInput) return;
+      syncDateAndTimeConstraints();
       const startMin = parseMinutes(startInput.value);
       const endMin = parseMinutes(endInput.value);
       if (startMin === null || endMin === null) {
         durationBadge.textContent = "15–240 min";
         durationBadge.classList.remove("duration-invalid");
+        return;
+      }
+      const dateVal = dateInput ? dateInput.value.trim() : "";
+      const minDate = dateInput ? (dateInput.getAttribute("min") || dateInput.getAttribute("data-today") || "") : "";
+      if (dateVal && minDate && dateVal === minDate && startMin <= getCurrentMinutesForToday()) {
+        durationBadge.textContent = "Past start time";
+        durationBadge.classList.add("duration-invalid");
         return;
       }
       const diff = endMin - startMin;
@@ -117,6 +157,10 @@
       }
     });
 
+    if (dateInput) {
+      dateInput.addEventListener("input", updateDurationPreview);
+      dateInput.addEventListener("change", updateDurationPreview);
+    }
     if (startInput) {
       startInput.addEventListener("input", updateDurationPreview);
       startInput.addEventListener("change", updateDurationPreview);
@@ -182,6 +226,14 @@
       const endVal = endInput ? endInput.value.trim() : "";
       if (!startVal) {
         markInvalid("start_time", "When does your availability begin?");
+      } else {
+        const startMin = parseMinutes(startVal);
+        if (dateVal && minDate && dateVal === minDate && startMin !== null && startMin <= getCurrentMinutesForToday()) {
+          markInvalid(
+            "start_time",
+            "This start time has already passed for today. Please choose a future start time."
+          );
+        }
       }
       if (!endVal) {
         markInvalid("end_time", "Your end time must be later than your start time.");
