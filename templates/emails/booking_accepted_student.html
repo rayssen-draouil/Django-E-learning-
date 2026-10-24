@@ -1,0 +1,25 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">Your Mentorship Request has been Accepted!</h2>
+<p>Hello {{ student_name }},</p>
+<p>Great news! <strong>{{ mentor_name }}</strong> has accepted your booking request.</p>
+
+<div class="info-card" style="border-left-color: #10b981;">
+    <div class="info-row"><span class="info-label">Mentor:</span> {{ mentor_name }}</div>
+    <div class="info-row"><span class="info-label">Topic:</span> {{ topic }}</div>
+    <div class="info-row"><span class="info-label">Date:</span> {{ date }}</div>
+    <div class="info-row"><span class="info-label">Time:</span> {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)</div>
+    <div class="info-row"><span class="info-label">Format:</span> {{ session_type|title }}</div>
+    {% if meeting_link %}
+    <div class="info-row"><span class="info-label">Meeting Link:</span> <a href="{{ meeting_link }}">{{ meeting_link }}</a></div>
+    {% elif location %}
+    <div class="info-row"><span class="info-label">Location:</span> {{ location }}</div>
+    {% endif %}
+</div>
+
+<p>Please make sure you are prepared 5 minutes before the session starts.</p>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">View Your Booking</a>
+</p>
+{% endblock %}

@@ -1,0 +1,345 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}{{ full_name }} — Mentor Profile | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mentor-profile-header {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2.25rem;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 2rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+    .profile-hero-avatar {
+        width: 6rem;
+        height: 6rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+    .profile-hero-details {
+        flex: 1;
+    }
+    .profile-hero-details h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .profile-hero-role {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin-bottom: 0.75rem;
+    }
+    .rating-overview {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    .stars-display {
+        color: #f59e0b;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+    }
+    .rating-number {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .rating-count {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .profile-bio {
+        font-size: 0.95rem;
+        color: #334155;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+    .topics-section h4 {
+        margin: 0 0 0.5rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+    }
+    .topics-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .topic-pill {
+        background: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+        font-size: 0.82rem;
+        font-weight: 500;
+        padding: 0.3rem 0.75rem;
+        border-radius: 9999px;
+    }
+
+    .section-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .section-header h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+    }
+    .slot-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: border-color 0.15s ease;
+    }
+    .slot-card:hover {
+        border-color: #3b82f6;
+    }
+    .slot-date {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.25rem;
+    }
+    .slot-time {
+        font-size: 0.88rem;
+        color: #475569;
+        margin-bottom: 0.65rem;
+    }
+    .slot-meta {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+    .badge-format {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.55rem;
+        border-radius: 0.35rem;
+        text-transform: capitalize;
+    }
+    .badge-format.online {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+    .badge-format.in_person {
+        background: #ffedd5;
+        color: #c2410c;
+    }
+    .btn-book-slot {
+        display: block;
+        text-align: center;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.55rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+    }
+    .btn-book-slot:hover {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+
+    .review-item {
+        padding: 1.25rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .review-item:last-child {
+        border-bottom: none;
+    }
+    .review-author-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    .review-author {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.95rem;
+    }
+    .review-verified-pill {
+        background: #ecfdf5;
+        color: #047857;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.15rem 0.45rem;
+        border-radius: 0.35rem;
+        margin-left: 0.5rem;
+    }
+    .review-date {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+    .review-content {
+        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.55;
+        margin: 0.35rem 0 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mentor-detail-container">
+    <div style="margin-top: 1rem;">
+        <a href="{% url 'users:mentors' %}" style="text-decoration: none; color: #2563eb; font-weight: 600; font-size: 0.9rem;">&larr; Back to Mentors Directory</a>
+    </div>
+
+    <!-- Mentor Header -->
+    <header class="mentor-profile-header">
+        <div class="profile-hero-avatar">{{ initials }}</div>
+        <div class="profile-hero-details">
+            <h1>{{ full_name }}</h1>
+            <p class="profile-hero-role">{{ experience }} &bull; SkillForge Verified Mentor</p>
+
+            <div class="rating-overview">
+                {% if rating_summary.has_reviews %}
+                    <span class="stars-display" style="display: inline-flex; align-items: center; gap: 2px;">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= rating_summary.stars_rounded %}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            {% else %}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="rating-number">{{ rating_summary.average_rating }}</span>
+                    <span class="rating-count">({{ rating_summary.review_count }} verified reviews)</span>
+                {% else %}
+                    <span class="rating-count" style="font-style: italic;">No reviews yet &bull; New Mentor</span>
+                {% endif %}
+            </div>
+
+            <p class="profile-bio">{{ bio }}</p>
+
+            <div class="topics-section">
+                <h4>Areas of Expertise</h4>
+                <div class="topics-wrap">
+                    {% for topic in topics %}
+                        <span class="topic-pill">{{ topic }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Available Slots Section -->
+    <section class="section-card">
+        <div class="section-header">
+            <div>
+                <h2>Available Coaching Slots</h2>
+                <p style="margin: 0.25rem 0 0; font-size: 0.88rem; color: #64748b;">Select an open slot to submit a 1-on-1 coaching request.</p>
+            </div>
+            <span style="font-size: 0.88rem; font-weight: 600; color: #2563eb;">{{ available_slots|length }} slots available</span>
+        </div>
+
+        <div class="slots-grid">
+            {% for slot in available_slots %}
+            <div class="slot-card">
+                <div>
+                    <div class="slot-date">{{ slot.date }}</div>
+                    <div class="slot-time">{{ slot.start_time }} &ndash; {{ slot.end_time }} ({{ slot.duration_minutes }} min)</div>
+                    <div class="slot-meta">
+                        <span class="badge-format {{ slot.session_type }}">{{ slot.session_type_label }}</span>
+                        <span class="badge-format" style="background: #f1f5f9; color: #475569;">{{ slot.topic_label }}</span>
+                    </div>
+                    {% if slot.location %}
+                        <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 0.75rem;">Location: {{ slot.location }}</p>
+                    {% endif %}
+                </div>
+                <a href="{% url 'users:mentor_book_slot' mentor_id slot.id %}" class="btn-book-slot">Book This Slot</a>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; background: #f8fafc; border-radius: 0.75rem;">
+                <p style="margin: 0; font-size: 0.95rem; color: #64748b;">This mentor does not have any open availability slots at the moment.</p>
+                <p style="margin: 0.35rem 0 0; font-size: 0.85rem; color: #94a3b8;">Please check back later or browse other mentors in the directory.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Verified Reviews Section -->
+    <section class="section-card">
+        <div class="section-header">
+            <div>
+                <h2>Verified Student Reviews</h2>
+                <p style="margin: 0.25rem 0 0; font-size: 0.88rem; color: #64748b;">Real feedback submitted exclusively by students after completed sessions.</p>
+            </div>
+            <span style="font-weight: 600; color: #f59e0b;">{{ rating_summary.average_rating }} / 5.0</span>
+        </div>
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <article class="review-item">
+                <div class="review-author-row">
+                    <div>
+                        <span class="review-author">{{ review.student_name }}</span>
+                        <span class="review-verified-pill" style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                            Verified Session
+                        </span>
+                    </div>
+                    <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div style="color: #f59e0b; font-size: 0.95rem; margin-bottom: 0.25rem; display: inline-flex; align-items: center; gap: 2px;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        {% else %}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <p class="review-content">{{ review.review_text }}</p>
+            </article>
+            {% empty %}
+            <div style="text-align: center; padding: 2.5rem 1rem; color: #64748b;">
+                <p style="margin: 0; font-size: 0.95rem;">No reviews yet for this mentor.</p>
+                <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: #94a3b8;">Reviews will appear here after students complete their coaching sessions.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

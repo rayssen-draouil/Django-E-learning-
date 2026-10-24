@@ -1,0 +1,17 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">Mentorship Booking Cancelled</h2>
+<p>Hello {{ recipient_name }},</p>
+<p>The coaching session scheduled for <strong>{{ date }} at {{ start_time }}</strong> with <strong>{{ other_party_name }}</strong> has been cancelled by {{ cancelled_by }}.</p>
+
+{% if reason %}
+<div class="info-card" style="border-left-color: #64748b;">
+    <div class="info-row"><span class="info-label">Reason:</span></div>
+    <p style="margin: 4px 0 0; color: #334155;">{{ reason }}</p>
+</div>
+{% endif %}
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">Go to Dashboard</a>
+</p>
+{% endblock %}

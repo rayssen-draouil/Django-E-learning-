@@ -1,0 +1,18 @@
+Your Mentorship Request has been Accepted!
+
+Hello {{ student_name }},
+
+Great news! {{ mentor_name }} has accepted your booking request.
+
+Session Details:
+Mentor: {{ mentor_name }}
+Topic: {{ topic }}
+Date: {{ date }}
+Time: {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)
+Format: {{ session_type|title }}
+{% if meeting_link %}Meeting Link: {{ meeting_link }}{% elif location %}Location: {{ location }}{% endif %}
+
+View your booking details:
+{{ action_url }}
+
+SkillForge Platform

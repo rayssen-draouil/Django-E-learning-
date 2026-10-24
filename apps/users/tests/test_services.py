@@ -37,6 +37,27 @@ class UserServiceTests(SimpleTestCase):
         stored_password = collection.insert_one.call_args.args[0]["password"]
         self.assertTrue(check_password("A-valid-password-123!", stored_password))
 
+    def test_create_user_supports_mentor_role_and_rejects_admin_role(self):
+        collection = MagicMock()
+        mentor = create_user(
+            first_name="Amine",
+            last_name="Benali",
+            email="amine@example.com",
+            password="A-valid-password-123!",
+            role="mentor",
+            collection=collection,
+        )
+        self.assertEqual(mentor["role"], "mentor")
+        with self.assertRaises(ValueError):
+            create_user(
+                first_name="Admin",
+                last_name="User",
+                email="admin@example.com",
+                password="A-valid-password-123!",
+                role="admin",
+                collection=collection,
+            )
+
     def test_duplicate_email_is_translated(self):
         collection = MagicMock()
         collection.insert_one.side_effect = DuplicateKeyError("duplicate")

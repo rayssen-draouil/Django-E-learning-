@@ -1,0 +1,81 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="availability" role_label="MENTOR SPACE" %}
+
+        <main class="dashboard-main">
+            <header class="dashboard-header availability-header">
+                <div>
+                    <p class="eyebrow eyebrow-danger">CONFIRMATION · AVAILABILITY MANAGEMENT</p>
+                    <h1>Delete Availability</h1>
+                    <p class="header-subtitle">Confirm removal of your coaching time slot.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'users:mentor_availability_list' %}" class="outline-button">← Back to My Availability</a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
+                </div>
+            </header>
+
+            {% if messages %}
+                <div class="availability-toast-stack" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="availability-alert availability-alert-{{ message.tags|default:'info' }}">
+                            <span class="alert-icon" aria-hidden="true">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </span>
+                            <div class="alert-content">{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <section class="panel delete-confirmation-panel" role="region" aria-labelledby="confirm-delete-heading">
+                <h2 id="confirm-delete-heading">Remove Availability Slot?</h2>
+                <p>
+                    You are about to remove the coaching slot scheduled on
+                    <strong>{{ slot.date }}</strong> from
+                    <strong>{{ slot.start_time }} – {{ slot.end_time }}</strong>
+                    ({{ slot.duration_badge }}) for
+                    <strong>{{ slot.display_topic }}</strong> ({{ slot.session_type_label }}).
+                </p>
+                <p class="delete-modal-warning">
+                    This action will remove the slot from future availability so students can no longer book it.
+                </p>
+
+                <form method="post" action="{% url 'users:mentor_availability_delete' slot_id=slot.id %}" data-delete-form>
+                    {% csrf_token %}
+                    <div class="availability-form-actions">
+                        <a href="{% url 'users:mentor_availability_list' %}" class="outline-button">
+                            Keep Slot
+                        </a>
+                        <button
+                            type="submit"
+                            class="btn-danger-confirm"
+                            data-delete-confirm-btn
+                            data-default-text="Delete Availability"
+                            data-loading-text="Deleting..."
+                        >
+                            <span class="btn-spinner" aria-hidden="true" hidden></span>
+                            <span data-submit-label>Delete Availability</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="{% static 'backoffice/mentor-availability.js' %}" defer></script>
+</body>
+</html>

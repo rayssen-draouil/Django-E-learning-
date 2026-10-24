@@ -1,0 +1,22 @@
+New Mentorship Request from {{ student_name }}
+
+Hello {{ mentor_name }},
+
+You have received a new coaching request on SkillForge:
+
+Student: {{ student_name }}
+Topic: {{ topic }}
+Date: {{ date }}
+Time: {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)
+Format: {{ session_type|title }}
+
+Learning Objective:
+{{ learning_objective }}
+
+Challenge / Question:
+{{ problem_description }}
+
+Review this request on your dashboard:
+{{ action_url }}
+
+SkillForge Platform

@@ -1,0 +1,873 @@
+/* SkillForge Mentor Availability Management Styles */
+
+.availability-header .primary-button,
+.btn-create-availability {
+    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.72rem 1.25rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--orange);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(244, 140, 6, 0.24);
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.btn-create-availability:hover,
+.btn-save-availability:hover:not(:disabled) {
+    background: var(--navy);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(47, 50, 125, 0.22);
+}
+
+.btn-create-availability:focus-visible,
+.btn-save-availability:focus-visible,
+.btn-cancel-availability:focus-visible,
+.btn-slot-edit:focus-visible,
+.btn-slot-delete:focus-visible,
+.btn-danger-confirm:focus-visible {
+    outline: 3px solid var(--navy);
+    outline-offset: 2px;
+}
+
+.btn-plus-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+[hidden],
+[hidden="true"] {
+    display: none !important;
+}
+
+/* Toast & Alert Notifications */
+.availability-toast-stack {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.availability-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.95rem 1.15rem;
+    border-radius: 0.85rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 0.82rem;
+}
+
+.availability-alert:empty,
+.availability-alert[hidden] {
+    display: none !important;
+}
+    font-weight: 500;
+    box-shadow: 0 6px 20px rgba(47, 50, 125, 0.06);
+    animation: slotFadeIn 0.22s ease;
+}
+
+.availability-alert p {
+    margin: 0;
+}
+
+.availability-alert-success {
+    border-color: #b7ebd2;
+    background: #f2fcf7;
+    color: #0f6e46;
+}
+
+.availability-alert-error {
+    border-color: #f5c2c7;
+    background: #fff5f6;
+    color: #9e1c2b;
+}
+
+.availability-alert-info,
+.availability-alert-warning {
+    border-color: #bce6f7;
+    background: #f2fbff;
+    color: #0e5a7a;
+}
+
+.alert-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: 0 0 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    font-weight: 700;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-dismiss {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.alert-dismiss:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Filter Panel */
+.availability-filter-panel {
+    margin-bottom: 1.25rem;
+    padding: 1.15rem 1.4rem;
+}
+
+.availability-filter-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 1rem;
+}
+
+.filter-group {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.filter-group label {
+    color: var(--navy);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 0.62rem 0.8rem;
+    border: 1px solid #dfe4f0;
+    border-radius: 0.65rem;
+    color: var(--navy);
+    background: #fcfdff;
+    font: inherit;
+    font-size: 0.8rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(35, 189, 238, 0.16);
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.btn-filter-apply {
+    margin-top: 0;
+    border: 0;
+    padding: 0.66rem 1.1rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.btn-filter-reset {
+    padding: 0.62rem 0.95rem;
+    white-space: nowrap;
+}
+
+/* Availability Slots Listing */
+.availability-list-panel {
+    margin-bottom: 1.5rem;
+}
+
+.availability-slot-grid {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+}
+
+.availability-slot-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 0.9rem;
+    background: #fcfdff;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    animation: slotFadeIn 0.22s ease;
+}
+
+.availability-slot-card:hover {
+    border-color: #d3dcf0;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(47, 50, 125, 0.06);
+    transform: translateY(-1px);
+}
+
+.slot-card-left {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.slot-date-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.75rem;
+    background: var(--cream);
+    min-width: 9.5rem;
+}
+
+.slot-date-icon {
+    font-size: 1.25rem;
+}
+
+.slot-date-primary {
+    display: block;
+    color: var(--navy);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.slot-date-iso {
+    display: block;
+    color: var(--muted);
+    font-size: 0.68rem;
+}
+
+.slot-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.slot-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.slot-topic {
+    margin: 0;
+    color: var(--navy);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.slot-pill-custom {
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: #f2edff;
+    color: #5e35b1;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.slot-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.slot-time-range {
+    color: var(--navy);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.slot-duration-badge {
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: #eef2fa;
+    color: var(--navy);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.slot-format-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.badge-online {
+    background: #e5f7ff;
+    color: #0b698b;
+}
+
+.badge-in-person {
+    background: #fff2e1;
+    color: #b35c00;
+}
+
+.slot-status-badge {
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.status-available {
+    background: #e9fbf2;
+    color: #159b64;
+}
+
+.status-booked {
+    background: #f2edff;
+    color: #6236b5;
+}
+
+.slot-location {
+    margin: 0.4rem 0 0;
+    color: var(--muted);
+    font-size: 0.74rem;
+}
+
+/* Slot Card Actions */
+.slot-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-shrink: 0;
+}
+
+.btn-slot-edit,
+.btn-slot-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.52rem 0.85rem;
+    border-radius: 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-slot-edit {
+    border: 1px solid #dfe4f0;
+    background: #fff;
+    color: var(--navy);
+}
+
+.btn-slot-edit:hover {
+    border-color: var(--navy);
+    background: #f4f6fc;
+}
+
+.btn-slot-delete {
+    border: 1px solid #fad2d6;
+    background: #fff5f6;
+    color: #b42332;
+}
+
+.btn-slot-delete:hover {
+    border-color: #dc3545;
+    background: #ffe3e6;
+    color: #8f1622;
+}
+
+/* Empty State */
+.availability-empty-state {
+    text-align: center;
+    padding: 2.75rem 1.5rem 2rem;
+}
+
+.empty-calendar-illustration {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin: 0 auto 1rem;
+    display: grid;
+    place-items: center;
+    border-radius: 1.25rem;
+    background: #fcfdff;
+}
+
+.availability-empty-state h3 {
+    margin: 0 0 0.45rem;
+    color: var(--navy);
+    font-size: 1.1rem;
+}
+
+.empty-state-message {
+    max-width: 30rem;
+    margin: 0 auto 1.35rem;
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.6;
+}
+
+.empty-state-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+/* Create & Edit Form */
+.availability-form-panel {
+    max-width: 48rem;
+}
+
+.availability-form-grid {
+    display: grid;
+    gap: 1.15rem;
+}
+
+.availability-time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.availability-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.availability-field label,
+.availability-fieldset legend {
+    color: var(--navy);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.required-star {
+    color: #d93025;
+}
+
+.optional-tag {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.74rem;
+}
+
+.label-with-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.duration-preview-badge {
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    background: #e5f7ff;
+    color: #0b698b;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.duration-preview-badge.duration-invalid {
+    background: #fff0f1;
+    color: #b42332;
+}
+
+.availability-input {
+    width: 100%;
+    padding: 0.72rem 0.85rem;
+    border: 1px solid #dfe4f0;
+    border-radius: 0.65rem;
+    color: var(--navy);
+    background: #fff;
+    font: inherit;
+    font-size: 0.84rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.availability-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(35, 189, 238, 0.18);
+}
+
+.availability-input.input-invalid,
+.availability-field.has-error .availability-input {
+    border-color: #d93025;
+    background: #fffafb;
+}
+
+.field-hint {
+    color: var(--muted);
+    font-size: 0.72rem;
+}
+
+.field-error {
+    color: #b42332;
+    font-size: 0.76rem;
+    font-weight: 500;
+    min-height: 0;
+}
+
+.field-error:empty {
+    display: none;
+}
+
+/* Radio Cards for Session Format */
+.availability-fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.session-format-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-top: 0.45rem;
+}
+
+.session-format-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.9rem 1rem;
+    border: 1.5px solid #dfe4f0;
+    border-radius: 0.8rem;
+    background: #fcfdff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.session-format-card:hover {
+    border-color: var(--blue);
+    background: #fff;
+}
+
+.session-format-card.selected {
+    border-color: var(--orange);
+    background: #fffaf3;
+    box-shadow: 0 4px 14px rgba(244, 140, 6, 0.12);
+}
+
+.session-format-card input[type="radio"] {
+    margin: 0;
+    accent-color: var(--orange);
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.format-card-icon {
+    font-size: 1.35rem;
+}
+
+.format-card-content {
+    display: grid;
+    gap: 0.1rem;
+}
+
+.format-card-content strong {
+    color: var(--navy);
+    font-size: 0.84rem;
+}
+
+.format-card-content small {
+    color: var(--muted);
+    font-size: 0.7rem;
+}
+
+.session-format-info {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 0.7rem;
+    background: #f0f9ff;
+    border: 1px solid #cce9fb;
+    color: #0e5a7a;
+    font-size: 0.76rem;
+}
+
+.session-format-info p {
+    margin: 0;
+}
+
+.info-badge-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff;
+    font-weight: 700;
+}
+
+/* Form Actions & Buttons */
+.availability-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--line);
+}
+
+.btn-save-availability {
+    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--orange);
+    color: #fff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.btn-save-availability:disabled,
+.btn-danger-confirm:disabled {
+    opacity: 0.68;
+    cursor: wait;
+    transform: none;
+}
+
+.btn-cancel-availability {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.72rem 1.35rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.btn-cancel-availability:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.btn-danger-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.72rem 1.35rem;
+    border: 0;
+    border-radius: 999px;
+    background: #c92a3a;
+    color: #fff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease;
+}
+
+.btn-danger-confirm:hover:not(:disabled) {
+    background: #9e1c2b;
+}
+
+.btn-spinner {
+    width: 0.95rem;
+    height: 0.95rem;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spinLoader 0.65s linear infinite;
+}
+
+/* Modals (Create & Delete Confirmation) */
+.availability-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(24, 28, 66, 0.48);
+    backdrop-filter: blur(2px);
+}
+
+.availability-modal-backdrop[hidden] {
+    display: none !important;
+}
+
+.availability-modal-card {
+    width: 100%;
+    max-width: 38rem;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 1.65rem;
+    border-radius: 1.1rem;
+    background: #fff;
+    box-shadow: 0 20px 50px rgba(24, 28, 66, 0.24);
+    animation: slotFadeIn 0.2s ease;
+}
+
+.delete-modal-card {
+    max-width: 30rem;
+}
+
+.modal-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+}
+
+.modal-card-header h2 {
+    margin: 0;
+    color: var(--navy);
+    font-size: 1.2rem;
+}
+
+.eyebrow-danger {
+    color: #c92a3a;
+}
+
+.modal-close-btn {
+    border: 0;
+    background: #f3f5fb;
+    color: var(--navy);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 1.15rem;
+    cursor: pointer;
+}
+
+.modal-close-btn:hover {
+    background: #e4e9f7;
+}
+
+.delete-modal-body p {
+    margin: 0 0 0.75rem;
+    color: var(--navy);
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+
+.delete-modal-warning {
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.65rem;
+    background: #fff5f6;
+    border: 1px solid #f5c2c7;
+    color: #9e1c2b !important;
+    font-size: 0.78rem !important;
+}
+
+.delete-modal-actions {
+    justify-content: flex-end;
+}
+
+/* Detail Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.detail-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.72rem;
+    margin-bottom: 0.25rem;
+}
+
+@keyframes slotFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spinLoader {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (max-width: 980px) {
+    .availability-filter-form {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 680px) {
+    .availability-filter-form,
+    .availability-time-row,
+    .session-format-cards,
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .availability-slot-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .slot-card-left {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .slot-date-badge {
+        width: 100%;
+    }
+    .slot-card-actions {
+        justify-content: flex-end;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--line);
+    }
+}

@@ -1,0 +1,22 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">Reminder: Upcoming Mentorship Session</h2>
+<p>Hello {{ recipient_name }},</p>
+<p>This is a friendly reminder that you have an upcoming mentorship session scheduled with <strong>{{ other_party_name }}</strong>.</p>
+
+<div class="info-card" style="border-left-color: #3b82f6;">
+    <div class="info-row"><span class="info-label">Topic:</span> {{ topic }}</div>
+    <div class="info-row"><span class="info-label">Date:</span> {{ date }}</div>
+    <div class="info-row"><span class="info-label">Time:</span> {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)</div>
+    <div class="info-row"><span class="info-label">Format:</span> {{ session_type|title }}</div>
+    {% if meeting_link %}
+    <div class="info-row"><span class="info-label">Meeting URL:</span> <a href="{{ meeting_link }}">{{ meeting_link }}</a></div>
+    {% elif location %}
+    <div class="info-row"><span class="info-label">Location:</span> {{ location }}</div>
+    {% endif %}
+</div>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">View Session Details</a>
+</p>
+{% endblock %}

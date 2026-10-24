@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ email_title|default:"SkillForge Mentorship" }}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6fb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .email-header {
+            background: #1a2b49;
+            color: #ffffff;
+            padding: 24px 32px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .email-header .tagline {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .email-body {
+            padding: 32px;
+        }
+        .email-heading {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        .info-card {
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .info-row {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #475569;
+            display: inline-block;
+            width: 110px;
+        }
+        .btn-action {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px 0 10px;
+        }
+        .email-footer {
+            background-color: #f8fafc;
+            padding: 20px 32px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>SkillForge</h1>
+            <p class="tagline">Mentorship &amp; Continuous Learning</p>
+        </div>
+        <div class="email-body">
+            {% block content %}{% endblock %}
+        </div>
+        <div class="email-footer">
+            <p>This is an automated notification from SkillForge. Please do not reply directly to this email.</p>
+            <p>&copy; SkillForge Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

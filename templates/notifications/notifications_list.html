@@ -1,0 +1,190 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}Notifications | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .notifications-wrapper {
+        max-width: 760px;
+        margin: 2rem auto 4rem;
+    }
+    .notifications-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+    .notifications-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .notifications-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .unread-pill {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+    }
+    .notification-item {
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: background-color 0.15s ease;
+    }
+    .notification-item.unread {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+    .notif-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .notif-icon.request { background: #dbeafe; color: #1e40af; }
+    .notif-icon.confirmed { background: #dcfce7; color: #15803d; }
+    .notif-icon.declined { background: #fee2e2; color: #b91c1c; }
+    .notif-icon.reminder { background: #fef3c7; color: #92400e; }
+    .notif-icon.completed { background: #ede9fe; color: #6d28d9; }
+    .notif-body {
+        flex: 1;
+    }
+    .notif-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.2rem;
+    }
+    .notif-msg {
+        font-size: 0.88rem;
+        color: #475569;
+        margin: 0 0 0.4rem;
+        line-height: 1.5;
+    }
+    .notif-meta {
+        font-size: 0.78rem;
+        color: #94a3b8;
+    }
+    .notif-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        align-items: flex-end;
+    }
+    .btn-mark-read {
+        background: none;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.65rem;
+        border-radius: 0.35rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-mark-read:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-wrapper">
+    <div class="notifications-card">
+        <header class="notifications-header">
+            <h1>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span>Notification Center</span>
+                {% if unread_count > 0 %}
+                    <span class="unread-pill">{{ unread_count }} unread</span>
+                {% endif %}
+            </h1>
+            {% if unread_count > 0 %}
+                <form method="post" action="{% url 'users:notification_mark_all_read' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-mark-read" style="padding: 0.4rem 0.85rem;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Mark all as read</span>
+                    </button>
+                </form>
+            {% endif %}
+        </header>
+
+        <div class="notifications-list">
+            {% for n in notifications %}
+                <div class="notification-item {% if not n.is_read %}unread{% endif %}">
+                    <div class="notif-icon {% if 'accepted' in n.event_type %}confirmed{% elif 'rejected' in n.event_type %}declined{% elif 'reminder' in n.event_type %}reminder{% elif 'completed' in n.event_type %}completed{% else %}request{% endif %}">
+                        {% if 'accepted' in n.event_type %}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                        {% elif 'rejected' in n.event_type %}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        {% elif 'reminder' in n.event_type %}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        {% elif 'completed' in n.event_type %}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        {% else %}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        {% endif %}
+                    </div>
+                    <div class="notif-body">
+                        <h4 class="notif-title">{{ n.title }}</h4>
+                        <p class="notif-msg">{{ n.message }}</p>
+                        <div class="notif-meta">
+                            <span>{{ n.created_at|date:"M d, Y H:i" }}</span>
+                            {% if n.link_url %}
+                                &bull; <a href="{{ n.link_url }}" style="color: #2563eb; font-weight: 600; text-decoration: none;">View Details &rarr;</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="notif-actions">
+                        {% if not n.is_read %}
+                            <form method="post" action="{% url 'users:notification_mark_read' n.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-mark-read" title="Mark as read">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                                    <span>Read</span>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 3.5rem 1rem; color: #64748b;">
+                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.65rem;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <p style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #0f172a;">You're all caught up!</p>
+                    <p style="margin: 0.35rem 0 0; font-size: 0.88rem; color: #94a3b8;">No notifications at this time.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
