@@ -1,0 +1,147 @@
+﻿{% load static support_tags %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ ticket.title }} | Support</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" role_label="LEARNER SPACE" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">YOUR REQUEST · # {{ ticket.id }}</p>
+                <h1>{{ ticket.title }}</h1>
+                <p class="header-subtitle">Opened {{ ticket.created_at|date:"M j, Y, H:i" }} · Category : {{ categories|get_item:ticket.category }}</p>
+            </div>
+            <div class="header-actions">
+                <span class="support-chip support-chip--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
+                <span class="support-chip support-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span>
+                <a href="{% url 'support:board' %}" class="outline-button">← My requests</a>
+            </div>
+        </header>
+
+        <section class="panel-duo" aria-label="Your request">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Request description</h2><p>The issue you reported to support.</p></div>
+                </div>
+                <p class="support-prose">{{ ticket.description }}</p>
+
+                <div class="panel-heading support-thread-title">
+                    <div><h2>Your conversation</h2><p>{{ ticket_messages|length }} message{{ ticket_messages|length|pluralize }} — you and the support team.</p></div>
+                </div>
+                <div class="support-thread">
+                    {% for item in ticket_messages %}
+                    <article class="support-msg {% if item.sender_role == 'admin' %}support-msg--staff{% endif %}">
+                        <div class="support-msg-head"><strong>{{ item.sender_name }}</strong>{% if item.sender_role == 'admin' %}<span class="support-msg-badge">Support</span>{% endif %}<time>{{ item.created_at|date:"M j, Y, H:i" }}</time></div>
+                        <p class="support-msg-body">{{ item.body }}</p>
+                        {% if item.attachment %}<a class="outline-button" href="{% url 'support:attachment' ticket_id=ticket.id message_id=item.id %}">📎 {{ item.attachment.name }}</a>{% endif %}
+                    </article>
+                    {% empty %}<p>Your request has no reply yet. Add a message below to clarify your need.</p>{% endfor %}
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="support-fields support-reply" novalidate>
+                    {% csrf_token %}<input type="hidden" name="action" value="reply">
+                    {% for field in reply_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                    <div class="support-form-actions"><button class="primary-button" type="submit">Send message</button></div>
+                </form>
+            </article>
+
+            <div class="support-rail">
+                <article class="panel">
+                    <div class="panel-heading"><div><h2>Ticket status</h2><p>Live status updates.</p></div></div>
+                    <div class="support-state-grid">
+                        <div class="filter-field"><label>Status</label><span class="support-chip support-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span></div>
+                        <div class="filter-field"><label>Priority</label><span class="support-chip support-chip--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span></div>
+                        <div class="filter-field"><label>Category</label>{{ categories|get_item:ticket.category }}</div>
+                        <div class="filter-field"><label>Assigned to</label>{{ ticket.assignee_name|default:"Waiting for assignment" }}</div>
+                    </div>
+                    {% if ticket.history %}
+                    <ul class="support-timeline">
+                        {% for event in ticket.history reversed %}<li>
+                            <span class="support-chip support-chip--{{ event.status }}">{{ statuses|get_item:event.status }}</span>
+                            <div class="support-timeline-text"><strong>{{ event.note }}</strong><time>{{ event.at|date:"M j, Y, H:i" }}</time></div>
+                        </li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </article>
+
+                <article class="panel" id="ai-suggest-panel">
+                    <div class="panel-heading"><div><h2>Automated assistance</h2><p>Suggestions while waiting.</p></div><span class="trend" id="ai-suggest-source">{{ smart.faq|yesno:"…," }}</span></div>
+                    <div class="panel-heading support-thread-title"><div><h2>Suggested next steps</h2><p>Based on your description.</p></div></div>
+                    <blockquote class="support-quote">{{ smart.faq }}</blockquote>
+                    <div id="ai-suggest-out" hidden>
+                        <p class="support-recurrence-note" id="ai-suggest-why"></p>
+                        <div id="ai-suggest-list"></div>
+                    </div>
+                    <p class="support-recurrence-note">Recommended category: {{ categories|get_item:smart.category }}</p>
+                    <div class="support-form-actions">
+                        <button type="button" class="outline-button" id="ai-btn-suggest" data-url="{% url 'support:ai_suggestion' %}" data-title="{{ ticket.title|escape }}" data-description="{{ ticket.description|escape }}">&#129302; Get AI suggestions</button>
+
+                    </div>
+                </article>
+
+                {% if can_edit %}
+                <details class="panel">
+                    <summary>Edit my request</summary>
+                    <form method="post" class="support-fields support-reply" novalidate>
+                        {% csrf_token %}<input type="hidden" name="action" value="edit">
+                        {% for field in edit_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                        <div class="support-form-actions"><button class="primary-button" type="submit">Save</button></div>
+                    </form>
+                </details>{% endif %}
+
+                {% if can_close %}
+                <form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="support-danger-link support-close-btn" type="submit">Mark as resolved</button></form>{% endif %}
+            </div>
+        </section>
+    </main>
+    {{ categories|json_script:"labels-categories" }}
+    {{ priorities|json_script:"labels-priorities" }}
+    <script>
+    (function () {
+        var button = document.getElementById("ai-btn-suggest");
+        if (!button) return;
+        var cookie = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        var token = cookie ? decodeURIComponent(cookie[1]) : "";
+        var labelsCategory = JSON.parse(document.getElementById("labels-categories").textContent),
+            labelsPriority = JSON.parse(document.getElementById("labels-priorities").textContent),
+            zoneSource = document.getElementById("ai-suggest-source"),
+            zoneOutput = document.getElementById("ai-suggest-out"),
+            zoneWhy = document.getElementById("ai-suggest-why"),
+            zoneList = document.getElementById("ai-suggest-list");
+
+        button.addEventListener("click", function () {
+            button.disabled = true;
+            zoneSource.textContent = "analyzing…";
+            fetch(button.dataset.url, {
+                method: "POST",
+                headers: { "X-CSRFToken": token, "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({ title: button.dataset.title, description: button.dataset.description })
+            }).then(function (response) { return response.json(); }).then(function (data) {
+                if (!data.ok) {
+                    zoneSource.textContent = data.error || "AI unavailable";
+                } else {
+                    var classification = data.classification || {};
+                    var source = {
+                        label: "AI · " + (data.source === "groq" ? data.model : "local assistant")
+                    };
+                    zoneSource.textContent = source.label;
+                    zoneWhy.textContent = (labelsCategory[classification.category] || "") + " · suggested priority: "
+                        + (labelsPriority[classification.priority] || "") + " — " + (classification.explanation || "");
+                    zoneList.innerHTML = "";
+                    (data.solutions || []).forEach(function (solution) {
+                        var block = document.createElement("article");
+                        block.className = "support-msg";
+                        var header = document.createElement("div");
+                        header.className = "support-msg-head";
+                        var title = document.createElement("strong"); title.textContent = solution.question;
+                        header.appendChild(title);
+                        var text = document.createElement("p"); text.className = "support-msg-body"; text.textContent = solution.answer;
+                        block.appendChild(header); block.appendChild(text);
+                        zoneList.appendChild(block);
+                    });
+                    zoneOutput.hidden = false;
+                }
+            }).catch(function () {
+                zoneSource.textContent = "AI unreachable";
+            }).then(function () { button.disabled = false; });
+        });
+    })();
+    </script>
+</div></body></html>

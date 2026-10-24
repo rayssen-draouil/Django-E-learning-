@@ -62,6 +62,7 @@ class UsersViewsTests(SimpleTestCase):
                 "first_name": "Ada",
                 "last_name": "Lovelace",
                 "email": "ADA@example.com",
+                "role": "student",
                 "password": "A-valid-password-123!",
                 "password_confirm": "A-valid-password-123!",
             })
@@ -77,6 +78,7 @@ class UsersViewsTests(SimpleTestCase):
                 "first_name": "Ada",
                 "last_name": "Lovelace",
                 "email": "ada@example.com",
+                "role": "student",
                 "password": "A-valid-password-123!",
                 "password_confirm": "A-valid-password-123!",
             })

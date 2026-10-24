@@ -5,12 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}SkillForge{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=6">
     {% block extra_head %}{% endblock %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <nav class="site-nav">
     <a class="site-brand" href="{% url 'home' %}">
         <span class="site-brand-mark" aria-hidden="true"></span>
@@ -22,6 +22,7 @@
         <a href="{% url 'users:mentors' %}">Mentors</a>
         <a href="{% url 'users:quiz' %}">Quiz</a>
         {% if request.session.user_id %}
+            <a href="{% url 'support:list' %}#nouvelle-demande">Support{% if support_unread_notifications %}<span class="site-nav-badge">{{ support_unread_notifications }}</span>{% endif %}</a>
             <a class="site-nav-dashboard" href="{% url 'users:backoffice' %}">Dashboard</a>
             <a class="site-nav-profile" href="{% url 'users:profile' %}">Mon profil</a>
             <form method="post" action="{% url 'users:logout' %}" class="inline-form">
@@ -34,8 +35,24 @@
     </div>
 </nav>
 <main class="container {% block main_class %}{% endblock %}">
-    {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+    {% for message in messages %}<div class="message {{ message.tags }}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}" aria-live="polite">{{ message }}</div>{% endfor %}
     {% block content %}{% endblock %}
 </main>
+<footer class="mt-32" style="background-color: rgba(37, 38, 65, 1);">
+		<div class="max-w-lg mx-auto">
+			<div class="flex py-12 justify-center text-white items-center px-20 sm:px-36">
+				<div class="relative">
+					<h1 class="font-bold text-xl pr-5 relative z-50">SkillForge</h1>
+					<svg class="w-11 h-11 absolute -top-2 -left-3 z-40" viewBox="0 0 79 79" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M35.9645 2.94975C37.9171 0.997129 41.0829 0.997127 43.0355 2.94975L76.0502 35.9645C78.0029 37.9171 78.0029 41.0829 76.0503 43.0355L43.0355 76.0502C41.0829 78.0029 37.9171 78.0029 35.9645 76.0503L2.94975 43.0355C0.997129 41.0829 0.997127 37.9171 2.94975 35.9645L35.9645 2.94975Z" stroke="#26C1F2" stroke-width="2"/>
+					</svg>
+				</div>
+				<span class="border-l border-gray-500 text-sm pl-5 py-2 font-semibold">Classe virtuelle</span>
+			</div>
+			</div>
+	<div class="text-center text-white pb-6">
+		<p class="my-3 text-gray-400 text-sm">&copy; 2021 SkillForge<br>Adresse: SkillForge, 123 Rue de l'Apprentissage<br>Email: contact@skillforge.com</p>
+	</div>
+	</footer>
 </body>
 </html>

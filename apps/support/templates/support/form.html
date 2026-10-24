@@ -1,0 +1,51 @@
+{% extends "users/base.html" %}
+{% load static support_tags %}
+{% block title %}New request | SkillForge{% endblock %}
+{% block body_class %}sf-support sf-front{% endblock %}
+{% block main_class %}sf-shell{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'support/css/support.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<section class="sf-page sf-page--reading">
+    <a class="sf-backlink" href="{% url 'support:list' %}">← Back to requests</a>
+
+    <header class="sf-masthead sf-reveal">
+        <div>
+            <p class="sf-masthead__eyebrow">Help Center</p>
+            <h1 class="sf-masthead__title">{{ heading }}</h1>
+            <p class="sf-masthead__lead">Describe the issue as clearly as possible. A screenshot and the page name can help us resolve it faster.</p>
+        </div>
+        <div class="sf-masthead__actions"><a class="sf-btn sf-btn--ghost" href="{% url 'support:list' %}">Back to my requests</a></div>
+    </header>
+
+    <form method="post" class="sf-card sf-reveal">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="sf-field">
+                <label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<small class="sf-field__hint">{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="sf-actions">
+            <button class="sf-btn sf-btn--primary" type="submit">Create my request</button>
+            <a class="sf-btn sf-btn--ghost" href="{% url 'support:list' %}">Cancel</a>
+        </div>
+    </form>
+
+    <article class="sf-card sf-assistant">
+        <span class="sf-assistant__label">Before writing</span>
+        <h2 class="sf-card__title">Three tips for fast processing</h2>
+        <ol class="sf-timeline">
+            <li><span class="sf-timeline__text"><b>Specify the page</b> — the exact title of the course, quiz, or mentor.</span></li>
+            <li><span class="sf-timeline__text"><b>Describe the steps</b> — what you did and what you observe.</span></li>
+            <li><span class="sf-timeline__text"><b>Attach a screenshot</b> — an image is worth a long description.</span></li>
+        </ol>
+    </article>
+</section>
+{% endblock %}

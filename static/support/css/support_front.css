@@ -1,0 +1,259 @@
+/* ==========================================================================
+   SkillForge — Support étudiant, habillage Skilline (reprend le style de
+   la page Mentors : Tailwind 2 + skilline.css + Poppins).
+   Ne concerne que les éléments que Django rend sans classe (inputs, selects)
+   et les petits composants sans équivalent utilitaire (chips, pager, badge).
+   ========================================================================== */
+
+/* ---------- Champs rendus par Django (pas de classe possible) ------------- */
+
+.support-filters input,
+.support-filters select,
+.support-filters textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background-color: #fff;
+    color: #4b5563;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    appearance: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.support-filters textarea {
+    min-height: 8rem;
+    resize: vertical;
+}
+
+.support-filters select {
+    padding-right: 2.4rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%234b5563' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    cursor: pointer;
+}
+
+.support-filters input::placeholder,
+.support-filters textarea::placeholder {
+    color: #9ca3af;
+}
+
+.support-filters input:hover,
+.support-filters select:hover,
+.support-filters textarea:hover {
+    border-color: #d1d5db;
+}
+
+.support-filters input:focus,
+.support-filters select:focus,
+.support-filters textarea:focus {
+    outline: none;
+    border-color: #F48C06;
+    box-shadow: 0 0 0 3px rgb(244 140 6 / 15%);
+}
+
+/* ---------- Compteur de notifications non lues --------------------------- */
+
+.sx-badge {
+    display: inline-block;
+    min-width: 1.15rem;
+    margin-left: 0.25rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* ---------- Bandeau d'information ---------------------------------------- */
+
+.sx-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    max-width: 72rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.9rem 1.2rem;
+    border-left: 4px solid #60a5fa;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 4px 14px -6px rgb(31 41 55 / 18%);
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.sx-alert--warn {
+    border-left-color: #ef4444;
+}
+
+.sx-alert a {
+    color: #2F327D;
+    font-weight: 600;
+}
+
+.sx-alert a:hover {
+    color: #F48C06;
+}
+
+/* ---------- Cartes de demandes (langage Mentors) -------------------------- */
+
+.sx-card {
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, box-shadow .25s ease;
+}
+
+.sx-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 24px 40px -24px rgb(47 50 125 / .35);
+}
+
+.sx-card:focus-visible {
+    outline: 3px solid #F48C06;
+    outline-offset: 3px;
+}
+
+.sx-card .sx-chip {
+    flex-shrink: 0;
+}
+
+.sx-card:hover .sx-chip--open,
+.sx-card:hover .sx-chip--in_progress,
+.sx-card:hover .sx-chip--waiting,
+.sx-card:hover .sx-chip--resolved {
+    transform: scale(1.05);
+}
+
+/* ---------- Pastilles de statut ------------------------------------------ */
+
+.sx-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    transition: transform .18s ease;
+}
+
+.sx-chip--open {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.sx-chip--in_progress {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.sx-chip--waiting {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.sx-chip--resolved {
+    background: #d1fae5;
+    color: #047857;
+}
+
+/* ---------- Pastilles de priorité ---------------------------------------- */
+
+.sx-priority {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.sx-priority--low {
+    color: #9ca3af;
+    border-color: #f3f4f6;
+}
+
+.sx-priority--normal {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.sx-priority--high {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+.sx-priority--urgent {
+    background: #fee2e2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.sx-meta {
+    color: #4b5563;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+/* ---------- Pagination ---------------------------------------------------- */
+
+.sx-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 3rem;
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.sx-pager a {
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 10px -4px rgb(31 41 55 / 25%);
+    color: #2F327D;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.sx-pager a:hover {
+    background: #F48C06;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.sx-pager .is-disabled {
+    opacity: 0.4;
+}
+
+/* ---------- Adaptatif ------------------------------------------------------ */
+
+@media (max-width: 700px) {
+    .support-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .sx-pager {
+        gap: 0.7rem;
+    }
+}

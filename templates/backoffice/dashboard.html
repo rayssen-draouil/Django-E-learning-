@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!doctype html>
 <html lang="fr">
 <head>
@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6">
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
@@ -31,9 +31,9 @@
             </header>
 
             <section class="stats-grid" aria-label="Statistiques d'apprentissage">
-                {% for label, value, color in stats %}
+                {% for icon, label, value, color in stats %}
                     <article class="stat-card {{ color }}">
-                        <div class="stat-icon">{{ forloop.counter }}</div>
+                        <div class="stat-icon">{{ icon }}</div>
                         <div>
                             <p>{{ label }}</p>
                             <strong>{{ value }}</strong>
@@ -42,7 +42,93 @@
                 {% endfor %}
             </section>
 
+            <section class="dashboard-grid">
+                {% if user.role == 'admin' %}
+                <article class="panel progress-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>File des demandes récentes</h2>
+                            <p>Derniers tickets reçus par le support.</p>
+                        </div>
+                        <span class="trend">{{ support_stats.open }} ouverte{{ support_stats.open|pluralize }}</span>
+                    </div>
+                    <div class="course-list">
+                        {% for t in support_stats.recent_tickets %}
+                            <article class="course-row">
+                                <div class="course-info"><h3>{{ t.title }}</h3>
+                                    <div class="course-meta"><span>{{ t.status_label }}</span><span>Priorité : {{ t.priority_label }}</span><span>{{ t.updated_at|date:"d/m/Y H:i" }}</span></div>
+                                </div>
+                                <a class="continue-button" href="{% url 'support:detail' t.id %}">Détails</a>
+                            </article>
+                        {% empty %}<p>Aucune demande reçue pour le moment.</p>{% endfor %}
+                    </div>
+                    <a class="primary-button" href="{% url 'support:list' %}">Ouvrir la console →</a>
+                </article>
+                {% else %}
+                <article class="panel progress-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Progression générale</h2>
+                            <p>Votre activité ces dernières semaines</p>
+                        </div>
+                        <span class="trend">+12%</span>
+                    </div>
+                    <div class="progress-visual">
+                        <div class="progress-ring"><span>68<small>%</small></span></div>
+                        <div>
+                            <strong>Excellent travail !</strong>
+                            <p>Vous êtes sur la bonne voie. Continuez à apprendre régulièrement.</p>
+                        </div>
+                    </div>
+                    <div class="activity-bars" aria-label="Activité hebdomadaire">
+                        {% for height in activity_heights %}
+                            <span style="height: {{ height }}%;"></span>
+                        {% endfor %}
+                    </div>
+                    <div class="days"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+                </article>
+                {% endif %}
+
+                <article class="panel profile-panel">
+                    <div class="cover"></div>
+                    <div class="profile-content">
+                        <img src="{% static 'backoffice/images/user-1.jpg' %}" alt="Photo de profil" class="large-avatar">
+                        <h2>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"SkillForge" }}</h2>
+                        <p>{{ user.email }}</p>
+                        <div class="profile-line"><span>Niveau actuel</span><strong>Intermédiaire</strong></div>
+                        <div class="profile-line"><span>Objectif hebdomadaire</span><strong>4 / 5 jours</strong></div>
+                        <a href="{% url 'users:profile' %}" class="primary-button">Modifier mon profil</a>
+                    </div>
+                </article>
+            </section>
+
+            {% if user.role != 'admin' %}
+            <section class="panel courses-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Reprendre mes cours</h2>
+                        <p>Continuez là où vous vous êtes arrêté.</p>
+                    </div>
+                    <a href="{% url 'users:courses' %}" class="text-link">Tous les cours →</a>
+                </div>
+                <div class="course-list">
+                    {% for title, progress, status in courses %}
+                        <div class="course-row">
+                            <div class="course-image course-image-{{ forloop.counter }}"></div>
+                            <div class="course-info">
+                                <h3>{{ title }}</h3>
+                                <div class="course-meta"><span>{{ progress }} terminé</span><span>{{ status }}</span></div>
+                                <div class="bar"><i style="width: {{ progress }};"></i></div>
+                            </div>
+                            <a href="{% url 'users:courses' %}" class="continue-button">Continuer</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             {% if quiz_storage_error %}<div class="panel">Les données Quiz sont temporairement indisponibles.</div>{% endif %}
+            <div class="panel-duo">
             <section class="panel courses-panel" id="quiz-dashboard">
                 <div class="panel-heading">
                     <div><h2>{% if is_quiz_manager %}Gestion des quiz{% else %}Quiz et évaluations{% endif %}</h2>
@@ -79,64 +165,41 @@
                     {% for question in question_stats %}<article class="course-row"><div class="course-info"><h3>{{ question.prompt }}</h3><p>{{ question.correct }} bonne(s) réponse(s) sur {{ question.answered }} · {{ question.accuracy }} %</p></div></article>{% endfor %}
                 </div>{% endif %}
             </section>
-
-            <section class="dashboard-grid">
-                <article class="panel progress-panel">
-                    <div class="panel-heading">
-                        <div>
-                            <h2>Progression générale</h2>
-                            <p>Votre activité ces dernières semaines</p>
-                        </div>
-                        <span class="trend">+12%</span>
-                    </div>
-                    <div class="progress-visual">
-                        <div class="progress-ring"><span>68<small>%</small></span></div>
-                        <div>
-                            <strong>Excellent travail !</strong>
-                            <p>Vous êtes sur la bonne voie. Continuez à apprendre régulièrement.</p>
-                        </div>
-                    </div>
-                    <div class="activity-bars" aria-label="Activité hebdomadaire">
-                        {% for height in activity_heights %}
-                            <span style="height: {{ height }}%;"></span>
-                        {% endfor %}
-                    </div>
-                    <div class="days"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
-                </article>
-
-                <article class="panel profile-panel">
-                    <div class="cover"></div>
-                    <div class="profile-content">
-                        <img src="{% static 'backoffice/images/user-1.jpg' %}" alt="Photo de profil" class="large-avatar">
-                        <h2>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"SkillForge" }}</h2>
-                        <p>{{ user.email }}</p>
-                        <div class="profile-line"><span>Niveau actuel</span><strong>Intermédiaire</strong></div>
-                        <div class="profile-line"><span>Objectif hebdomadaire</span><strong>4 / 5 jours</strong></div>
-                        <a href="{% url 'users:profile' %}" class="primary-button">Modifier mon profil</a>
-                    </div>
-                </article>
-            </section>
+            </div>
 
             <section class="panel courses-panel">
                 <div class="panel-heading">
                     <div>
-                        <h2>Reprendre mes cours</h2>
-                        <p>Continuez là où vous vous êtes arrêté.</p>
+                        <h2>Support &amp; assistance</h2>
+                        <p>Vos demandes d'aide, leur avancement et les réponses de l'équipe.</p>
                     </div>
-                    <a href="{% url 'users:courses' %}" class="text-link">Tous les cours →</a>
+                    <span class="trend">{{ support_stats.ticket_count }} demande{{ support_stats.ticket_count|pluralize }}</span>
                 </div>
-                <div class="course-list">
-                    {% for title, progress, status in courses %}
-                        <div class="course-row">
-                            <div class="course-image course-image-{{ forloop.counter }}"></div>
-                            <div class="course-info">
-                                <h3>{{ title }}</h3>
-                                <div class="course-meta"><span>{{ progress }} terminé</span><span>{{ status }}</span></div>
-                                <div class="bar"><i style="width: {{ progress }};"></i></div>
-                            </div>
-                            <a href="{% url 'users:courses' %}" class="continue-button">Continuer</a>
+                <div class="course-list support-grid">
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>{% if user.role == 'admin' %}Console du support{% else %}Mon tableau de bord support{% endif %}</h3>
+                            <p>{% if user.role == 'admin' %}Traitez la file complète : {{ support_stats.open }} ouverte{{ support_stats.open|pluralize }} · {{ support_stats.in_progress }} en cours · {{ support_stats.resolved }} résolue{{ support_stats.resolved|pluralize }}{% else %}Ouvertes : {{ support_stats.open }} · En cours : {{ support_stats.in_progress }} · Résolues : {{ support_stats.resolved }}{% if support_stats.unread %} · {{ support_stats.unread }} notification{{ support_stats.unread|pluralize }} non lue{{ support_stats.unread|pluralize }}{% endif %}{% endif %}</p>
                         </div>
-                    {% endfor %}
+                        <a class="continue-button" href="{% if user.role == 'admin' %}{% url 'support:list' %}{% else %}{% url 'support:board' %}{% endif %}">{% if user.role == 'admin' %}Ouvrir la console{% else %}Consulter{% endif %}</a>
+                    </article>
+                    {% if user.role == 'admin' %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Solutions &amp; FAQ</h3>
+                            <p>Gérez la base de connaissances visible par les apprenants.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:faq' %}">Gérer</a>
+                    </article>
+                    {% else %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Nouvelle demande d'aide</h3>
+                            <p>Un souci sur un cours, un quiz ou la plateforme ? Décrivez-le en deux minutes.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:list' %}#nouvelle-demande">Ouvrir</a>
+                    </article>
+                    {% endif %}
                 </div>
             </section>
         </main>

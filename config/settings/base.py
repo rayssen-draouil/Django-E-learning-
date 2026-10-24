@@ -36,6 +36,41 @@ DEBUG = False
 ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "")
 
 
+def _load_env_file(path: Path) -> None:
+    """Charge un fichier .env sans dépendance externe ; l'environnement gagne."""
+    try:
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+_load_env_file(BASE_DIR / ".env")
+
+
+# --- E-mail (relais SMTP Brevo ; identifiants dans .env, jamais dans le code) ---
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp-relay.brevo.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
+EMAIL_SENDER = os.environ.get("EMAIL_SENDER", EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = EMAIL_SENDER
+
+# Assistant IA du support (Groq, API compatible OpenAI). Clé hors du code : .env
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_FALLBACK_MODEL = os.environ.get("GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
+GROQ_TIMEOUT = int(os.environ.get("GROQ_TIMEOUT", "25"))
+GROQ_MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "900"))
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,6 +80,7 @@ INSTALLED_APPS = [
     'apps.courses.apps.CoursesConfig',
     'apps.mentors.apps.MentorsConfig',
     'apps.quizzes.apps.QuizzesConfig',
+    'apps.support.apps.SupportConfig',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +103,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.messages.context_processors.messages',
+                'apps.support.context_processors.support_notifications',
             ],
         },
     },
@@ -111,6 +148,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

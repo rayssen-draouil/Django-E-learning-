@@ -11,6 +11,14 @@
                 <p class="profile-eyebrow">VOTRE ESPACE D'APPRENTISSAGE</p>
                 <h1>{{ user.first_name|default:"Apprenant" }} {{ user.last_name|default:"" }}</h1>
                 <p>{{ user.email }}</p>
+                <div class="profile-badges">
+                    <span class="profile-badge profile-badge-role">{{ role_label }}</span>
+                    <span class="profile-badge profile-badge-ok">Compte actif</span>
+                    {% if member_since %}<span class="profile-badge profile-badge-muted">Membre depuis {{ member_since }}</span>{% endif %}
+                    {% if support_unread_notifications %}
+                        <span class="profile-badge profile-badge-alert">{{ support_unread_notifications }} notification{{ support_unread_notifications|pluralize }} de support</span>
+                    {% endif %}
+                </div>
             </div>
             <a class="profile-dashboard-link" href="{% url 'users:backoffice' %}">Mon tableau de bord <span>→</span></a>
         </div>
@@ -25,9 +33,24 @@
                 </div>
                 <span class="profile-card-icon">✦</span>
             </div>
+            {% if user.role == "student" %}
+                <div class="profile-stats">
+                    <div><strong>{{ quiz_stats.attempt_count }}</strong><span>Quiz tentés</span></div>
+                    <div><strong>{{ quiz_stats.average_score|floatformat:1 }}</strong><span>Score moyen</span></div>
+                    <div><strong>{{ quiz_stats.best_score|floatformat:1 }}</strong><span>Meilleur score</span></div>
+                    <div><strong>{{ quiz_stats.pass_rate|floatformat:0 }}%</strong><span>de réussite</span></div>
+                </div>
+            {% else %}
+                <div class="profile-stats">
+                    <div><strong>{{ managed_quizzes_count|default:0 }}</strong><span>Quiz gérés</span></div>
+                    <div><strong>{{ support_stats.ticket_count }}</strong><span>Tickets support</span></div>
+                    <div><strong>{{ support_stats.open }}</strong><span>Encore ouverts</span></div>
+                    <div><strong>{{ support_unread_notifications }}</strong><span>Notifications</span></div>
+                </div>
+            {% endif %}
             <div class="profile-details">
                 <div><span>Adresse e-mail</span><strong>{{ user.email }}</strong></div>
-                <div><span>Rôle</span><strong>{{ user.role|default:"Apprenant" }}</strong></div>
+                <div><span>Rôle</span><strong>{{ role_label }}</strong></div>
                 <div><span>Statut</span><strong class="status-pill">Actif</strong></div>
             </div>
             {% if user.role == "instructor" or user.role == "admin" %}
@@ -49,16 +72,73 @@
                     <h2>Modifier le profil</h2>
                 </div>
             </div>
-            <p class="profile-card-subtitle">Gardez vos informations à jour pour profiter pleinement de votre parcours SkillForge.</p>
+            <p class="profile-card-subtitle">Mettez à jour le nom affiché dans votre espace SkillForge.</p>
             <form method="post" novalidate>
                 {% csrf_token %}
+                <input type="hidden" name="action" value="profile">
                 {% for field in form %}
                     <div class="field">
-                        {{ field.label_tag }}{{ field }}{{ field.errors }}
+                        {{ field.label_tag }}{{ field }}
+                        {% if request.POST.action != "password" and request.POST.action != "email" %}{{ field.errors }}{% endif %}
                     </div>
                 {% endfor %}
                 <button class="profile-save-button" type="submit">Enregistrer les modifications</button>
             </form>
+        </section>
+
+        <section class="profile-card profile-edit-card profile-email-card">
+            <div class="profile-card-heading">
+                <div>
+                    <p class="profile-eyebrow">CONNEXION</p>
+                    <h2>Adresse e-mail</h2>
+                </div>
+                <span class="profile-card-icon" aria-hidden="true">@</span>
+            </div>
+            <p class="profile-card-subtitle">Votre adresse actuelle : <strong>{{ user.email }}</strong>. Elle sert à vous connecter et à récupérer votre compte.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="email">
+                {% for field in email_form %}
+                    <div class="field">
+                        {{ field.label_tag }}{{ field }}{{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button class="profile-save-button" type="submit">Mettre à jour l’adresse e-mail</button>
+            </form>
+            <p class="profile-card-note">Le mot de passe actuel est demandé pour confirmer ce changement.</p>
+        </section>
+
+        <section class="profile-card profile-edit-card profile-security-card">
+            <div class="profile-card-heading">
+                <div>
+                    <p class="profile-eyebrow">VOTRE SÉCURITÉ</p>
+                    <h2>Changer le mot de passe</h2>
+                </div>
+                <span class="profile-card-icon">⛨</span>
+            </div>
+            <p class="profile-card-subtitle">Confirmez votre mot de passe actuel, puis choisissez un nouveau mot de passe&nbsp;: il vous servira à votre prochaine connexion et coupera les demandes de réinitialisation en attente.</p>
+            <p class="profile-card-note">Le nouveau mot de passe doit contenir au moins 8 caractères, ne pas être trop courant et ne peut pas être uniquement composé de chiffres.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="password">
+                <div class="field">
+                    <label for="id_current_password">Mot de passe actuel</label>
+                    <input id="id_current_password" name="current_password" type="password" autocomplete="current-password" required>
+                    {{ password_form.current_password.errors }}
+                </div>
+                <div class="field">
+                    <label for="id_new_password">Nouveau mot de passe</label>
+                    <input id="id_new_password" name="new_password" type="password" autocomplete="new-password" required>
+                    {{ password_form.new_password.errors }}
+                </div>
+                <div class="field">
+                    <label for="id_new_password_confirm">Confirmer le nouveau mot de passe</label>
+                    <input id="id_new_password_confirm" name="new_password_confirm" type="password" autocomplete="new-password" required>
+                    {{ password_form.new_password_confirm.errors }}
+                </div>
+                <button class="profile-save-button" type="submit">Mettre à jour le mot de passe</button>
+            </form>
+            <p class="profile-card-note">Mot de passe oublié, ou vous préférez un lien sécurisé par e-mail&nbsp;? <a href="{% url 'users:forgot_password' %}">Utiliser le mot de passe oublié</a>.</p>
         </section>
     </div>
 </div>

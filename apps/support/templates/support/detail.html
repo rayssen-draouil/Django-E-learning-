@@ -1,0 +1,144 @@
+{% extends "users/base.html" %}
+{% load static support_tags %}
+{% block title %}{{ ticket.title }} | Support{% endblock %}
+{% block body_class %}sf-support {% if is_admin %}sf-back{% else %}sf-front{% endif %}{% endblock %}
+{% block main_class %}sf-shell{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'support/css/support.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{% if is_admin %}<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% else %}<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">{% endif %}
+{% endblock %}
+{% block content %}
+<section class="sf-page">
+    <a class="sf-backlink" href="{% url 'support:list' %}">← Back to requests</a>
+
+    <header class="sf-ticket-head sf-reveal">
+        <div>
+            <p class="sf-masthead__eyebrow">Ticket # {{ ticket.id }}</p>
+            <h1 class="sf-ticket-head__title">{{ ticket.title }}</h1>
+            <div class="sf-ticket-head__meta">
+                <span>Opened on {{ ticket.created_at|date:"M j, Y, H:i" }}</span>
+                <span>{{ categories|get_item:ticket.category }}</span>
+                {% if is_admin %}<span>{{ ticket.student_name }} · {{ ticket.student_email }}</span>{% endif %}
+            </div>
+        </div>
+        <div class="sf-masthead__actions">
+            <span class="sf-chip sf-chip--{{ ticket.status }}"><i class="sf-chip__dot"></i>{{ statuses|get_item:ticket.status }}</span>
+            <span class="sf-chip sf-chip--{{ ticket.priority }}"><i class="sf-chip__dot"></i>{{ priorities|get_item:ticket.priority }}</span>
+        </div>
+    </header>
+
+    <div class="sf-layout">
+        <main>
+            <article class="sf-card">
+                <h2 class="sf-card__title">Description</h2>
+                <p class="sf-prose">{{ ticket.description }}</p>
+            </article>
+
+            <article class="sf-card">
+                <h2 class="sf-card__title">Conversation</h2>
+                <div class="sf-thread">
+                    {% for item in ticket_messages %}<div class="sf-msg {% if item.sender_role == 'admin' %}sf-msg--staff{% endif %}">
+                        <div class="sf-msg__head"><span class="sf-msg__author">{{ item.sender_name }}</span><time class="sf-msg__time">{{ item.created_at|date:"M j, Y, H:i" }}</time></div>
+                        <p class="sf-msg__body">{{ item.body }}</p>
+                        {% if item.attachment %}<a class="sf-msg__file" href="{% url 'support:attachment' ticket_id=ticket.id message_id=item.id %}">📎 {{ item.attachment.name }}</a>{% endif %}
+                    </div>
+                    {% empty %}<p class="sf-empty">No conversation yet.</p>{% endfor %}
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="sf-reply">
+                    {% csrf_token %}<input type="hidden" name="action" value="reply">
+                    {% for field in reply_form %}<div class="sf-field"><label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                    <div class="sf-actions"><button class="sf-btn sf-btn--primary" type="submit">Send reply</button></div>
+                </form>
+            </article>
+
+            {% if ticket.history %}<article class="sf-card">
+                <h2 class="sf-card__title">Status history</h2>
+                <ol class="sf-timeline">
+                    {% for event in ticket.history reversed %}<li>
+                        <span class="sf-chip sf-chip--{{ event.status }}"><i class="sf-chip__dot"></i>{{ statuses|get_item:event.status }}</span>
+                        <span class="sf-timeline__text"><b>{{ event.note }}</b>{% if event.previous_status %} · · from {{ statuses|get_item:event.previous_status }}{% endif %} · {{ event.by }}</span>
+                        <time class="sf-timeline__time">{{ event.at|date:"M j, Y, H:i" }}</time>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </article>{% endif %}
+        </main>
+
+        <aside class="sf-rail">
+            {% if is_admin %}
+                <form method="post" class="sf-card">
+                    {% csrf_token %}<input type="hidden" name="action" value="admin_update">
+                    <h2 class="sf-card__title">Ticket management</h2>
+                    {% for field in admin_form %}<div class="sf-field"><label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                    <div class="sf-actions"><button class="sf-btn sf-btn--accent" type="submit">Save</button></div>
+                </form>
+
+                <article class="sf-card sf-assistant">
+                    <span class="sf-assistant__label">AI summary</span>
+                    <p class="sf-msg__body">{{ smart.summary }}</p>
+                    <h3 class="sf-card__title">Suggested reply</h3>
+                    <p class="sf-assistant__quote">{{ smart.reply }}</p>
+                    <div class="sf-actions">
+                        <button class="sf-btn sf-btn--ghost sf-btn--sm" type="button" data-suggested-reply="{{ smart.reply|escape }}" onclick="document.getElementById('id_body').value=this.dataset.suggestedReply;document.getElementById('id_body').focus();">Use suggestion</button>
+                    </div>
+                    <p class="sf-field__hint">Review this suggestion before sending.</p>
+                </article>
+
+                <article class="sf-card">
+                    <h2 class="sf-card__title">Internal notes <span class="sf-chip sf-chip--neutral">{{ internal_notes|length }}</span></h2>
+                    <p class="sf-card__hint">Visible only to the support team, never to the student.</p>
+                    {% for note in internal_notes %}<div class="sf-note">
+                        <div class="sf-note__head"><span class="sf-note__author">{{ note.author_name }}</span><time class="sf-note__time">{{ note.created_at|date:"M j, Y, H:i" }}</time></div>
+                        <p class="sf-note__body">{{ note.body }}</p>
+                        {% if note.can_delete %}<form method="post" action="{% url 'support:note_delete' ticket_id=ticket.id note_id=note.id %}">{% csrf_token %}<button class="sf-btn sf-btn--danger sf-btn--sm" type="submit">Delete note</button></form>{% endif %}
+                    </div>
+                    {% empty %}<p class="sf-empty">No internal notes for this ticket.</p>{% endfor %}
+                    <div class="sf-notepad">
+                        <p class="sf-notepad__title">＋ New internal note</p>
+                        <form method="post">
+                            {% csrf_token %}<input type="hidden" name="action" value="note">
+                            {% for field in note_form %}<div class="sf-field"><label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                            <button class="sf-btn sf-btn--ghost sf-btn--sm" type="submit">Add note</button>
+                        </form>
+                    </div>
+                </article>
+            {% else %}
+                <article class="sf-card">
+                    <h2 class="sf-card__title">Ticket status</h2>
+                    <dl class="sf-defs">
+                        <div><dt>Status</dt><dd>{{ statuses|get_item:ticket.status }}</dd></div>
+                        <div><dt>Priority</dt><dd>{{ priorities|get_item:ticket.priority }}</dd></div>
+                        <div><dt>Category</dt><dd>{{ categories|get_item:ticket.category }}</dd></div>
+                        <div><dt>Assigned to</dt><dd>{{ ticket.assignee_name|default:"Waiting for assignment" }}</dd></div>
+                    </dl>
+                </article>
+
+                <article class="sf-card sf-assistant">
+                    <span class="sf-assistant__label">Automated assistance</span>
+                    <h2 class="sf-card__title">Suggested path</h2>
+                    <dl class="sf-defs"><div><dt>Recommended category</dt><dd>{{ categories|get_item:smart.category }}</dd></div></dl>
+                    <h3 class="sf-card__title">Suggested next steps</h3>
+                    <p class="sf-assistant__quote">{{ smart.faq }}</p>
+
+                </article>
+            {% endif %}
+
+            {% if can_edit %}<details class="sf-card">
+                <summary class="sf-card__title">Edit request</summary>
+                <form method="post" class="sf-notepad">
+                    {% csrf_token %}<input type="hidden" name="action" value="edit">
+                    {% for field in edit_form %}<div class="sf-field"><label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                    <div class="sf-actions"><button class="sf-btn sf-btn--primary" type="submit">Save</button></div>
+                </form>
+            </details>{% endif %}
+
+            {% if can_close %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="sf-btn sf-btn--ghost" type="submit">Mark as resolved</button></form>{% endif %}
+            {% if can_delete %}<form method="post" action="{% url 'support:delete' ticket_id=ticket.id %}">{% csrf_token %}<button class="sf-btn sf-btn--danger" type="submit">Delete ticket</button></form>{% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

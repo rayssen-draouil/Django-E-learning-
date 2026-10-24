@@ -12,10 +12,100 @@
         {% for field in form %}
             <div class="field">
                 {{ field.label_tag }}{{ field }}{{ field.errors }}
+                {% if field.help_text %}<p class="helptext" id="hint_{{ field.html_name }}">{{ field.help_text }}</p>{% endif %}
             </div>
         {% endfor %}
         <button class="auth-button" type="submit">Créer mon compte</button>
     </form>
     <p class="auth-switch">Déjà inscrit ? <a href="{% url 'users:login' %}">Se connecter</a></p>
 </section>
+<script>
+(function () {
+    var form = document.querySelector(".auth-card form");
+    if (!form) return;
+    form.setAttribute("novalidate", "novalidate");
+
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    function champ(nom) { return form.elements.namedItem(nom); }
+
+    function montrerErreur(field, message) {
+        field.classList.add("is-invalid");
+        var conteneur = field.closest(".field");
+        if (!conteneur) return;
+        var boite = conteneur.querySelector(".field-error");
+        if (!boite) {
+            boite = document.createElement("p");
+            boite.className = "field-error";
+            conteneur.appendChild(boite);
+        }
+        boite.textContent = message;
+        var aide = conteneur.querySelector(".helptext");
+        if (aide) aide.style.display = "none";
+    }
+
+    function nettoyer(field) {
+        field.classList.remove("is-invalid");
+        var conteneur = field.closest(".field");
+        if (!conteneur) return;
+        var boite = conteneur.querySelector(".field-error");
+        if (boite) boite.remove();
+        var aide = conteneur.querySelector(".helptext");
+        if (aide) aide.style.display = "";
+    }
+
+    var regles = {
+        first_name: function (v) { return [v.length > 0, "Prénom obligatoire"]; },
+        last_name: function (v) { return [v.length > 0, "Nom obligatoire"]; },
+        email: function (v) { return [v.length > 0 && EMAIL_RE.test(v), "Adresse e-mail invalide"]; },
+        role: function (v) { return [v === "student" || v === "instructor", "Choisissez un type de compte"]; },
+        password: function (v) {
+            if (v.length < 8) return [false, "Mot de passe : au moins 8 caractères"];
+            if (!/[a-z]/.test(v)) return [false, "Ajoutez au moins une lettre minuscule"];
+            if (!/[A-Z]/.test(v)) return [false, "Ajoutez au moins une lettre majuscule"];
+            if (!/[0-9]/.test(v)) return [false, "Ajoutez au moins un chiffre"];
+            return [true, ""];
+        },
+        password_confirm: function (v) {
+            return [v.length > 0 && v === champ("password").value, "Les mots de passe ne correspondent pas"];
+        }
+    };
+
+    function validerChamp(nom) {
+        var field = champ(nom);
+        if (!field || !regles[nom]) return true;
+        var resultat = regles[nom](field.value, field);
+        if (resultat[0]) { nettoyer(field); return true; }
+        montrerErreur(field, resultat[1]);
+        return false;
+    }
+
+    var noms = Object.keys(regles);
+    noms.forEach(function (nom) {
+        var field = champ(nom);
+        if (!field) return;
+        field.addEventListener("blur", function () { validerChamp(nom); });
+        field.addEventListener("input", function () {
+            if (field.classList.contains("is-invalid")) validerChamp(nom);
+            if (nom === "password" && champ("password_confirm").classList.contains("is-invalid")) {
+                validerChamp("password_confirm");
+            }
+        });
+        field.addEventListener("change", function () { validerChamp(nom); });
+    });
+
+    form.addEventListener("submit", function (event) {
+        var premierInvalid = null;
+        var mauvais = noms.filter(function (nom) {
+            var ok = validerChamp(nom);
+            if (!ok && !premierInvalid) premierInvalid = champ(nom);
+            return !ok;
+        });
+        if (mauvais.length) {
+            event.preventDefault();
+            if (premierInvalid) premierInvalid.focus();
+        }
+    });
+})();
+</script>
 {% endblock %}

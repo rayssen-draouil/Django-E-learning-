@@ -18,6 +18,14 @@
         <a href="{% url 'users:backoffice' %}#quiz-dashboard" class="{% if section == 'quizzes' %}active{% endif %}">
             <span class="nav-icon">✓</span> Quiz
         </a>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'users:admin_users' %}" class="{% if section == 'users' %}active{% endif %}">
+            <span class="nav-icon">👥</span> Utilisateurs
+        </a>
+        {% endif %}
+        <a href="{% if user.role == 'admin' %}{% url 'support:dashboard' %}{% else %}{% url 'support:board' %}{% endif %}" class="{% if section == 'support' %}active{% endif %}">
+            <span class="nav-icon">✉</span> Support
+        </a>
     </nav>
     <div class="sidebar-promo">
         <img src="{% static 'backoffice/images/rocket.png' %}" alt="">
