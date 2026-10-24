@@ -1,1 +1,72 @@
-{% load static %}<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ title }} | SkillForge</title><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}"></head><body class="dashboard-body"><div class="dashboard-shell"><aside class="dashboard-sidebar"><a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a><p class="sidebar-label">GESTION DES QUIZ</p><nav class="dashboard-nav"><a class="active" href="{% url 'users:quiz_manage_list' %}">Mes quiz</a><a href="{% url 'users:quiz_manage_create' %}">Créer un quiz</a><a href="{% url 'users:profile' %}">Mon profil</a></nav><form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Déconnexion</button></form></aside><main class="dashboard-main"><header class="dashboard-header"><div><p class="eyebrow">ESPACE INSTRUCTEUR</p><h1>Mes quiz</h1><p class="header-subtitle">Créez et gérez vos évaluations.</p></div><a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Créer un quiz</a></header>{% if storage_error %}<div class="panel">Le stockage des quiz est temporairement indisponible.</div>{% endif %}<section class="panel"><div class="panel-heading"><h2>Quiz enregistrés</h2></div>{% for quiz in quizzes %}<article class="course-row"><div class="course-info"><h3>{{ quiz.title }}</h3><p>{{ quiz.status }} · {{ quiz.questions|length }} question(s)</p></div><a class="continue-button" href="{% url 'users:quiz_manage_detail' quiz_id=quiz.id %}">Détails</a></article>{% empty %}<p>Aucun quiz pour le moment.</p>{% endfor %}</section></main></div></body></html>
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=3">
+</head>
+<body class="dashboard-body quiz-list-page">
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar">
+        <a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a>
+        <p class="sidebar-label">QUIZ MANAGEMENT</p>
+        <nav class="dashboard-nav" aria-label="Quiz navigation">
+            <a class="active" href="{% url 'users:quiz_manage_list' %}"><span class="nav-icon">▤</span>Quiz management</a>
+            <a href="{% url 'users:quiz_manage_create' %}"><span class="nav-icon">＋</span>Create a quiz</a>
+            <a href="{% url 'users:profile' %}"><span class="nav-icon">◉</span>My profile</a>
+        </nav>
+        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit"><span class="nav-icon">↪</span>Log out</button></form>
+    </aside>
+
+    <main class="dashboard-main quiz-list-main">
+        <header class="quiz-list-topbar">
+            <div><p class="eyebrow">{% if user.role == "admin" %}ADMINISTRATOR{% else %}INSTRUCTOR{% endif %} WORKSPACE</p><h1>Quiz management</h1><p class="header-subtitle">Create, organize, and track your assessments in one place.</p></div>
+            <div class="quiz-list-top-actions">
+                <button class="quiz-list-ai-button" type="button" data-quiz-ai-open><span aria-hidden="true">✦</span> Generate with AI</button>
+                <a class="primary-button quiz-list-create-button" href="{% url 'users:quiz_manage_create' %}"><span aria-hidden="true">＋</span> Create a quiz</a>
+            </div>
+        </header>
+
+        {% if storage_error %}<div class="quiz-list-storage-error" role="alert">Quiz storage is temporarily unavailable. Please try again shortly.</div>{% endif %}
+
+        <section class="quiz-list-metrics" aria-label="Quiz summary">
+            <article class="quiz-list-metric"><span class="quiz-list-metric-icon metric-icon-violet" aria-hidden="true">▤</span><div><span>Total quizzes</span><strong>{{ quiz_summary.total }}</strong></div><i class="quiz-metric-accent"></i></article>
+            <article class="quiz-list-metric"><span class="quiz-list-metric-icon metric-icon-amber" aria-hidden="true">◷</span><div><span>Drafts</span><strong>{{ quiz_summary.drafts }}</strong></div><i class="quiz-metric-accent"></i></article>
+            <article class="quiz-list-metric"><span class="quiz-list-metric-icon metric-icon-green" aria-hidden="true">✓</span><div><span>Published</span><strong>{{ quiz_summary.published }}</strong></div><i class="quiz-metric-accent"></i></article>
+            <article class="quiz-list-metric"><span class="quiz-list-metric-icon metric-icon-blue" aria-hidden="true">✎</span><div><span>Questions created</span><strong>{{ quiz_summary.questions }}</strong></div><i class="quiz-metric-accent"></i></article>
+        </section>
+
+        <section class="quiz-list-library">
+            <header class="quiz-list-library-heading"><div><p class="eyebrow">YOUR LIBRARY</p><h2>All your quizzes <span>{{ quiz_summary.total }}</span></h2><p>Search or filter to find an assessment.</p></div><span class="quiz-list-live-count" id="quiz-list-live-count" aria-live="polite">{{ quiz_summary.total }} result(s)</span></header>
+            <div class="quiz-list-toolbar">
+                <label class="quiz-list-search"><span aria-hidden="true">⌕</span><input id="quiz-list-search" type="search" placeholder="Search quizzes…" autocomplete="off" aria-label="Search quizzes"><kbd>Ctrl K</kbd></label>
+                <label class="quiz-list-filter"><span class="sr-only">Filter by status</span><select id="quiz-list-status"><option value="all">All statuses</option><option value="draft">Drafts</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
+                <label class="quiz-list-filter quiz-list-sort"><span class="sr-only">Sort quizzes</span><select id="quiz-list-sort"><option value="recent">Most recent</option><option value="title">Alphabetical</option><option value="questions">Number of questions</option></select></label>
+            </div>
+
+            <div class="quiz-list-grid" id="quiz-list-grid">
+                {% for quiz in quizzes %}
+                    <article class="quiz-library-card" data-quiz-card data-status="{{ quiz.status }}" data-title="{{ quiz.title|lower }}" data-question-count="{{ quiz.questions|length }}" data-created="{{ quiz.updated_at|date:'U'|default:'0' }}">
+                        <div class="quiz-library-card-top"><span class="quiz-library-icon" aria-hidden="true">Q</span><span class="quiz-library-status status-{{ quiz.status }}"><i></i>{{ quiz.status|capfirst }}</span></div>
+                        <div class="quiz-library-card-body"><p class="quiz-library-overline">ASSESSMENT</p><h3>{{ quiz.title }}</h3><p class="quiz-library-description">{{ quiz.description|default:"No description yet."|truncatechars:115 }}</p></div>
+                        <div class="quiz-library-card-meta"><span><i aria-hidden="true">▤</i>{{ quiz.questions|length }} question(s)</span><span><i aria-hidden="true">◷</i>{% if quiz.duration_seconds %}{{ quiz.duration_seconds }} sec{% else %}No time limit{% endif %}</span></div>
+                        <div class="quiz-library-card-actions"><a class="quiz-library-detail" href="{% url 'users:quiz_manage_detail' quiz_id=quiz.id %}">Details <span aria-hidden="true">→</span></a><a class="quiz-library-delete" href="{% url 'users:quiz_manage_delete' quiz_id=quiz.id %}">Delete</a></div>
+                        <div class="quiz-library-card-glow" aria-hidden="true"></div>
+                    </article>
+                {% empty %}
+                    <div class="quiz-library-empty" id="quiz-library-empty"><span aria-hidden="true">✦</span><h3>Your library starts here</h3><p>Create your first quiz or generate a draft with the AI assistant.</p><div><a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Create a quiz</a><button class="outline-button" type="button" data-quiz-ai-open>Generate with AI</button></div></div>
+                {% endfor %}
+            </div>
+            <div class="quiz-list-no-results" id="quiz-list-no-results" hidden><span aria-hidden="true">⌕</span><strong>No quizzes found</strong><p>Try a different search or status.</p><button type="button" id="quiz-list-reset">Clear filters</button></div>
+        </section>
+    </main>
+    {% include "backoffice/quizzes/ai_generator_modal.html" %}
+</div>
+<script src="{% static 'backoffice/quiz-manage-list.js' %}?v=1" defer></script>
+</body>
+</html>

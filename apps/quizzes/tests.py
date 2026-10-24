@@ -9,7 +9,9 @@ from django.test import Client, SimpleTestCase, override_settings
 from django.urls import reverse
 
 from . import services
-from .forms import QuizForm, QuizImportForm, QuizSubmissionForm
+from .forms import QuizAIGenerationForm, QuizForm, QuizImportForm, QuizSubmissionForm
+from .ai.quiz_generator import InvalidGeneratedQuiz, generate_quiz
+from .ai.gemini_client import GeminiConfigurationError, GeminiGenerationError
 
 
 def question_data(**overrides):
@@ -406,4 +408,102 @@ class QuizViewTests(SimpleTestCase):
                 post = self.csrf_post(reverse("users:quiz_manage_delete", args=[str(quiz["_id"])]), {})
                 self.assertEqual(post.status_code, 302)
                 delete.assert_called_once()
+
+    def _csrf_json_post(self, url, payload):
+        response = self.client.get(reverse("users:quiz_manage_list"))
+        self.assertEqual(response.status_code, 200)
+        token = response.cookies["csrftoken"].value
+        return self.client.post(url, json.dumps(payload), content_type="application/json",
+                                HTTP_X_CSRFTOKEN=token)
+
+    def _ai_payload(self):
+        return {"topic": "Fractions", "description": "Quiz de mathématiques",
+                "objectives": "Comparer des fractions", "question_count": "5",
+                "difficulty": "beginner", "question_type": "single_choice", "language": "fr"}
+
+    def _generated_quiz(self):
+        return {"title": "Fractions", "description": "Évaluation des fractions", "questions": [
+            {"type": "single_choice", "prompt": f"Question {number} ?", "points": 1,
+             "options": [{"text": "A"}, {"text": "B"}], "correct_option_ids": [0]}
+            for number in range(1, 6)
+        ]}
+
+    def test_ai_generation_is_validated_and_does_not_persist_before_confirmation(self):
+        with self.authenticate_as(), \
+             patch("apps.quizzes.views.generate_quiz", return_value=self._generated_quiz()), \
+             patch("apps.quizzes.views.create_quiz") as create:
+            response = self._csrf_json_post(reverse("users:quiz_ai_generate"), self._ai_payload())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["quiz"]["questions"]), 5)
+        create.assert_not_called()
+
+    def test_ai_draft_is_created_only_after_valid_confirmation_as_current_user(self):
+        quiz_id = ObjectId()
+        generated = self._generated_quiz()
+        payload = {"title": generated["title"], "description": generated["description"],
+                   "questions": generated["questions"]}
+        with self.authenticate_as(), patch("apps.quizzes.views.create_quiz", return_value=quiz_id) as create:
+            response = self._csrf_json_post(reverse("users:quiz_ai_create_draft"), payload)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["redirect_url"], reverse("users:quiz_manage_detail", args=[str(quiz_id)]))
+        self.assertEqual(create.call_args.kwargs["user"]["_id"], self.user["_id"])
+        self.assertEqual(create.call_args.kwargs["data"]["status"], "draft")
+
+    def test_ai_endpoints_reject_anonymous_students_and_missing_csrf(self):
+        url = reverse("users:quiz_ai_generate")
+        self.assertEqual(self.client.post(url, "{}", content_type="application/json").status_code, 403)
+        with self.authenticate_as("student"):
+            response = self.client.post(url, "{}", content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+
+        csrf_client = Client(enforce_csrf_checks=True)
+        session = csrf_client.session
+        session["user_id"] = str(self.user["_id"])
+        session.save()
+        csrf_client.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
+        with patch("apps.users.decorators.get_active_user", return_value=self.user):
+            response = csrf_client.post(url, json.dumps(self._ai_payload()), content_type="application/json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_ai_validation_errors_and_generation_failures_are_safe(self):
+        with self.authenticate_as():
+            invalid = self._csrf_json_post(reverse("users:quiz_ai_generate"), {**self._ai_payload(), "question_count": "2"})
+            self.assertEqual(invalid.status_code, 400)
+            with patch("apps.quizzes.views.generate_quiz", side_effect=InvalidGeneratedQuiz):
+                failed = self._csrf_json_post(reverse("users:quiz_ai_generate"), self._ai_payload())
+            with patch("apps.quizzes.views.generate_quiz", side_effect=GeminiConfigurationError):
+                unavailable = self._csrf_json_post(reverse("users:quiz_ai_generate"), self._ai_payload())
+            with patch("apps.quizzes.views.generate_quiz", side_effect=GeminiGenerationError):
+                provider_failed = self._csrf_json_post(reverse("users:quiz_ai_generate"), self._ai_payload())
+            with patch("apps.quizzes.views._consume_ai_generation_slot", return_value=False):
+                limited = self._csrf_json_post(reverse("users:quiz_ai_generate"), self._ai_payload())
+        self.assertEqual(failed.status_code, 502)
+        self.assertIn("règles de validation", failed.json()["error"])
+        self.assertEqual(unavailable.status_code, 503)
+        self.assertEqual(provider_failed.status_code, 502)
+        self.assertIn("Check the API key", provider_failed.json()["error"])
+        self.assertEqual(limited.status_code, 429)
+        self.assertIn("Retry-After", limited)
+
+
+class QuizAIGenerationTests(SimpleTestCase):
+    def test_form_requires_topic_description_and_objectives(self):
+        form = QuizAIGenerationForm({"topic": " ", "description": "", "objectives": "",
+                                     "question_count": "5", "difficulty": "beginner",
+                                     "question_type": "mixed", "language": "fr"})
+        self.assertFalse(form.is_valid())
+        self.assertTrue({"topic", "description", "objectives"}.issubset(form.errors))
+
+    def test_generator_normalizes_structured_response_and_rejects_invalid_answers(self):
+        params = {"topic": "Fractions", "description": "Quiz", "objectives": "Comparer",
+                  "question_count": 5, "difficulty": "beginner", "question_type": "single_choice", "language": "fr"}
+        valid = {"title": "Fractions", "description": "Test", "questions": [
+            {"type": "single_choice", "prompt": f"Question {i}?", "points": 1,
+             "options": ["A", "B"], "correct_option_indices": [1]} for i in range(5)
+        ]}
+        result = generate_quiz(params, json_generator=lambda prompt, schema: json.dumps(valid))
+        self.assertEqual(result["questions"][0]["correct_option_ids"], [1])
+        valid["questions"][0]["correct_option_indices"] = [9]
+        with self.assertRaises(InvalidGeneratedQuiz):
+            generate_quiz(params, json_generator=lambda prompt, schema: json.dumps(valid))
 

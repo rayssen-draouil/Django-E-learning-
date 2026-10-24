@@ -23,7 +23,7 @@
                 </div>
                 <div class="header-actions">
                     <a href="{% url 'users:backoffice' %}" class="outline-button">Vue générale</a>
-                    {% include "backoffice/partials/user_role_chip.html" %}
+                    <a href="{% url 'users:profile' %}" class="profile-chip"><span>{{ user.first_name|default:"S"|first|upper }}</span>{{ user.first_name|default:"Mon profil" }}</a>
                 </div>
             </header>
 

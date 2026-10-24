@@ -38,8 +38,6 @@ class UsersViewsTests(SimpleTestCase):
             "users:backoffice_courses": "/users/backoffice/cours/",
             "users:backoffice_mentors": "/users/backoffice/mentors/",
             "users:backoffice_quizzes": "/users/backoffice/quiz/",
-            "users:mentor_availability_list": "/users/backoffice/mentors/availability/",
-            "users:mentor_availability_create": "/users/backoffice/mentors/availability/create/",
         }
         for route_name, path in expected.items():
             with self.subTest(route_name=route_name):
@@ -89,28 +87,16 @@ class UsersViewsTests(SimpleTestCase):
         self.assertContains(response, "déjà utilisée")
 
     def test_login_accepts_valid_credentials(self):
-        mentor = user_document(role="mentor")
-        with patch("apps.users.views.authenticate_user", return_value=mentor):
+        user = user_document()
+        with patch("apps.users.views.authenticate_user", return_value=user):
             response = self.client.post("/users/login/", {
-                "email": mentor["email"],
+                "email": user["email"],
                 "password": "A-valid-password-123!",
             })
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], "/users/backoffice/")
-        self.assertEqual(self.client.session["user_id"], str(mentor["_id"]))
-
-        session = self.client.session
-        session.flush()
-
-        student = user_document(role="student")
-        with patch("apps.users.views.authenticate_user", return_value=student):
-            response = self.client.post("/users/login/", {
-                "email": student["email"],
-                "password": "A-valid-password-123!",
-            })
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/users/profile/")
+        self.assertEqual(self.client.session["user_id"], str(user["_id"]))
 
     def test_invalid_login_does_not_reveal_account_existence(self):
         with patch("apps.users.views.authenticate_user", return_value=None):
@@ -142,13 +128,19 @@ class UsersViewsTests(SimpleTestCase):
         self.client.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
         return patch("apps.users.decorators.get_active_user", return_value=user_document(role=role))
 
-    def test_student_is_denied_access_to_backoffice_routes(self):
+    def test_student_can_access_each_learner_dashboard(self):
         paths = ("/users/backoffice/", "/users/backoffice/cours/",
                  "/users/backoffice/mentors/")
-        with self._session_for("student"):
+        with self._session_for("student"), \
+             patch("apps.users.views.list_published_quizzes", return_value=[]), \
+             patch("apps.users.views.get_student_quiz_stats", return_value={
+                 "attempts": [], "quiz_count": 0, "average_score": 0,
+                 "attempt_count": 0, "pass_rate": 0,
+                 "best_score": 0, "question_stats": [],
+             }):
             for path in paths:
                 with self.subTest(path=path):
-                    self.assertEqual(self.client.get(path).status_code, 403)
+                    self.assertEqual(self.client.get(path).status_code, 200)
 
     def test_visitor_is_redirected_from_learner_dashboards(self):
         paths = ("/users/backoffice/", "/users/backoffice/cours/",
@@ -175,24 +167,8 @@ class UsersViewsTests(SimpleTestCase):
                 legacy = self.client.get("/users/backoffice/quiz/")
                 self.assertRedirects(legacy, "/users/backoffice/", fetch_redirect_response=False)
 
-    def test_mentor_dashboard_includes_availability_management_overview(self):
-        with self._session_for("mentor"), \
-             patch("apps.users.views.get_student_quiz_stats", return_value={
-                 "attempts": [], "quiz_count": 0, "attempt_count": 0, "average_score": 0,
-                 "best_score": 0, "pass_rate": 0, "question_stats": [],
-             }), \
-             patch("apps.users.views.list_published_quizzes", return_value=[]), \
-             patch("apps.users.views.get_mentor_availability_stats", return_value={
-                 "total_slots": 2, "upcoming_slots": 2, "online_slots": 1, "in_person_slots": 1, "booked_slots": 0,
-             }), \
-             patch("apps.users.views.list_mentor_slots", return_value=[]):
-            response = self.client.get("/users/backoffice/")
-            self.assertEqual(response.status_code, 200)
-            self.assertContains(response, "Availability Management")
-            self.assertContains(response, reverse("users:mentor_availability_list"))
-
     def test_profile_is_available_to_each_active_business_role(self):
-        for role in ("student", "instructor", "mentor", "admin"):
+        for role in ("student", "instructor", "admin"):
             with self.subTest(role=role), self._session_for(role):
                 self.assertEqual(self.client.get("/users/profile/").status_code, 200)
 
