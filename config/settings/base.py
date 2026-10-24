@@ -128,3 +128,12 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 # Keep it outside source control in production.
 USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "")
 
+# AI assistant and asynchronous tasks.
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+AI_MODEL = os.environ.get("AI_MODEL", "claude-3-5-haiku-latest")
+AI_TIMEOUT = int(os.environ.get("AI_TIMEOUT", "20"))
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_TASK_ALWAYS_EAGER = _env_bool("CELERY_TASK_ALWAYS_EAGER", False)
+CELERY_TASK_STORE_EAGER_RESULT = _env_bool("CELERY_TASK_STORE_EAGER_RESULT", False)
+
