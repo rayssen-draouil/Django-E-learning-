@@ -1,0 +1,73 @@
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}{% if course %}{{ course.title }}{% else %}Cours indisponible{% endif %}{% endblock %}
+{% block content %}
+    {% if storage_error %}
+        <header>
+            <p class="course-eyebrow">Cours</p>
+            <h1 class="course-title">Cours temporairement indisponible</h1>
+            <p class="course-intro">La fiche de ce cours n'a pas pu être chargée. Réessayez dans quelques instants.</p>
+        </header>
+        <p class="course-alert" role="alert">Le service des cours ne répond pas pour le moment.</p>
+        <p><a class="course-button secondary" href="{% url 'users:courses' %}">Retour au catalogue</a></p>
+    {% else %}
+        <nav class="course-breadcrumb" aria-label="Fil d'Ariane">
+            <a href="{% url 'users:courses' %}">Catalogue des cours</a>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{{ course.title }}</span>
+        </nav>
+
+        <header class="course-detail-header">
+            <div class="badge-row">
+                <span class="course-badge category">{{ course.category_label }}</span>
+                <span class="course-badge level">{{ course.level_label }}</span>
+                {% if course.status == "draft" %}<span class="course-badge draft">Brouillon</span>{% endif %}
+            </div>
+            <h1 class="course-title">{{ course.title }}</h1>
+            <p class="course-intro">{{ course.description|truncatechars:180 }}</p>
+        </header>
+
+        {% if course.status == "draft" and can_manage %}
+            <p class="course-notice" role="status">Ce cours est un brouillon : il n'est visible que par vous et les administrateurs.</p>
+        {% endif %}
+
+        <div class="course-detail-grid">
+            <section class="course-detail-card" aria-labelledby="course-description-heading">
+                {% if course.thumbnail %}
+                    <img class="course-detail-media" src="{{ course.thumbnail }}" alt="Illustration du cours {{ course.title }}">
+                {% endif %}
+                <h2 id="course-description-heading">À propos de ce cours</h2>
+                {{ course.description|linebreaks }}
+                {% if course.objectives %}
+                    <h2>Objectifs d'apprentissage</h2>
+                    <ul class="course-objectives">
+                        {% for objective in course.objectives %}<li>{{ objective }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+                {% if can_manage %}
+                    <div class="course-detail-actions">
+                        <a class="course-button secondary" href="{% url 'users:course_manage_edit' course_id=course.id %}">Modifier le cours</a>
+                        <form method="post" action="{% url 'users:course_manage_publish' course_id=course.id %}">
+                            {% csrf_token %}
+                            <button class="course-button" type="submit">{% if course.status == "published" %}Dépublier{% else %}Publier{% endif %}</button>
+                        </form>
+                        <a class="course-button danger" href="{% url 'users:course_manage_delete' course_id=course.id %}">Supprimer</a>
+                    </div>
+                {% endif %}
+            </section>
+
+            <aside class="course-detail-card" aria-labelledby="course-info-heading">
+                <h2 id="course-info-heading">Informations</h2>
+                <ul class="course-detail-meta">
+                    <li><span>Instructeur</span><strong>{{ course.instructor_name }}</strong></li>
+                    <li><span>Catégorie</span><strong>{{ course.category_label }}</strong></li>
+                    <li><span>Niveau</span><strong>{{ course.level_label }}</strong></li>
+                    <li><span>Durée</span><strong>{{ course.duration_hours }} h</strong></li>
+                    <li><span>Langue</span><strong>{{ course.language }}</strong></li>
+                    <li><span>Tarif</span><strong>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</strong></li>
+                    <li><span>Publié le</span><strong>{{ course.created_at|date:"d/m/Y" }}</strong></li>
+                </ul>
+                <p><a class="course-button secondary" href="{% url 'users:courses' %}">Retour au catalogue</a></p>
+            </aside>
+        </div>
+    {% endif %}
+{% endblock %}
