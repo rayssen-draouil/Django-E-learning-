@@ -1,0 +1,25 @@
+{% if is_reschedule %}Your Rescheduled Online Mentorship Session Is Confirmed{% else %}Your Online Mentorship Session Is Confirmed{% endif %}
+
+Hello {{ student_name }},
+
+{% if is_reschedule %}Your rescheduled 1-on-1 online mentorship session with {{ mentor_name }} has been confirmed on SkillForge. This updated invitation supersedes any previous schedule for this booking.{% else %}Great news! {{ mentor_name }} has accepted your mentorship request and your secure SkillForge Virtual Classroom is ready for your scheduled session.{% endif %}
+
+Confirmed Session Details:
+- Session Topic: {{ topic }}
+- Mentor: {{ mentor_name }}
+- Student: {{ student_name }}
+- Confirmed Date: {{ date }}
+- Confirmed Time: {{ start_time }}{% if end_time %} - {{ end_time }}{% endif %} ({{ duration_minutes }} minutes)
+- Timezone: {{ timezone_label|default:"UTC" }}
+- Format: Live Online Video Classroom (SkillForge)
+
+Join Classroom Link:
+{{ action_url }}
+
+Important Preparation Notes:
+1. Sign in to your SkillForge account before joining. Only you and your assigned mentor can access this room.
+2. Arrive up to {{ early_join_minutes|default:15 }} minutes early in the classroom lobby to test your microphone and camera.
+3. This invitation applies specifically to the scheduled session above.
+
+Need help? Manage your session from your SkillForge profile dashboard.
+SkillForge — Mentorship & Continuous Learning

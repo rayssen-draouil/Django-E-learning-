@@ -1,0 +1,52 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">
+    {% if is_reschedule %}
+        Your Rescheduled Online Mentorship Session Is Confirmed
+    {% else %}
+        Your Online Mentorship Session Is Confirmed
+    {% endif %}
+</h2>
+
+<p>Hello <strong>{{ student_name }}</strong>,</p>
+
+{% if is_reschedule %}
+<p>Your rescheduled 1-on-1 online mentorship session with <strong>{{ mentor_name }}</strong> has been confirmed on SkillForge. This updated invitation supersedes any previous schedule for this booking.</p>
+{% else %}
+<p>Great news! <strong>{{ mentor_name }}</strong> has accepted your mentorship request and your secure SkillForge Virtual Classroom is ready for your scheduled session.</p>
+{% endif %}
+
+<div class="info-card" style="border-left-color: #10b981; background-color: #f8fafc;">
+    <div class="info-row"><span class="info-label">Session Topic:</span> <strong>{{ topic }}</strong></div>
+    <div class="info-row"><span class="info-label">Mentor:</span> {{ mentor_name }}</div>
+    <div class="info-row"><span class="info-label">Student:</span> {{ student_name }}</div>
+    <div class="info-row"><span class="info-label">Date:</span> <strong>{{ date }}</strong></div>
+    <div class="info-row"><span class="info-label">Time:</span> <strong>{{ start_time }}{% if end_time %} &ndash; {{ end_time }}{% endif %}</strong> ({{ duration_minutes }} minutes)</div>
+    <div class="info-row"><span class="info-label">Timezone:</span> {{ timezone_label|default:"UTC" }}</div>
+    <div class="info-row"><span class="info-label">Format:</span> Live Online Video Classroom (SkillForge)</div>
+</div>
+
+<p style="text-align: center; margin: 26px 0 18px;">
+    <a href="{{ action_url }}" class="btn-action" style="background-color: #2563eb; padding: 14px 28px; font-size: 15px;">
+        Join Classroom on SkillForge
+    </a>
+</p>
+
+<div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; margin: 18px 0; font-size: 13px; color: #1e3a8a;">
+    <strong>Before You Join — Quick Checklist:</strong>
+    <ul style="margin: 8px 0 0; padding-left: 18px;">
+        <li><strong>Sign in required:</strong> Please sign in to your SkillForge student account before opening the classroom link. Only you and your assigned mentor are authorized to enter.</li>
+        <li><strong>Test your camera &amp; microphone:</strong> Visit the classroom lobby up to {{ early_join_minutes|default:15 }} minutes before the start time to preview your camera and test your microphone.</li>
+        <li><strong>Scheduled session link:</strong> This invitation is valid specifically for the scheduled mentorship session listed above.</li>
+    </ul>
+</div>
+
+<p style="font-size: 13px; color: #475569;">
+    Direct Classroom Link:<br>
+    <a href="{{ action_url }}" style="color: #2563eb; word-break: break-all;">{{ action_url }}</a>
+</p>
+
+<p style="font-size: 12px; color: #64748b; margin-top: 20px;">
+    Need assistance or need to manage your booking? Visit your <a href="{{ action_url }}" style="color: #2563eb;">SkillForge Dashboard</a> or contact SkillForge Support through your account portal.
+</p>
+{% endblock %}

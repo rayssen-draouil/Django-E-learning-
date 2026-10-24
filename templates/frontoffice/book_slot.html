@@ -134,6 +134,18 @@
         <p>You are requesting a 1-on-1 coaching session with <strong>{{ mentor.first_name }} {{ mentor.last_name }}</strong>.</p>
     </header>
 
+    {% if from_recommend %}
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 0.6rem; padding: 1rem 1.15rem; margin-bottom: 1.5rem;">
+        <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: #1d4ed8; margin-bottom: 0.25rem;">
+            &#10003; Recommended Match &mdash; Review &amp; Confirm Booking
+        </div>
+        {% if match_reason %}
+            <p style="font-size: 0.88rem; color: #1e293b; margin: 0 0 0.35rem;">{{ match_reason }}</p>
+        {% endif %}
+        <p style="font-size: 0.78rem; color: #475569; margin: 0;">Please review the session details and your pre-filled learning objective below before submitting your booking request.</p>
+    </div>
+    {% endif %}
+
     <!-- Slot Summary Read-Only -->
     <div class="slot-summary-card">
         <div class="summary-item">

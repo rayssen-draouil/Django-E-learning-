@@ -26,6 +26,7 @@
                 id="{{ form.date.id_for_label }}"
                 value="{{ form.date.value|date:'Y-m-d'|default:form.date.value|default:'' }}"
                 min="{{ form.fields.date.widget.attrs.min }}"
+                data-today="{{ form.fields.date.widget.attrs.min }}"
                 class="availability-input {% if form.date.errors %}input-invalid{% endif %}"
                 required
                 aria-required="true"
@@ -49,6 +50,7 @@
                     name="{{ form.start_time.html_name }}"
                     id="{{ form.start_time.id_for_label }}"
                     value="{{ form.start_time.value|time:'H:i'|default:form.start_time.value|default:'' }}"
+                    data-current-time="{{ form.current_time_hhmm|default:'' }}"
                     class="availability-input {% if form.start_time.errors %}input-invalid{% endif %}"
                     required
                     aria-required="true"

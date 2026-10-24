@@ -218,7 +218,7 @@ body {
     font-weight: 600;
 }
 
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 .auth-select {
     width: 100%;
@@ -232,6 +232,18 @@ select,
     font: inherit;
     font-size: .95rem;
     transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    accent-color: #2563eb;
+    vertical-align: middle;
 }
 
 select,

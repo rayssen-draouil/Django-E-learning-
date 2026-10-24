@@ -126,10 +126,15 @@ class AvailabilitySlotForm(forms.Form):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.initial_slot: dict[str, Any] | None = kwargs.pop("slot", None)
         self.reference_date = kwargs.pop("reference_date", None)
+        self.reference_datetime = kwargs.pop("reference_datetime", None)
         super().__init__(*args, **kwargs)
 
-        min_date_iso = (self.reference_date or current_local_date()).isoformat()
+        now_local = self.reference_datetime or current_local_datetime()
+        min_date_iso = (self.reference_date or now_local.date()).isoformat()
+        self.current_time_hhmm = now_local.strftime("%H:%M")
         self.fields["date"].widget.attrs["min"] = min_date_iso
+        self.fields["date"].widget.attrs["data-today"] = min_date_iso
+        self.fields["start_time"].widget.attrs["data-current-time"] = self.current_time_hhmm
 
         if self.initial_slot and not self.is_bound and "initial" not in kwargs:
             self.initial.update(
@@ -146,7 +151,8 @@ class AvailabilitySlotForm(forms.Form):
 
     def clean_date(self):
         slot_date = self.cleaned_data["date"]
-        today = self.reference_date or current_local_date()
+        now_local = self.reference_datetime or current_local_datetime()
+        today = self.reference_date or now_local.date()
         if slot_date < today:
             raise forms.ValidationError(
                 "That date has already passed. Please select today or a future date."
@@ -163,8 +169,24 @@ class AvailabilitySlotForm(forms.Form):
 
     def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()
+        slot_date = cleaned_data.get("date")
         start_time = cleaned_data.get("start_time")
         end_time = cleaned_data.get("end_time")
+
+        now_local = self.reference_datetime or current_local_datetime()
+        today = self.reference_date or now_local.date()
+        if (
+            slot_date
+            and start_time
+            and slot_date == today
+            and (self.reference_date is None or self.reference_datetime is not None)
+        ):
+            current_hm = now_local.time().replace(second=0, microsecond=0)
+            if start_time.replace(second=0, microsecond=0) <= current_hm:
+                self.add_error(
+                    "start_time",
+                    "This start time has already passed for today. Please choose a future start time.",
+                )
 
         if start_time and end_time:
             duration_minutes = calculate_duration_minutes(start_time, end_time)
@@ -419,30 +441,302 @@ class MeetingLinkForm(forms.Form):
     )
 
 
+STAR_RATING_CHOICES = [
+    (5, "5 Stars — Outstanding guidance"),
+    (4, "4 Stars — Very helpful session"),
+    (3, "3 Stars — Good coaching"),
+    (2, "2 Stars — Needs improvement"),
+    (1, "1 Star — Did not meet expectations"),
+]
+
+LEARNING_OUTCOME_FORM_CHOICES = [
+    ("achieved_goal", "Achieved my learning goal"),
+    ("made_progress", "Made solid progress"),
+    ("needs_more_help", "Still need follow-up guidance"),
+]
+
+STRENGTH_TAG_FORM_CHOICES = [
+    ("Clear Explanations", "Clear Explanations"),
+    ("Actionable Code Examples", "Actionable Code Examples"),
+    ("Patient & Encouraging", "Patient & Encouraging"),
+    ("Deep Technical Mastery", "Deep Technical Mastery"),
+    ("Great Debugging Partner", "Great Debugging Partner"),
+    ("Well-Prepared & Structured", "Well-Prepared & Structured"),
+]
+
+
 class ReviewSubmissionForm(forms.Form):
-    rating = forms.ChoiceField(
-        label="Session Rating",
-        choices=[
-            (5, "5 Stars — Outstanding guidance"),
-            (4, "4 Stars — Very helpful session"),
-            (3, "3 Stars — Good coaching"),
-            (2, "2 Stars — Needs improvement"),
-            (1, "1 Star — Did not meet expectations"),
-        ],
-        widget=forms.Select(attrs={"class": "availability-input"}),
+    rating = forms.TypedChoiceField(
+        label="Overall Experience",
+        choices=STAR_RATING_CHOICES,
+        coerce=int,
+        initial=5,
+        widget=forms.Select(attrs={"class": "availability-input", "id": "id_rating"}),
+    )
+    helpfulness_rating = forms.TypedChoiceField(
+        label="Helpfulness (Actionable Guidance)",
+        choices=STAR_RATING_CHOICES,
+        coerce=int,
+        required=False,
+        initial=5,
+        widget=forms.Select(attrs={"class": "availability-input", "id": "id_helpfulness_rating"}),
+    )
+    clarity_rating = forms.TypedChoiceField(
+        label="Clarity of Explanations",
+        choices=STAR_RATING_CHOICES,
+        coerce=int,
+        required=False,
+        initial=5,
+        widget=forms.Select(attrs={"class": "availability-input", "id": "id_clarity_rating"}),
+    )
+    communication_rating = forms.TypedChoiceField(
+        label="Listening & Communication",
+        choices=STAR_RATING_CHOICES,
+        coerce=int,
+        required=False,
+        initial=5,
+        widget=forms.Select(attrs={"class": "availability-input", "id": "id_communication_rating"}),
+    )
+    learning_outcome = forms.ChoiceField(
+        label="Learning Outcome",
+        choices=LEARNING_OUTCOME_FORM_CHOICES,
+        required=False,
+        initial="achieved_goal",
+        widget=forms.RadioSelect(attrs={"class": "outcome-radio"}),
+    )
+    strength_tags = forms.MultipleChoiceField(
+        label="What stood out? (Optional)",
+        choices=STRENGTH_TAG_FORM_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "strength-tag-checkbox"}),
+    )
+    matched_goal = forms.BooleanField(
+        label="This mentor was a good match for my learning goal",
+        required=False,
+        initial=True,
     )
     review_text = forms.CharField(
-        label="Your Review",
-        min_length=10,
+        label="Written Review (Optional)",
+        required=False,
         max_length=1000,
         widget=forms.Textarea(
             attrs={
                 "class": "availability-input",
                 "rows": 4,
-                "placeholder": "Share what was most helpful about the mentor's guidance...",
+                "placeholder": "Share what was most helpful about the mentor's guidance (optional)...",
                 "data-char-counter": "review-counter",
                 "maxlength": "1000",
             }
         ),
-        help_text="10 to 1000 characters. Only verified reviews from completed sessions are shown.",
+        help_text="Optional. If provided, please enter 10 to 1000 characters of constructive feedback.",
     )
+
+    def clean_review_text(self) -> str:
+        text = (self.cleaned_data.get("review_text") or "").strip()
+        if text and len(text) < 10:
+            raise forms.ValidationError(
+                "If writing a review comment, please provide at least 10 characters (or leave blank to submit ratings only)."
+            )
+        return text
+
+
+class MentorReviewResponseForm(forms.Form):
+    response_text = forms.CharField(
+        label="Your Professional Response",
+        min_length=5,
+        max_length=600,
+        widget=forms.Textarea(
+            attrs={
+                "class": "availability-input",
+                "rows": 3,
+                "placeholder": "Thank the student or add a professional follow-up note...",
+                "maxlength": "600",
+            }
+        ),
+    )
+
+
+class ReviewReportForm(forms.Form):
+    reason = forms.ChoiceField(
+        label="Reason for Reporting",
+        choices=[
+            ("spam", "Spam or promotional content"),
+            ("offensive", "Offensive or disrespectful language"),
+            ("privacy", "Exposes private or personal information"),
+            ("inaccurate", "Unrelated to the mentoring session"),
+        ],
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    details = forms.CharField(
+        label="Additional Context (Optional)",
+        required=False,
+        max_length=300,
+        widget=forms.Textarea(
+            attrs={
+                "class": "availability-input",
+                "rows": 2,
+                "placeholder": "Briefly describe the issue...",
+                "maxlength": "300",
+            }
+        ),
+    )
+
+
+class MentorRecommendationForm(forms.Form):
+    learning_goal = forms.CharField(
+        label="What do you want to learn or solve?",
+        required=False,
+        max_length=800,
+        widget=forms.Textarea(
+            attrs={
+                "class": "availability-input",
+                "rows": 3,
+                "placeholder": "e.g., I am a beginner in React and want help understanding hooks and building my first project...",
+                "maxlength": "800",
+            }
+        ),
+    )
+    topic = forms.ChoiceField(
+        label="Topic / Technology",
+        required=False,
+        choices=(("any", "Any topic (Auto-detect from goal)"), *TOPIC_CHOICES),
+        initial="any",
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    experience_level = forms.ChoiceField(
+        label="Your Current Level",
+        required=False,
+        choices=[
+            ("any", "Any level"),
+            ("beginner", "Beginner — New to the topic"),
+            ("intermediate", "Intermediate — Building projects"),
+            ("advanced", "Advanced — Architecture & optimization"),
+        ],
+        initial="any",
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    teaching_style = forms.ChoiceField(
+        label="Preferred Mentoring Style",
+        required=False,
+        choices=[
+            ("any", "Any teaching style"),
+            ("beginner_friendly", "Patient & step-by-step (Beginner-friendly)"),
+            ("project_focused", "Hands-on & practical (Project-focused)"),
+            ("deep_technical", "Deep-dive architecture & code review"),
+            ("career_coaching", "Interview prep & career guidance"),
+        ],
+        initial="any",
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    preferred_language = forms.ChoiceField(
+        label="Preferred Language",
+        required=False,
+        choices=[
+            ("any", "Any language"),
+            ("English", "English"),
+            ("French", "French (Français)"),
+            ("Arabic", "Arabic (العربية)"),
+        ],
+        initial="any",
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    session_type = forms.ChoiceField(
+        label="Session Format",
+        required=False,
+        choices=[
+            ("any", "Online or In-person"),
+            ("online", "Online (Video Call)"),
+            ("in_person", "In-person"),
+        ],
+        initial="any",
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    preferred_date = forms.DateField(
+        label="Preferred Date (Optional)",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={"type": "date", "class": "availability-input"},
+        ),
+    )
+    preferred_duration = forms.TypedChoiceField(
+        label="Minimum Duration",
+        required=False,
+        coerce=int,
+        empty_value=0,
+        choices=[
+            (0, "Any duration"),
+            (30, "At least 30 minutes"),
+            (45, "At least 45 minutes"),
+            (60, "At least 60 minutes"),
+        ],
+        initial=0,
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+    require_available_slot = forms.BooleanField(
+        label="Only show mentors with currently open availability slots",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={"class": "rec-checkbox"}),
+    )
+
+
+class MentorProfileSettingsForm(forms.Form):
+    experience = forms.CharField(
+        label="Professional Headline / Experience",
+        required=False,
+        max_length=120,
+        widget=forms.TextInput(
+            attrs={
+                "class": "availability-input",
+                "placeholder": "e.g., Senior Full-Stack Engineer (8 yrs experience)",
+            }
+        ),
+    )
+    bio = forms.CharField(
+        label="Mentoring Biography & Approach",
+        required=False,
+        max_length=800,
+        widget=forms.Textarea(
+            attrs={
+                "class": "availability-input",
+                "rows": 3,
+                "placeholder": "Describe your technical background, projects, and how you help students succeed...",
+            }
+        ),
+    )
+    topics = forms.CharField(
+        label="Verified Expertise & Skills (comma-separated)",
+        required=False,
+        max_length=300,
+        widget=forms.TextInput(
+            attrs={
+                "class": "availability-input",
+                "placeholder": "e.g., Python, Django, Web Development, React, Databases",
+            }
+        ),
+    )
+    languages = forms.CharField(
+        label="Teaching Languages (comma-separated)",
+        required=False,
+        max_length=120,
+        widget=forms.TextInput(
+            attrs={
+                "class": "availability-input",
+                "placeholder": "e.g., English, French",
+            }
+        ),
+    )
+    teaching_style = forms.ChoiceField(
+        label="Primary Mentoring Style",
+        required=False,
+        choices=[
+            ("beginner_friendly", "Patient & step-by-step (Beginner-friendly)"),
+            ("project_focused", "Hands-on & practical (Project-focused)"),
+            ("deep_technical", "Deep-dive architecture & code review"),
+            ("career_coaching", "Interview prep & career guidance"),
+        ],
+        widget=forms.Select(attrs={"class": "availability-input"}),
+    )
+

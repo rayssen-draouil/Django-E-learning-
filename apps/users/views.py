@@ -9,6 +9,7 @@ from apps.mentors.bookings import (
     STATUS_RESCHEDULED_PENDING,
     list_student_bookings,
 )
+from apps.mentors.forms import MentorProfileSettingsForm
 from apps.mentors.reviews import (
     get_mentor_rating_summary,
     get_review_by_booking,
@@ -256,6 +257,7 @@ def profile(request):
     mentor_rating_summary = None
     mentor_reviews = []
     mentor_stats = None
+    mentor_profile_form = None
 
     if role == "student":
         all_bookings = list_student_bookings(user["_id"])
@@ -277,6 +279,26 @@ def profile(request):
             mentor_stats = get_mentor_availability_stats(user)
         except Exception:
             mentor_stats = None
+        try:
+            from config.mongodb import db
+            full_doc = db["users"].find_one({"_id": user["_id"]}) or {}
+            topics_val = full_doc.get("topics") or []
+            if isinstance(topics_val, list):
+                topics_val = ", ".join(str(t) for t in topics_val)
+            langs_val = full_doc.get("languages") or []
+            if isinstance(langs_val, list):
+                langs_val = ", ".join(str(l) for l in langs_val)
+            mentor_profile_form = MentorProfileSettingsForm(
+                initial={
+                    "experience": full_doc.get("experience", ""),
+                    "bio": full_doc.get("bio", ""),
+                    "topics": topics_val,
+                    "languages": langs_val,
+                    "teaching_style": full_doc.get("teaching_style", "beginner_friendly"),
+                }
+            )
+        except Exception:
+            mentor_profile_form = MentorProfileSettingsForm()
 
     form = ProfileForm(
         request.POST or None,
@@ -312,5 +334,6 @@ def profile(request):
             "mentor_rating_summary": mentor_rating_summary,
             "mentor_reviews": mentor_reviews,
             "mentor_stats": mentor_stats,
+            "mentor_profile_form": mentor_profile_form,
         },
     )

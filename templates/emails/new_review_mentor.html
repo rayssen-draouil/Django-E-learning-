@@ -1,0 +1,19 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">New Verified Session Feedback Received</h2>
+<p>Hello {{ mentor_name }},</p>
+<p><strong>{{ student_name }}</strong> submitted verified feedback for your coaching session on <strong>{{ topic }}</strong>.</p>
+
+<div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 14px 18px; border-radius: 6px; margin: 16px 0;">
+    <p style="margin: 4px 0;"><strong>Overall Rating:</strong> {{ rating }} / 5 Stars</p>
+    <p style="margin: 4px 0;"><strong>Helpfulness:</strong> {{ helpfulness_rating }} / 5 &bull; <strong>Clarity:</strong> {{ clarity_rating }} / 5 &bull; <strong>Communication:</strong> {{ communication_rating }} / 5</p>
+    <p style="margin: 4px 0;"><strong>Learning Outcome:</strong> {{ learning_outcome_label }}</p>
+    {% if review_text %}
+    <p style="margin: 10px 0 4px; font-style: italic; color: #334155;">"{{ review_text }}"</p>
+    {% endif %}
+</div>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">View Feedback in Dashboard</a>
+</p>
+{% endblock %}

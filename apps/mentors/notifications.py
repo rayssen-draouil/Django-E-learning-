@@ -26,6 +26,12 @@ EVENT_TYPES = {
     "session_reminder",
     "session_completed",
     "session_no_show",
+    "review_received",
+    "review_response_added",
+    "feedback_reminder",
+    "recommendation_booking_submitted",
+    "classroom_invitation_sent",
+    "classroom_invitation_failed",
 }
 
 

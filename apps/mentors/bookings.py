@@ -5,12 +5,14 @@ from datetime import date, datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
+import uuid
+
 from bson import ObjectId
 from pymongo.collection import Collection
 from pymongo.errors import PyMongoError
 
 from config.mongodb import db
-from . import email_service, notifications, repositories
+from . import classroom, email_service, notifications, repositories
 from .services import (
     MIN_DURATION_MINUTES,
     calculate_duration_minutes,
@@ -109,6 +111,28 @@ def _clean_booking(doc: dict[str, Any] | None) -> dict[str, Any] | None:
     item = dict(doc)
     item["id"] = str(item["_id"])
     item["status_label"] = STATUS_LABELS.get(item.get("status", ""), item.get("status", ""))
+    item["timezone_label"] = classroom.get_timezone_label()
+
+    session_type = (item.get("session_type") or "online").strip().lower()
+    if session_type == "online":
+        item["classroom_url"] = item.get("classroom_url") or classroom.build_classroom_path(item["_id"])
+        inv_status = item.get("invitation_status") or (
+            classroom.INVITATION_STATUS_SENT
+            if item.get("status") == STATUS_ACCEPTED
+            else classroom.INVITATION_STATUS_PENDING
+        )
+        item["invitation_status"] = inv_status
+        item["invitation_status_label"] = {
+            classroom.INVITATION_STATUS_SENT: "Invitation Sent",
+            classroom.INVITATION_STATUS_FAILED: "Invitation Failed",
+            classroom.INVITATION_STATUS_PENDING: "Pending Confirmation",
+            classroom.INVITATION_STATUS_SUPERSEDED: "Updated Schedule Sent",
+            classroom.INVITATION_STATUS_NOT_REQUIRED: "In-Person",
+        }.get(inv_status, "Scheduled")
+    else:
+        item["classroom_url"] = ""
+        item["invitation_status"] = classroom.INVITATION_STATUS_NOT_REQUIRED
+        item["invitation_status_label"] = "In-Person"
     return item
 
 
@@ -201,6 +225,19 @@ def create_booking_request(
         "session_type": slot.get("session_type", "online"),
         "location": slot.get("location", ""),
         "meeting_link": "",
+        "classroom_url": "",
+        "livekit_room_name": "",
+        "classroom_status": (
+            classroom.CLASSROOM_STATUS_REQUESTED
+            if slot.get("session_type", "online") == "online"
+            else classroom.CLASSROOM_STATUS_NOT_APPLICABLE
+        ),
+        "invitation_status": (
+            classroom.INVITATION_STATUS_PENDING
+            if slot.get("session_type", "online") == "online"
+            else classroom.INVITATION_STATUS_NOT_APPLICABLE
+        ),
+        "invitation_id": "",
         "learning_objective": clean_objective,
         "problem_description": clean_problem,
         "status": STATUS_PENDING,
@@ -258,14 +295,22 @@ def mentor_accept_booking(
     mentor_user: dict[str, Any],
     meeting_link: str = "",
 ) -> bool:
-    if not isinstance(mentor_user, dict):
+    if not isinstance(mentor_user, dict) or not mentor_user.get("_id"):
         raise BookingPermissionError("Authentication required.")
+    user_role = mentor_user.get("role")
+    if user_role is not None and user_role != "mentor":
+        raise BookingPermissionError("Only mentors are authorized to accept booking requests.")
+
     mid = parse_object_id(mentor_user.get("_id"))
     bid = parse_object_id(booking_id)
 
     booking = bookings_collection.find_one({"_id": bid, "mentor_id": mid})
     if not booking:
         raise BookingNotFoundError("Booking request not found.")
+
+    # Idempotency guard: accepting an already accepted booking does not create a second room or duplicate email
+    if booking.get("status") == STATUS_ACCEPTED:
+        return True
 
     if booking.get("status") not in (STATUS_PENDING, STATUS_RESCHEDULED_PENDING):
         raise BookingValidationError(f"Cannot accept request with status '{booking.get('status')}'.")
@@ -297,53 +342,142 @@ def mentor_accept_booking(
         if not slot or slot.get("booked_by") != booking.get("student_id"):
             raise SlotConflictError("This slot has already been booked by another session.")
 
+    session_type = (booking.get("session_type") or "online").strip().lower()
+    is_online = session_type == "online"
+
     clean_link = (meeting_link or "").strip()
-    if clean_link and not (clean_link.startswith("http://") or clean_link.startswith("https://")):
+    if clean_link and not (clean_link.startswith("http://") or clean_link.startswith("https://") or clean_link.startswith("/")):
         clean_link = f"https://{clean_link}"
+
+    classroom_path = classroom.build_classroom_path(bid) if is_online else ""
+    room_name = (
+        (booking.get("livekit_room_name") or classroom.generate_stable_room_name(bid))
+        if is_online
+        else ""
+    )
+    invitation_id = (
+        (booking.get("invitation_id") or f"inv-{bid}-{uuid.uuid4().hex[:10]}")
+        if is_online
+        else ""
+    )
 
     update_fields: dict[str, Any] = {
         "status": STATUS_ACCEPTED,
         "decision_at": now,
         "updated_at": now,
     }
-    if clean_link:
-        update_fields["meeting_link"] = clean_link
+    if is_online:
+        update_fields["livekit_room_name"] = room_name
+        update_fields["classroom_url"] = classroom_path
+        update_fields["classroom_status"] = classroom.CLASSROOM_STATUS_SCHEDULED
+        update_fields["invitation_id"] = invitation_id
+        update_fields["invitation_status"] = classroom.INVITATION_STATUS_SENT
+        update_fields["invitation_sent_at"] = now
+        update_fields["meeting_link"] = clean_link or classroom_path
+    else:
+        update_fields["livekit_room_name"] = ""
+        update_fields["classroom_status"] = classroom.CLASSROOM_STATUS_NOT_APPLICABLE
+        update_fields["invitation_status"] = classroom.INVITATION_STATUS_NOT_REQUIRED
+        if clean_link:
+            update_fields["meeting_link"] = clean_link
 
+    # 1. Persist accepted booking and confirmed schedule BEFORE sending notifications or emails
     bookings_collection.update_one({"_id": bid}, {"$set": update_fields})
 
-    # Notify student
+    # 2. Notify student in-app
     student_id = booking.get("student_id")
-    mentor_name = f"{mentor_user.get('first_name', '')} {mentor_user.get('last_name', '')}".strip() or "Mentor"
+    mentor_name = (
+        f"{mentor_user.get('first_name', '')} {mentor_user.get('last_name', '')}".strip()
+        or booking.get("mentor_name")
+        or "Mentor"
+    )
     notifications.create_notification(
         recipient_id=student_id,
         event_type="booking_accepted",
         title="Session Confirmed!",
         message=f"{mentor_name} has accepted your mentorship session on {booking['date']} at {booking['start_time']}.",
-        link_url="/users/profile/",
+        link_url=classroom_path if is_online else "/users/profile/",
         related_booking_id=bid,
     )
 
-    # Email student
-    student_user = db["users"].find_one({"_id": student_id})
-    if student_user and student_user.get("email"):
-        email_service.send_templated_email(
-            subject=f"Session Confirmed — Mentorship with {mentor_name}",
-            recipient_email=student_user["email"],
-            template_name_base="booking_accepted_student",
-            context={
-                "student_name": f"{student_user.get('first_name', '')}".strip() or "Student",
-                "mentor_name": mentor_name,
-                "topic": booking.get("topic", "Mentoring"),
-                "date": booking.get("date"),
-                "start_time": booking.get("start_time"),
-                "end_time": booking.get("end_time"),
-                "duration_minutes": booking.get("duration_minutes", 60),
-                "session_type": booking.get("session_type", "online"),
-                "meeting_link": clean_link or booking.get("meeting_link"),
-                "location": booking.get("location"),
-                "action_url": "/users/profile/",
-            },
-        )
+    # 3. Dispatch confirmation / LiveKit classroom invitation email via Brevo
+    student_user = db["users"].find_one({"_id": student_id}) if student_id else None
+    recipient_email = (
+        (student_user.get("email") if student_user else None)
+        or booking.get("student_email")
+        or ""
+    ).strip()
+    student_display_name = (
+        (f"{student_user.get('first_name', '')} {student_user.get('last_name', '')}".strip() if student_user else "")
+        or booking.get("student_name")
+        or "Student"
+    )
+
+    if is_online:
+        if recipient_email:
+            email_sent = email_service.send_templated_email(
+                subject=f"Your Online Mentorship Session Is Confirmed — {booking.get('topic', 'Mentoring')} with {mentor_name}",
+                recipient_email=recipient_email,
+                template_name_base="classroom_invitation_student",
+                context={
+                    "student_name": student_display_name,
+                    "mentor_name": mentor_name,
+                    "topic": booking.get("topic", "Mentoring"),
+                    "date": booking.get("date"),
+                    "start_time": booking.get("start_time"),
+                    "end_time": booking.get("end_time"),
+                    "duration_minutes": booking.get("duration_minutes", 60),
+                    "timezone_label": classroom.get_timezone_label(),
+                    "session_type": "online",
+                    "classroom_url": classroom.build_absolute_classroom_url(bid),
+                    "meeting_link": clean_link or classroom_path,
+                    "action_url": classroom_path,
+                    "invitation_id": invitation_id,
+                    "is_reschedule": False,
+                },
+            )
+            if not email_sent:
+                bookings_collection.update_one(
+                    {"_id": bid},
+                    {
+                        "$set": {
+                            "invitation_status": classroom.INVITATION_STATUS_FAILED,
+                            "invitation_last_error": "brevo_delivery_failed",
+                            "updated_at": _now(),
+                        }
+                    },
+                )
+        elif "student_email" in booking:
+            bookings_collection.update_one(
+                {"_id": bid},
+                {
+                    "$set": {
+                        "invitation_status": classroom.INVITATION_STATUS_FAILED,
+                        "invitation_last_error": "missing_student_email",
+                        "updated_at": _now(),
+                    }
+                },
+            )
+    else:
+        if recipient_email:
+            email_service.send_templated_email(
+                subject=f"Session Confirmed — In-Person Mentorship with {mentor_name}",
+                recipient_email=recipient_email,
+                template_name_base="booking_accepted_student",
+                context={
+                    "student_name": student_display_name,
+                    "mentor_name": mentor_name,
+                    "topic": booking.get("topic", "Mentoring"),
+                    "date": booking.get("date"),
+                    "start_time": booking.get("start_time"),
+                    "end_time": booking.get("end_time"),
+                    "duration_minutes": booking.get("duration_minutes", 60),
+                    "session_type": "in_person",
+                    "meeting_link": "",
+                    "location": booking.get("location"),
+                    "action_url": "/users/profile/",
+                },
+            )
 
     return True
 
@@ -480,18 +614,21 @@ def mentor_propose_reschedule(
         raise BookingValidationError(f"Proposed session must last at least {MIN_DURATION_MINUTES} minutes.")
 
     now = _now()
+    is_online = booking.get("session_type", "online") == "online"
+    update_fields: dict[str, Any] = {
+        "status": STATUS_RESCHEDULED_PENDING,
+        "proposed_date": proposed_date,
+        "proposed_start_time": proposed_start_time,
+        "proposed_end_time": proposed_end_time,
+        "reschedule_note": (reschedule_note or "").strip()[:500],
+        "updated_at": now,
+    }
+    if is_online:
+        update_fields["classroom_status"] = classroom.CLASSROOM_STATUS_RESCHEDULE_PENDING
+
     bookings_collection.update_one(
         {"_id": bid},
-        {
-            "$set": {
-                "status": STATUS_RESCHEDULED_PENDING,
-                "proposed_date": proposed_date,
-                "proposed_start_time": proposed_start_time,
-                "proposed_end_time": proposed_end_time,
-                "reschedule_note": (reschedule_note or "").strip()[:500],
-                "updated_at": now,
-            }
-        },
+        {"$set": update_fields},
     )
 
     student_id = booking.get("student_id")
@@ -553,18 +690,42 @@ def student_respond_reschedule(
         new_date = booking.get("proposed_date", booking["date"])
         new_start = booking.get("proposed_start_time", booking["start_time"])
         new_end = booking.get("proposed_end_time", booking["end_time"])
+        is_online = booking.get("session_type", "online") == "online"
+        room_name = booking.get("livekit_room_name") or (
+            classroom.generate_stable_room_name(bid) if is_online else ""
+        )
+        new_invitation_id = f"inv-{bid}-{uuid.uuid4().hex[:10]}"
+
+        new_duration = booking.get("duration_minutes", 60)
+        try:
+            p_start = parse_time_value(new_start, field_name="start_time", missing_message="Start time required.")
+            p_end = parse_time_value(new_end, field_name="end_time", missing_message="End time required.")
+            calc_dur = calculate_duration_minutes(p_start, p_end)
+            if calc_dur > 0:
+                new_duration = calc_dur
+        except Exception:
+            pass
+
+        update_doc: dict[str, Any] = {
+            "status": STATUS_ACCEPTED,
+            "date": new_date,
+            "start_time": new_start,
+            "end_time": new_end,
+            "duration_minutes": new_duration,
+            "updated_at": now,
+        }
+        if is_online:
+            update_doc["livekit_room_name"] = room_name
+            update_doc["classroom_status"] = classroom.CLASSROOM_STATUS_SCHEDULED
+            update_doc["meeting_link"] = booking.get("meeting_link") or f"/users/mentorship/classroom/{bid}/"
+            update_doc["invitation_id"] = new_invitation_id
+            update_doc["invitation_status"] = "sent"
+            update_doc["invitation_sent_at"] = now
+            update_doc["invitation_last_error"] = ""
 
         bookings_collection.update_one(
             {"_id": bid},
-            {
-                "$set": {
-                    "status": STATUS_ACCEPTED,
-                    "date": new_date,
-                    "start_time": new_start,
-                    "end_time": new_end,
-                    "updated_at": now,
-                }
-            },
+            {"$set": update_doc},
         )
         notifications.create_notification(
             recipient_id=mentor_id,
@@ -574,12 +735,54 @@ def student_respond_reschedule(
             link_url="/users/backoffice/mentors/sessions/",
             related_booking_id=bid,
         )
+
+        if is_online and student_user.get("email"):
+            mentor_user_doc = db["users"].find_one({"_id": mentor_id}) or {}
+            mentor_name = (
+                f"{mentor_user_doc.get('first_name', '')} {mentor_user_doc.get('last_name', '')}".strip()
+                or "Mentor"
+            )
+            classroom_url = classroom.build_absolute_classroom_url(bid)
+            email_sent = email_service.send_templated_email(
+                subject=f"Updated Online Mentorship Invitation — {booking.get('topic', 'Session')} with {mentor_name}",
+                recipient_email=student_user["email"],
+                template_name_base="classroom_invitation_student",
+                context={
+                    "student_name": f"{student_user.get('first_name', '')}".strip() or "Student",
+                    "mentor_name": mentor_name,
+                    "topic": booking.get("topic", "Mentorship Session"),
+                    "student_goal": booking.get("student_goal", ""),
+                    "date": new_date,
+                    "start_time": new_start,
+                    "end_time": new_end,
+                    "duration_minutes": new_duration,
+                    "timezone_label": classroom.get_timezone_label(),
+                    "session_type": "Online (SkillForge Virtual Classroom)",
+                    "classroom_url": classroom_url,
+                    "action_url": f"/users/mentorship/classroom/{bid}/",
+                    "booking_id": str(bid),
+                    "invitation_id": new_invitation_id,
+                    "is_reschedule": True,
+                },
+            )
+            if not email_sent:
+                bookings_collection.update_one(
+                    {"_id": bid},
+                    {
+                        "$set": {
+                            "invitation_status": "failed",
+                            "invitation_last_error": "Reschedule email delivery failed via Brevo SMTP.",
+                            "updated_at": _now(),
+                        }
+                    },
+                )
     else:
         bookings_collection.update_one(
             {"_id": bid},
             {
                 "$set": {
                     "status": STATUS_CANCELLED,
+                    "classroom_status": classroom.CLASSROOM_STATUS_CANCELLED,
                     "cancelled_by": "student",
                     "cancellation_reason": "Declined reschedule proposal.",
                     "updated_at": now,
@@ -630,6 +833,7 @@ def student_cancel_booking(
         {
             "$set": {
                 "status": STATUS_CANCELLED,
+                "classroom_status": classroom.CLASSROOM_STATUS_CANCELLED,
                 "cancelled_by": "student",
                 "cancellation_reason": clean_reason,
                 "updated_at": now,
@@ -701,6 +905,7 @@ def mentor_cancel_booking(
         {
             "$set": {
                 "status": STATUS_CANCELLED,
+                "classroom_status": classroom.CLASSROOM_STATUS_CANCELLED,
                 "cancelled_by": "mentor",
                 "cancellation_reason": clean_reason,
                 "updated_at": now,
@@ -812,6 +1017,9 @@ def mentor_complete_session(
 ) -> bool:
     if not isinstance(mentor_user, dict):
         raise BookingPermissionError("Authentication required.")
+    user_role = str(mentor_user.get("role", "mentor")).lower()
+    if user_role == "student":
+        raise BookingPermissionError("Only the assigned mentor can mark a session as completed.")
     mid = parse_object_id(mentor_user.get("_id"))
     bid = parse_object_id(booking_id)
 
@@ -819,14 +1027,48 @@ def mentor_complete_session(
     if not booking:
         raise BookingNotFoundError("Booking request not found.")
 
+    if booking.get("status") == STATUS_COMPLETED:
+        # Idempotent completion
+        return True
+
     if booking.get("status") != STATUS_ACCEPTED:
         raise BookingValidationError("Only confirmed sessions can be marked as completed.")
 
     now = _now()
+    existing_att = dict(classroom._default_attendance())
+    if isinstance(booking.get("attendance"), dict):
+        existing_att.update(booking["attendance"])
+    existing_att["mentor_currently_connected"] = False
+    existing_att["student_currently_connected"] = False
+    if existing_att.get("mentor_joined") and not existing_att.get("mentor_last_left_at"):
+        existing_att["mentor_last_left_at"] = now
+    if existing_att.get("student_joined") and not existing_att.get("student_last_left_at"):
+        existing_att["student_last_left_at"] = now
+
     bookings_collection.update_one(
         {"_id": bid},
-        {"$set": {"status": STATUS_COMPLETED, "completed_at": now, "updated_at": now}},
+        {
+            "$set": {
+                "status": STATUS_COMPLETED,
+                "classroom_status": classroom.CLASSROOM_STATUS_COMPLETED,
+                "completed_at": now,
+                "meeting_ended_at": now,
+                "attendance": existing_att,
+                "updated_at": now,
+            }
+        },
     )
+
+    try:
+        classroom._log_classroom_event(
+            booking_id=bid,
+            event_type="session_completed",
+            actor_id=mid,
+            actor_role="mentor",
+            metadata={"completed_at": now.isoformat(), "room_name": booking.get("livekit_room_name", "")},
+        )
+    except Exception:
+        pass
 
     # Prompt student for verified review!
     student_id = booking.get("student_id")
@@ -877,7 +1119,13 @@ def mentor_mark_no_show(
     now = _now()
     bookings_collection.update_one(
         {"_id": bid},
-        {"$set": {"status": STATUS_NO_SHOW, "updated_at": now}},
+        {
+            "$set": {
+                "status": STATUS_NO_SHOW,
+                "classroom_status": classroom.CLASSROOM_STATUS_NO_SHOW,
+                "updated_at": now,
+            }
+        },
     )
 
     student_id = booking.get("student_id")

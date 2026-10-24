@@ -320,6 +320,10 @@
                     <span>Manage Quizzes</span>
                 </a>
             {% else %}
+                <a href="{% url 'users:mentor_recommendations' %}" class="btn-quick" style="background: rgba(37, 99, 235, 0.35); border-color: rgba(147, 197, 253, 0.5);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span>AI Mentor Matchmaker</span>
+                </a>
                 <a href="{% url 'users:mentors' %}" class="btn-quick">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <span>Discover Mentors</span>
@@ -367,10 +371,13 @@
                                         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ session.session_type|title }}</span>
                                         <span class="status-pill {{ session.status }}">{{ session.status_label }}</span>
                                     </div>
-                                    {% if session.session_type == "online" and session.meeting_link %}
-                                        <p style="margin: 0.4rem 0 0; font-size: 0.88rem;">
-                                            <strong>Meeting Link:</strong>
-                                            <a href="{{ session.meeting_link }}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 600;">{{ session.meeting_link }}</a>
+                                    {% if session.session_type == "online" %}
+                                        <p style="margin: 0.4rem 0 0; font-size: 0.85rem; color: #334155;">
+                                            <strong>Classroom:</strong>
+                                            <span style="color: #4f46e5; font-weight: 700;">SkillForge LiveKit Virtual Classroom</span>
+                                            {% if session.invitation_status == "sent" %}
+                                                <span style="margin-left: 0.4rem; font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 600;">Email Invite Sent</span>
+                                            {% endif %}
                                         </p>
                                     {% elif session.session_type == "in_person" and session.location %}
                                         <p style="margin: 0.4rem 0 0; font-size: 0.88rem; color: #475569;">
@@ -379,8 +386,10 @@
                                     {% endif %}
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
-                                    {% if session.session_type == "online" and session.meeting_link %}
-                                        <a href="{{ session.meeting_link }}" target="_blank" class="btn-action-small btn-join">Join Meeting</a>
+                                    {% if session.session_type == "online" %}
+                                        <a href="{% url 'users:mentorship_classroom' session.id %}" class="btn-action-small btn-join">
+                                            Join Virtual Classroom
+                                        </a>
                                     {% endif %}
                                     <form method="post" action="{% url 'users:student_cancel_booking' session.id %}" onsubmit="return confirm('Are you sure you want to cancel this confirmed session?');">
                                         {% csrf_token %}
@@ -472,16 +481,36 @@
                                     {% endif %}
 
                                     {% if session.review %}
-                                        <div style="margin-top: 0.5rem; background: #f8fafc; padding: 0.65rem 0.85rem; border-radius: 0.4rem; font-size: 0.85rem;">
-                                            <span style="color: #f59e0b; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> {{ session.review.rating }}/5</span> &mdash; <em>"{{ session.review.review_text }}"</em>
+                                        <div style="margin-top: 0.5rem; background: #f8fafc; padding: 0.75rem 0.9rem; border-radius: 0.45rem; font-size: 0.85rem; border-left: 3px solid #f59e0b;">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                                <span style="color: #f59e0b; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> {{ session.review.rating }}/5</span>
+                                                <span style="font-size: 0.76rem; color: #64748b;">(Helpfulness {{ session.review.helpfulness_rating }}/5 &bull; Clarity {{ session.review.clarity_rating }}/5 &bull; Comm. {{ session.review.communication_rating }}/5)</span>
+                                                {% if session.review.learning_outcome_label %}
+                                                    <span style="font-size: 0.72rem; background: #dcfce7; color: #166534; padding: 0.12rem 0.45rem; border-radius: 0.35rem; font-weight: 600;">{{ session.review.learning_outcome_label }}</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if session.review.review_text %}
+                                                <p style="margin: 0.2rem 0 0; color: #334155;"><em>"{{ session.review.review_text }}"</em></p>
+                                            {% else %}
+                                                <p style="margin: 0.2rem 0 0; color: #64748b;"><em>Rating-only evaluation submitted.</em></p>
+                                            {% endif %}
+                                            {% if session.review.mentor_response %}
+                                                <div style="margin-top: 0.45rem; padding-top: 0.45rem; border-top: 1px solid #e2e8f0; font-size: 0.8rem; color: #1e40af;">
+                                                    <strong>Mentor Reply:</strong> {{ session.review.mentor_response }}
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     {% endif %}
                                 </div>
-                                <div>
-                                    {% if session.status == "completed" and not session.review %}
+                                <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end;">
+                                    {% if session.status == "completed" and not session.review and session.attendance_status != "no_show" %}
                                         <a href="{% url 'users:student_submit_review' session.id %}" class="btn-action-small btn-review" style="display: inline-flex; align-items: center; gap: 0.35rem;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                             <span>Leave Review</span>
+                                        </a>
+                                    {% elif session.review and session.review.can_edit %}
+                                        <a href="{% url 'users:student_edit_review' session.id %}" class="btn-action-small" style="background: #f1f5f9; color: #334155 !important; border: 1px solid #cbd5e1;">
+                                            Edit Review
                                         </a>
                                     {% endif %}
                                 </div>
@@ -532,14 +561,39 @@
                         </div>
                     </div>
 
+                    {% if mentor_rating_summary.has_reviews %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.65rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.65rem; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
+                        <div><strong style="color:#0f172a;">Helpfulness:</strong> {{ mentor_rating_summary.avg_helpfulness }}/5</div>
+                        <div><strong style="color:#0f172a;">Clarity:</strong> {{ mentor_rating_summary.avg_clarity }}/5</div>
+                        <div><strong style="color:#0f172a;">Communication:</strong> {{ mentor_rating_summary.avg_communication }}/5</div>
+                        <div><strong style="color:#0f172a;">Outcome Rate:</strong> {{ mentor_rating_summary.positive_outcome_pct }}%</div>
+                    </div>
+                    {% endif %}
+
                     <h3 style="font-size: 1.05rem; margin: 1.5rem 0 0.75rem; color: #0f172a;">Recent Verified Reviews</h3>
                     {% for rev in mentor_reviews %}
                         <div style="padding: 0.85rem 0; border-bottom: 1px solid #f1f5f9;">
-                            <div style="display: flex; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <strong style="font-size: 0.9rem; color: #0f172a;">{{ rev.student_name }}</strong>
                                 <span style="color: #f59e0b; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> {{ rev.rating }}/5</span>
                             </div>
-                            <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: #475569;">{{ rev.review_text }}</p>
+                            {% if rev.review_text %}
+                                <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: #475569;">{{ rev.review_text }}</p>
+                            {% else %}
+                                <p style="margin: 0.25rem 0 0; font-size: 0.82rem; color: #94a3b8; font-style: italic;">Rating-only evaluation</p>
+                            {% endif %}
+                            {% if rev.mentor_response %}
+                                <div style="margin-top: 0.45rem; background: #eff6ff; border-left: 3px solid #2563eb; padding: 0.45rem 0.65rem; border-radius: 0.35rem; font-size: 0.8rem; color: #1e3a8a;">
+                                    <strong>Your Response:</strong> {{ rev.mentor_response }}
+                                </div>
+                            {% else %}
+                                <form method="post" action="{% url 'users:mentor_reply_review' rev.id %}" style="margin-top: 0.5rem; display: flex; gap: 0.4rem;">
+                                    {% csrf_token %}
+                                    <input type="text" name="mentor_response" placeholder="Write a public response to {{ rev.student_name }}..." required
+                                           style="flex: 1; padding: 0.4rem 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.4rem; font-size: 0.8rem;">
+                                    <button type="submit" class="btn-action-small btn-review" style="padding: 0.4rem 0.75rem; font-size: 0.78rem;">Reply</button>
+                                </form>
+                            {% endif %}
                         </div>
                     {% empty %}
                         <p style="color: #64748b; font-size: 0.88rem; font-style: italic;">No reviews yet. Completed student coaching sessions will appear here.</p>
@@ -576,6 +630,25 @@
                     </button>
                 </form>
             </section>
+
+            {% if role == "mentor" and mentor_profile_form %}
+            <section class="panel-card">
+                <h2>Mentoring &amp; AI Match Settings</h2>
+                <p style="font-size: 0.8rem; color: #64748b; margin: -0.5rem 0 1rem;">Complete your expertise details to improve your visibility in the AI Mentor Recommendation Engine.</p>
+                <form method="post" action="{% url 'users:mentor_update_profile_settings' %}" novalidate>
+                    {% csrf_token %}
+                    {% for field in mentor_profile_form %}
+                        <div class="form-group-profile">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn-action-small btn-review" style="width: 100%; padding: 0.7rem; margin-top: 0.5rem;">
+                        Save Mentoring Profile
+                    </button>
+                </form>
+            </section>
+            {% endif %}
         </aside>
     </div>
 </div>

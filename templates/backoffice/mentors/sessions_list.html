@@ -395,14 +395,27 @@
                             </div>
 
                             {% if session.session_type == "online" %}
-                                <div style="margin: 0.75rem 0; font-size: 0.88rem; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.75rem 1rem; border-radius: 0.6rem; display: flex; align-items: center; gap: 0.5rem;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                                    <strong>Meeting URL:</strong>
-                                    {% if session.meeting_link %}
-                                        <a href="{{ session.meeting_link }}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: 600;">{{ session.meeting_link }}</a>
-                                    {% else %}
-                                        <span style="color: #dc2626;">No link provided yet. Add your Google Meet or Zoom link.</span>
-                                    {% endif %}
+                                <div style="margin: 0.75rem 0; font-size: 0.88rem; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.8rem 1rem; border-radius: 0.6rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.65rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                        <div>
+                                            <strong style="color: #312e81;">SkillForge LiveKit Virtual Classroom</strong>
+                                            {% if session.livekit_room_name %}
+                                                <span style="font-size: 0.76rem; color: #6366f1; margin-left: 0.35rem;">({{ session.livekit_room_name }})</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.45rem;">
+                                        {% if session.invitation_status == "failed" %}
+                                            <span style="background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                                                Email Invite Failed
+                                            </span>
+                                        {% elif session.invitation_status == "sent" %}
+                                            <span style="background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                                                Invitation Email Sent
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             {% else %}
                                 <p style="font-size: 0.88rem; color: #475569;"><strong>Location:</strong> {{ session.location|default:"In-person venue" }}</p>
@@ -415,10 +428,18 @@
 
                         <div class="actions-panel">
                             {% if session.session_type == "online" %}
-                                <button type="button" class="btn-session-action" style="background: #6366f1; color: #ffffff;" onclick="openMeetingLinkModal('{{ session.id }}', '{{ session.meeting_link }}')">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                                    <span>Update Meeting Link</span>
-                                </button>
+                                <a href="{% url 'users:mentorship_classroom' session.id %}" class="btn-session-action" style="background: linear-gradient(135deg, #4f46e5, #0ea5e9); color: #ffffff;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                    <span>Launch Classroom</span>
+                                </a>
+
+                                <form method="post" action="{% url 'users:mentor_resend_invitation' session.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-session-action" style="background: #e0f2fe; color: #0369a1;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                        <span>Resend Email Invite</span>
+                                    </button>
+                                </form>
                             {% endif %}
 
                             <!-- Mark as completed -->
@@ -465,11 +486,42 @@
                     <article class="session-item-card">
                         <div>
                             <h3 class="student-name-title">{{ session.student_name }} &bull; {{ session.topic }}</h3>
-                            <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.35rem; display: flex; gap: 0.75rem;">
+                            <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.35rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                 <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Date: {{ session.date }}</span>
                                 <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Time: {{ session.start_time }} &ndash; {{ session.end_time }}</span>
                                 <span class="status-pill completed">Completed</span>
                             </div>
+
+                            {% if session.review %}
+                                <div style="margin-top: 0.85rem; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #f59e0b; padding: 0.85rem 1rem; border-radius: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                        <span style="color: #d97706; font-weight: 700; font-size: 0.88rem;">&#9733; {{ session.review.rating }}/5 Verified Feedback</span>
+                                        <span style="font-size: 0.76rem; color: #64748b;">(Helpfulness {{ session.review.helpfulness_rating }}/5 &bull; Clarity {{ session.review.clarity_rating }}/5 &bull; Comm. {{ session.review.communication_rating }}/5)</span>
+                                        {% if session.review.learning_outcome_label %}
+                                            <span style="font-size: 0.72rem; background: #dcfce7; color: #166534; padding: 0.12rem 0.45rem; border-radius: 0.35rem; font-weight: 600;">{{ session.review.learning_outcome_label }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if session.review.review_text %}
+                                        <p style="margin: 0.25rem 0 0.5rem; font-size: 0.88rem; color: #334155;">"{{ session.review.review_text }}"</p>
+                                    {% else %}
+                                        <p style="margin: 0.25rem 0 0.5rem; font-size: 0.82rem; color: #64748b; font-style: italic;">Student submitted a rating-only evaluation.</p>
+                                    {% endif %}
+
+                                    {% if session.review.mentor_response %}
+                                        <div style="background: #eff6ff; border-left: 3px solid #2563eb; padding: 0.5rem 0.75rem; border-radius: 0.35rem; font-size: 0.82rem; color: #1e3a8a;">
+                                            <strong>Your Public Reply:</strong> {{ session.review.mentor_response }}
+                                        </div>
+                                    {% else %}
+                                        <form method="post" action="{% url 'users:mentor_reply_review' session.review.id %}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            {% csrf_token %}
+                                            <input type="text" name="mentor_response" class="availability-input" placeholder="Write a professional public reply to thank the student..." required style="flex: 1; min-width: 220px; padding: 0.45rem 0.7rem; font-size: 0.82rem;">
+                                            <button type="submit" class="btn-save-availability" style="padding: 0.45rem 1rem; font-size: 0.8rem;">Post Reply</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #94a3b8; font-style: italic;">Awaiting student feedback.</p>
+                            {% endif %}
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.4rem; color: #10b981; font-weight: 600; font-size: 0.88rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -517,11 +569,14 @@
             <form method="post" id="acceptForm">
                 {% csrf_token %}
                 <div id="meetingLinkInputGroup" style="margin-bottom: 1.25rem;">
+                    <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 0.65rem; padding: 0.85rem 1rem; margin-bottom: 0.85rem; font-size: 0.84rem; color: #312e81;">
+                        <strong>Automatic Virtual Classroom Provisioning:</strong>
+                        Accepting this online request automatically creates a secure <strong>SkillForge LiveKit Classroom</strong> and emails the student their private classroom invitation link.
+                    </div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
-                        Online Meeting URL (Google Meet / Zoom)
+                        Optional Custom / Backup Link (Leave blank to use SkillForge Classroom)
                     </label>
-                    <input type="url" name="meeting_link" class="availability-input" placeholder="https://meet.google.com/..." style="width: 100%;">
-                    <small style="color: #64748b; font-size: 0.78rem;">You can also provide or update this link later before the session begins.</small>
+                    <input type="url" name="meeting_link" class="availability-input" placeholder="Leave blank for built-in SkillForge Virtual Classroom" style="width: 100%;">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                     <button type="button" class="btn-cancel-availability" onclick="closeModal('acceptModal')">Cancel</button>

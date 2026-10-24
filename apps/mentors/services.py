@@ -211,12 +211,18 @@ def validate_and_normalize_slot_data(
     data: dict[str, Any],
     *,
     reference_date: date | None = None,
+    reference_datetime: datetime | None = None,
 ) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise AvailabilityValidationError("Invalid availability payload.")
 
+    now_local = (
+        reference_datetime
+        if reference_datetime is not None
+        else current_local_datetime()
+    )
     slot_date = parse_date_value(data.get("date"))
-    today = reference_date if reference_date is not None else current_local_date()
+    today = reference_date if reference_date is not None else now_local.date()
     if slot_date < today:
         raise AvailabilityValidationError(
             "That date has already passed. Please select today or a future date.",
@@ -233,6 +239,14 @@ def validate_and_normalize_slot_data(
         field_name="end_time",
         missing_message="Your end time must be later than your start time.",
     )
+
+    if slot_date == today and (reference_date is None or reference_datetime is not None):
+        current_hm = now_local.time().replace(second=0, microsecond=0)
+        if start_t.replace(second=0, microsecond=0) <= current_hm:
+            raise AvailabilityValidationError(
+                "This start time has already passed for today. Please choose a future start time.",
+                field="start_time",
+            )
 
     duration_minutes = calculate_duration_minutes(start_t, end_t)
     if duration_minutes <= 0:
@@ -464,9 +478,14 @@ def create_availability_slot(
     data: dict[str, Any],
     user: dict[str, Any],
     reference_date: date | None = None,
+    reference_datetime: datetime | None = None,
 ) -> ObjectId:
     mentor_id = _require_mentor_user(user)
-    normalized = validate_and_normalize_slot_data(data, reference_date=reference_date)
+    normalized = validate_and_normalize_slot_data(
+        data,
+        reference_date=reference_date,
+        reference_datetime=reference_datetime,
+    )
 
     ensure_no_overlap(
         mentor_id,
@@ -523,10 +542,15 @@ def update_availability_slot(
     data: dict[str, Any],
     user: dict[str, Any],
     reference_date: date | None = None,
+    reference_datetime: datetime | None = None,
 ) -> dict[str, Any]:
     existing = get_managed_slot(slot_id, user)
     mentor_id = existing["mentor_id"]
-    normalized = validate_and_normalize_slot_data(data, reference_date=reference_date)
+    normalized = validate_and_normalize_slot_data(
+        data,
+        reference_date=reference_date,
+        reference_datetime=reference_datetime,
+    )
 
     ensure_no_overlap(
         mentor_id,

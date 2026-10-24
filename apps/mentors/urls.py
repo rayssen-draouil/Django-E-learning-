@@ -7,6 +7,7 @@ app_name = "mentors"
 urlpatterns = [
     # Public & student routes
     path("mentors/", views.mentors, name="mentors"),
+    path("mentors/recommend/", views.mentor_recommendations_view, name="mentor_recommendations"),
     path("mentors/<str:mentor_id>/", views.mentor_public_detail, name="mentor_public_detail"),
     path(
         "mentors/<str:mentor_id>/book/<str:availability_id>/",
@@ -27,6 +28,31 @@ urlpatterns = [
         "mentors/reviews/<str:booking_id>/add/",
         views.student_submit_review_view,
         name="student_submit_review",
+    ),
+    path(
+        "mentors/reviews/<str:booking_id>/edit/",
+        views.student_edit_review_view,
+        name="student_edit_review",
+    ),
+    path(
+        "mentors/reviews/<str:review_id>/report/",
+        views.report_review_view,
+        name="report_review",
+    ),
+    path(
+        "mentors/reviews/<str:review_id>/moderate/",
+        views.admin_moderate_review_view,
+        name="moderate_review",
+    ),
+    path(
+        "backoffice/mentors/reviews/<str:review_id>/reply/",
+        views.mentor_reply_review_view,
+        name="mentor_reply_review",
+    ),
+    path(
+        "backoffice/mentors/profile-settings/",
+        views.mentor_update_profile_settings_view,
+        name="mentor_update_profile_settings",
     ),
 
     # Notifications
@@ -117,5 +143,57 @@ urlpatterns = [
         "backoffice/mentors/sessions/<str:booking_id>/cancel/",
         views.mentor_cancel_booking_view,
         name="mentor_cancel_booking",
+    ),
+    path(
+        "backoffice/mentors/sessions/<str:booking_id>/resend-invitation/",
+        views.mentor_resend_invitation_view,
+        name="mentor_resend_invitation",
+    ),
+
+    # Online Virtual Classroom & LiveKit Endpoints
+    path(
+        "mentorship/classroom/<str:booking_id>/",
+        views.classroom_view,
+        name="mentorship_classroom",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/metadata/",
+        views.classroom_metadata_api,
+        name="classroom_metadata_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/token/",
+        views.classroom_token_api,
+        name="classroom_token_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/attendance/",
+        views.classroom_attendance_api,
+        name="classroom_attendance_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/chat/",
+        views.classroom_chat_api,
+        name="classroom_chat_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/moderate/",
+        views.classroom_moderate_api,
+        name="classroom_moderate_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/complete/",
+        views.classroom_complete_api,
+        name="classroom_complete_api",
+    ),
+    path(
+        "api/mentorship/classroom/<str:booking_id>/ai-assist/",
+        views.classroom_ai_assist_api,
+        name="classroom_ai_assist_api",
+    ),
+    path(
+        "api/mentorship/livekit/webhook/",
+        views.livekit_webhook_view,
+        name="livekit_webhook",
     ),
 ]
