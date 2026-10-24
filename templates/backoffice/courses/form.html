@@ -1,0 +1,44 @@
+{% extends "backoffice/courses/base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">ESPACE {{ role_label|upper }}</p>
+            <h1>{{ title }}</h1>
+            <p class="header-subtitle">{% if course %}Mettez à jour les informations du cours « {{ course.title }} ».{% else %}Renseignez les informations du cours. Il sera créé en brouillon par défaut.{% endif %}</p>
+        </div>
+        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour à mes cours</a>
+    </header>
+
+    <form method="post" class="panel course-form">
+        {% csrf_token %}
+        <p class="course-form-intro">Les champs marqués d’un astérisque sont obligatoires. Les données sont validées avant leur enregistrement.</p>
+        {% if form.non_field_errors %}
+            <div class="course-form-alert" id="form-errors" role="alert">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        {% for field in form %}
+            <div class="course-field{% if field.errors %} has-error{% endif %}{% if field.name == 'is_free' %} course-checkbox{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+                {{ field }}
+                <p class="course-help" id="{{ field.auto_id }}_help">{% if field.help_text %}{{ field.help_text }}{% else %}Champ facultatif.{% endif %}</p>
+                {% if field.errors %}
+                    <div class="course-error" id="{{ field.auto_id }}_error">
+                        {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div class="course-form-actions">
+            <button class="course-button" type="submit">Enregistrer</button>
+            {% if course %}
+                <a class="course-button secondary" href="{% url 'users:course_manage_detail' course_id=course.id %}">Annuler</a>
+            {% else %}
+                <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Annuler</a>
+            {% endif %}
+        </div>
+    </form>
+    <script src="{% static 'backoffice/courses-ai.js' %}" defer></script>
+{% endblock %}

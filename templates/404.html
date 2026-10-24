@@ -1,0 +1,8 @@
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}Page introuvable{% endblock %}
+{% block content %}
+    <p class="course-eyebrow">Erreur 404</p>
+    <h1 class="course-title">Page introuvable</h1>
+    <p class="course-intro">La page demandée n'existe pas ou n'est plus accessible. Vérifiez l'adresse ou revenez au catalogue.</p>
+    <p><a class="course-button" href="{% url 'users:courses' %}">Voir les cours</a> <a class="course-button secondary" href="{% url 'home' %}">Retour à l'accueil</a></p>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "backoffice/courses/base.html" %}
+{% block title %}Supprimer le cours{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">CONFIRMATION</p>
+            <h1>Supprimer le cours</h1>
+            <p class="header-subtitle">Cette action est définitive.</p>
+        </div>
+    </header>
+
+    <section class="panel" aria-labelledby="delete-confirmation-heading">
+        <h2 id="delete-confirmation-heading">Confirmer la suppression</h2>
+        <p>Voulez-vous vraiment supprimer le cours <strong>{{ course.title }}</strong> ? Il disparaîtra du catalogue et de vos cours.</p>
+        <div class="course-actions">
+            <form method="post" action="{% url 'users:course_manage_delete' course_id=course.id %}">
+                {% csrf_token %}
+                <button class="course-button danger" type="submit">Confirmer la suppression</button>
+            </form>
+            <a class="course-button secondary" href="{% url 'users:course_manage_detail' course_id=course.id %}">Annuler</a>
+        </div>
+    </section>
+{% endblock %}

@@ -22,6 +22,10 @@
                     <p class="header-subtitle">Voici un aperçu de votre progression.</p>
                 </div>
                 <div class="header-actions">
+                    {% if user.role == 'instructor' or user.role == 'admin' %}
+                        <a href="{% url 'users:course_manage_list' %}" class="outline-button">Mes cours</a>
+                        <a href="{% url 'users:course_manage_create' %}" class="outline-button">Nouveau cours</a>
+                    {% endif %}
                     <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
                     <a href="{% url 'users:profile' %}" class="profile-chip">
                         <span>{{ user.first_name|default:"S"|first|upper }}</span>

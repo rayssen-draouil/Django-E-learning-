@@ -1,0 +1,8 @@
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}Erreur serveur{% endblock %}
+{% block content %}
+    <p class="course-eyebrow">Erreur 500</p>
+    <h1 class="course-title">Une erreur est survenue</h1>
+    <p class="course-intro">Le service a rencontré un problème inattendu. Réessayez dans quelques instants.</p>
+    <p><a class="course-button" href="{% url 'home' %}">Retour à l'accueil</a></p>
+{% endblock %}

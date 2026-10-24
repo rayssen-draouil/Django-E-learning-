@@ -24,6 +24,11 @@
             </div>
             <h1 class="course-title">{{ course.title }}</h1>
             <p class="course-intro">{{ course.description|truncatechars:180 }}</p>
+            <div class="course-detail-summary" aria-label="Résumé du cours">
+                <span><strong>{{ course.duration_hours }} h</strong> de contenu</span>
+                <span><strong>{{ course.language|upper }}</strong></span>
+                <span><strong>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</strong></span>
+            </div>
         </header>
 
         {% if course.status == "draft" and can_manage %}
@@ -64,7 +69,7 @@
                     <li><span>Durée</span><strong>{{ course.duration_hours }} h</strong></li>
                     <li><span>Langue</span><strong>{{ course.language }}</strong></li>
                     <li><span>Tarif</span><strong>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</strong></li>
-                    <li><span>Publié le</span><strong>{{ course.created_at|date:"d/m/Y" }}</strong></li>
+                    <li><span>Créé le</span><strong>{{ course.created_at|date:"d/m/Y" }}</strong></li>
                 </ul>
                 <p><a class="course-button secondary" href="{% url 'users:courses' %}">Retour au catalogue</a></p>
             </aside>

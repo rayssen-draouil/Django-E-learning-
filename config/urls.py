@@ -21,4 +21,9 @@ from .views import home
 urlpatterns = [
     path('', home, name='home'),
     path('users/', include('apps.users.urls')),
+    path('', include('apps.courses.urls')),
 ]
+
+handler403 = "config.views.error_403"
+handler404 = "config.views.error_404"
+handler500 = "config.views.error_500"

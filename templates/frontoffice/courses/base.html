@@ -1,0 +1,47 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Cours{% endblock %} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontoffice/css/courses.css' %}">
+</head>
+<body class="course-site">
+    <a class="course-skip-link" href="#main-content">Aller au contenu principal</a>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="site-brand" href="{% url 'home' %}">SkillForge</a>
+            <nav class="site-nav" aria-label="Navigation principale">
+                <a href="{% url 'home' %}">Accueil</a>
+                <a href="{% url 'users:courses' %}"{% if request.resolver_match.url_name == 'courses' or request.resolver_match.url_name == 'course_detail' %} aria-current="page"{% endif %}>Cours</a>
+                <a href="{% url 'users:mentors' %}">Mentors</a>
+                <a href="{% url 'users:quiz' %}">Quiz</a>
+                {% if request.session.user_id %}
+                    <a class="nav-cta" href="{% url 'users:backoffice' %}">Tableau de bord</a>
+                {% else %}
+                    <a href="{% url 'users:login' %}">Connexion</a>
+                    <a class="nav-cta" href="{% url 'users:register' %}">Inscription</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="course-main" id="main-content">
+        {% if messages %}
+            <div class="course-messages" aria-live="polite">
+                {% for message in messages %}
+                    <p class="course-message {{ message.tags }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer-inner">SkillForge — Apprendre, pratiquer et progresser à son rythme.</div>
+    </footer>
+</body>
+</html>

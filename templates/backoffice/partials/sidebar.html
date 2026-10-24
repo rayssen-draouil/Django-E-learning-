@@ -9,9 +9,14 @@
         <a href="{% url 'users:backoffice' %}" class="{% if section == 'overview' %}active{% endif %}">
             <span class="nav-icon">⌂</span> Tableau de bord
         </a>
-        <a href="{% if user.role == 'student' %}{% url 'users:backoffice_courses' %}{% else %}{% url 'users:courses' %}{% endif %}" class="{% if section == 'courses' %}active{% endif %}">
+        <a href="{% if user.role == 'student' %}{% url 'users:backoffice_courses' %}{% else %}{% url 'users:course_manage_list' %}{% endif %}" class="{% if section == 'courses' %}active{% endif %}">
             <span class="nav-icon">▣</span> Mes cours
         </a>
+        {% if user.role == 'instructor' or user.role == 'admin' %}
+            <a href="{% url 'users:course_manage_create' %}">
+                <span class="nav-icon" aria-hidden="true">+</span> Nouveau cours
+            </a>
+        {% endif %}
         <a href="{% if user.role == 'student' %}{% url 'users:backoffice_mentors' %}{% else %}{% url 'users:mentors' %}{% endif %}" class="{% if section == 'mentors' %}active{% endif %}">
             <span class="nav-icon">♧</span> Mentors
         </a>
