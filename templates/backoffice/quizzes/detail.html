@@ -1,40 +1,84 @@
 {% load static %}
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }} | SkillForge</title>
-    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=2">
 </head>
 <body class="dashboard-body">
 <div class="dashboard-shell">
     <aside class="dashboard-sidebar">
         <a class="dashboard-logo" href="{% url 'home' %}"><span class="logo-shape">S</span><span>SkillForge</span></a>
-        <p class="sidebar-label">GESTION DES QUIZ</p>
-        <nav class="dashboard-nav"><a class="active" href="{% url 'users:quiz_manage_list' %}">Mes quiz</a><a href="{% url 'users:quiz_manage_create' %}">Créer un quiz</a></nav>
-        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Déconnexion</button></form>
+        <p class="sidebar-label">QUIZ MANAGEMENT</p>
+        <nav class="dashboard-nav" aria-label="Quiz navigation">
+            <a class="active" href="{% url 'users:quiz_manage_list' %}">Quiz management</a>
+            <a href="{% url 'users:quiz_manage_create' %}">Create a quiz</a>
+        </nav>
+        <form method="post" action="{% url 'users:logout' %}" class="logout-form">{% csrf_token %}<button type="submit">Log out</button></form>
     </aside>
-    <main class="dashboard-main">
-        {% for message in messages %}<div class="panel">{{ message }}</div>{% endfor %}
-        <header class="dashboard-header">
-            <div><p class="eyebrow">{{ quiz.status }}</p><h1>{{ quiz.title }}</h1><p class="header-subtitle">{{ quiz.description }}</p></div>
-            <div class="header-actions">
-                <a class="outline-button" href="{% url 'users:quiz_manage_edit' quiz_id=quiz.id %}">Modifier</a>
-                {% if quiz.status == "draft" %}<form method="post" action="{% url 'users:quiz_manage_publish' quiz_id=quiz.id %}">{% csrf_token %}<button class="primary-button" type="submit">Soumettre le quiz</button></form>{% endif %}
-                <a class="primary-button" href="{% url 'users:quiz_manage_delete' quiz_id=quiz.id %}">Supprimer</a>
+
+    <main class="dashboard-main quiz-detail-main">
+        <a class="quiz-detail-back" href="{% url 'users:quiz_manage_list' %}"><span aria-hidden="true">←</span> Back to quiz management</a>
+        {% for message in messages %}<div class="quiz-detail-message" role="status">{{ message }}</div>{% endfor %}
+
+        <section class="quiz-detail-hero">
+            <div class="quiz-detail-hero-glow" aria-hidden="true"></div>
+            <div class="quiz-detail-hero-content">
+                <div class="quiz-detail-eyebrow-row">
+                    <span class="quiz-status-pill quiz-status-{{ quiz.status }}"><i></i>{{ quiz.status|capfirst }}</span>
+                    <span class="quiz-detail-label">ASSESSMENT · SKILLFORGE</span>
+                </div>
+                <h1>{{ quiz.title }}</h1>
+                <p>{{ quiz.description|default:"No description for this quiz." }}</p>
+                <div class="quiz-detail-actions">
+                    <a class="outline-button" href="{% url 'users:quiz_manage_edit' quiz_id=quiz.id %}"><span aria-hidden="true">✎</span> Edit quiz</a>
+                    {% if quiz.status == "draft" %}
+                        <form method="post" action="{% url 'users:quiz_manage_publish' quiz_id=quiz.id %}">{% csrf_token %}<button class="primary-button" type="submit"><span aria-hidden="true">↗</span> Submit quiz</button></form>
+                    {% endif %}
+                    <a class="quiz-detail-delete" href="{% url 'users:quiz_manage_delete' quiz_id=quiz.id %}">Delete</a>
+                </div>
             </div>
-        </header>
-        <section class="panel">
-            <h2>Paramètres</h2>
-            <p>Durée : {% if quiz.duration_seconds %}{{ quiz.duration_seconds }} secondes{% else %}sans limite{% endif %}</p>
-            <p>Score minimal : {% if quiz.passing_score != None %}{{ quiz.passing_score }} %{% else %}non défini{% endif %}</p>
-            <h2>Questions ({{ quiz.questions|length }})</h2>
-            {% for question in quiz.questions %}
-                <article class="course-row"><div class="course-info"><h3>{{ question.position }}. {{ question.prompt }}</h3><p>{{ question.type }} · {{ question.points }} point(s)</p>
-                    <ul>{% for option in question.options %}<li>{{ option.text }}{% if option.id in question.correct_option_ids %} — réponse correcte{% endif %}</li>{% endfor %}</ul>
-                </div></article>
-            {% endfor %}
+            <div class="quiz-detail-hero-mark" aria-hidden="true"><span>Q</span><i>✦</i></div>
+        </section>
+
+        <section class="quiz-detail-stats" aria-label="Quiz summary">
+            <article class="quiz-detail-stat"><span class="quiz-stat-icon quiz-stat-purple" aria-hidden="true">▤</span><div><span>Questions</span><strong>{{ quiz.questions|length }}</strong></div></article>
+            <article class="quiz-detail-stat"><span class="quiz-stat-icon quiz-stat-orange" aria-hidden="true">◷</span><div><span>Duration</span><strong>{% if quiz.duration_seconds %}{{ quiz.duration_seconds }} <small>sec</small>{% else %}No time limit{% endif %}</strong></div></article>
+            <article class="quiz-detail-stat"><span class="quiz-stat-icon quiz-stat-green" aria-hidden="true">✓</span><div><span>Passing score</span><strong>{% if quiz.passing_score != None %}{{ quiz.passing_score }} <small>%</small>{% else %}Not set{% endif %}</strong></div></article>
+            <article class="quiz-detail-stat"><span class="quiz-stat-icon quiz-stat-blue" aria-hidden="true">★</span><div><span>Total points</span><strong>{{ total_points }}</strong></div></article>
+        </section>
+
+        <section class="quiz-detail-questions-section">
+            <header class="quiz-detail-section-heading">
+                <div><p class="eyebrow">ASSESSMENT CONTENT</p><h2>Questions <span>{{ quiz.questions|length }}</span></h2><p>Review the questions and answer key.</p></div>
+                <a class="outline-button" href="{% url 'users:quiz_manage_edit' quiz_id=quiz.id %}">Edit questions</a>
+            </header>
+            <div class="quiz-detail-question-list">
+                {% for question in quiz.questions %}
+                    <article class="quiz-detail-question-card">
+                        <div class="quiz-question-number">{{ question.position|stringformat:"02d" }}</div>
+                        <div class="quiz-question-content">
+                            <div class="quiz-question-meta"><span class="quiz-question-type">{% if question.type == "single_choice" %}Single choice{% elif question.type == "multiple_choice" %}Multiple choice{% else %}True / False{% endif %}</span><span class="quiz-question-points">{{ question.points }} point(s)</span></div>
+                            <h3>{{ question.prompt }}</h3>
+                            <details class="quiz-question-answer-details">
+                                <summary><span>Show options and answer key</span><span class="quiz-question-chevron" aria-hidden="true">⌄</span></summary>
+                                <ul class="quiz-answer-list">
+                                    {% for option in question.options %}
+                                        <li class="{% if option.id in question.correct_option_ids %}is-correct{% endif %}"><span class="quiz-answer-indicator" aria-hidden="true">{% if option.id in question.correct_option_ids %}✓{% else %}·{% endif %}</span><span>{{ option.text }}</span>{% if option.id in question.correct_option_ids %}<span class="quiz-answer-correct-label">Correct answer</span>{% endif %}</li>
+                                    {% endfor %}
+                                </ul>
+                            </details>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="quiz-detail-empty"><span aria-hidden="true">✦</span><h3>No questions yet</h3><p>Add questions to prepare your assessment.</p><a class="primary-button" href="{% url 'users:quiz_manage_edit' quiz_id=quiz.id %}">Add questions</a></div>
+                {% endfor %}
+            </div>
         </section>
     </main>
 </div>

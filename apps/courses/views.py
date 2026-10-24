@@ -16,7 +16,7 @@ def courses(request):
     })
 
 
-@roles_required("instructor", "admin")
+@roles_required("student")
 def backoffice_courses(request):
     return render(request, "backoffice/section_dashboard.html", {
         "user": request.mongo_user,
