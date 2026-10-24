@@ -1,0 +1,15 @@
+Mentorship Request Update
+
+Hello {{ student_name }},
+
+{{ mentor_name }} was unable to accept your coaching request for {{ date }} at {{ start_time }}.
+
+{% if reason %}
+Reason provided:
+{{ reason }}
+{% endif %}
+
+You can browse other available slots or mentors:
+{{ action_url }}
+
+SkillForge Platform

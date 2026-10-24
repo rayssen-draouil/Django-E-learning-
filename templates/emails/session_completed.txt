@@ -1,0 +1,10 @@
+How was your session with {{ mentor_name }}?
+
+Hello {{ student_name }},
+
+Your mentorship session on {{ topic }} has concluded. We hope it was productive!
+
+Please take 60 seconds to share your review:
+{{ action_url }}
+
+SkillForge Platform

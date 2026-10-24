@@ -1,0 +1,3014 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ classroom_meta.topic }} — SkillForge Virtual Classroom</title>
+  <link rel="shortcut icon" type="image/png" href="{% static 'images/logos/favicon.png' %}" />
+  <link rel="stylesheet" href="{% static 'css/styles.min.css' %}" />
+  <style>
+    :root {
+      --sf-bg-dark: #070b14;
+      --sf-surface: #0f172a;
+      --sf-surface-2: #1e293b;
+      --sf-surface-3: #334155;
+      --sf-border: rgba(148, 163, 184, 0.18);
+      --sf-border-strong: rgba(148, 163, 184, 0.32);
+      --sf-primary: #4f46e5;
+      --sf-primary-hover: #4338ca;
+      --sf-accent: #0ea5e9;
+      --sf-success: #10b981;
+      --sf-warning: #f59e0b;
+      --sf-danger: #ef4444;
+      --sf-text: #f8fafc;
+      --sf-muted: #94a3b8;
+      --sf-topbar-height: 68px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body.sf-classroom-body {
+      background: radial-gradient(circle at 50% 0%, #111c35 0%, var(--sf-bg-dark) 70%);
+      color: var(--sf-text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* =====================================================================
+       Top Navigation Header (Fixed Margin, Padding & Responsive Alignment)
+       ===================================================================== */
+    .sf-topbar {
+      min-height: var(--sf-topbar-height);
+      background: rgba(15, 23, 42, 0.92);
+      border-bottom: 1px solid var(--sf-border);
+      margin: 0;
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: sticky;
+      top: 0;
+      z-index: 105;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    .sf-topbar-inner {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .sf-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      min-width: 0;
+    }
+
+    .sf-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-shrink: 0;
+    }
+
+    .sf-brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 800;
+      font-size: 1rem;
+      color: #fff;
+      text-decoration: none;
+      padding: 0.25rem 0.4rem 0.25rem 0.25rem;
+      border-radius: 12px;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+    }
+    .sf-brand-badge:hover {
+      color: #fff;
+      opacity: 0.92;
+    }
+
+    .sf-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+    }
+
+    .sf-header-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--sf-border-strong);
+      flex-shrink: 0;
+    }
+
+    .sf-session-meta {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sf-session-topic {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 420px;
+      line-height: 1.25;
+    }
+
+    .sf-session-schedule {
+      font-size: 0.75rem;
+      color: var(--sf-muted);
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+
+    .sf-timer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--sf-border-strong);
+      color: #e2e8f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .sf-conn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+      border: 1px solid var(--sf-border);
+      transition: all 0.2s ease;
+    }
+
+    .sf-conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+      transition: all 0.2s ease;
+    }
+    .sf-conn-pill.connected {
+      background: rgba(16, 185, 129, 0.14);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .sf-conn-pill.connected .sf-conn-dot {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .sf-conn-pill.reconnecting {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.38);
+    }
+    .sf-conn-pill.reconnecting .sf-conn-dot {
+      background: #f59e0b;
+    }
+
+    .sf-role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.32rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(79, 70, 229, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.38);
+    }
+
+    /* Alert Banner Container */
+    .sf-alert-host {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0.85rem auto 0;
+      padding: 0 1.25rem;
+      z-index: 102;
+    }
+
+    /* =====================================================================
+       Pre-Join Lobby Layout
+       ===================================================================== */
+    .sf-lobby-wrapper {
+      width: 100%;
+      max-width: 1140px;
+      margin: 1.5rem auto 2.5rem;
+      padding: 0 1.25rem;
+      flex: 1;
+    }
+
+    .sf-lobby-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--sf-border);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .sf-preview-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background: #050811;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--sf-border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .sf-preview-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    .sf-preview-placeholder {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--sf-muted);
+    }
+
+    .sf-avatar-circle {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 10px 24px rgba(79, 70, 229, 0.35);
+    }
+
+    .sf-preview-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.75rem;
+      background: rgba(15, 23, 42, 0.86);
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid var(--sf-border-strong);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .sf-icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      color: #f8fafc;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-size: 1.2rem;
+    }
+    .sf-icon-btn:hover {
+      background: #334155;
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    .sf-icon-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+    }
+    .sf-icon-btn.muted-off {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(185, 28, 28, 0.24));
+      border-color: rgba(248, 113, 113, 0.6);
+      color: #fecaca;
+    }
+
+    .sf-device-select {
+      background: var(--sf-surface-2);
+      color: var(--sf-text);
+      border: 1px solid var(--sf-border);
+      border-radius: 10px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.85rem;
+      width: 100%;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sf-device-select:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Lobby Action Buttons */
+    .sf-btn-primary-join {
+      background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.98rem;
+      padding: 0.9rem 1.25rem;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.35);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .sf-btn-primary-join:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca 0%, #0369a1 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(79, 70, 229, 0.45);
+      color: #fff;
+    }
+    .sf-btn-primary-join:disabled {
+      background: rgba(51, 65, 85, 0.6);
+      border-color: rgba(148, 163, 184, 0.2);
+      color: rgba(203, 213, 225, 0.55);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .sf-btn-unlock-early {
+      background: rgba(14, 165, 233, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.7rem 1rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.18s ease;
+      cursor: pointer;
+    }
+    .sf-btn-unlock-early:hover:not(:disabled) {
+      background: rgba(14, 165, 233, 0.22);
+      border-color: #38bdf8;
+      color: #e0f2fe;
+      transform: translateY(-1px);
+    }
+
+    .sf-btn-return {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--sf-border);
+      color: #cbd5e1;
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 0.6rem 1rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      transition: all 0.18s ease;
+    }
+    .sf-btn-return:hover {
+      background: rgba(51, 65, 85, 0.75);
+      border-color: var(--sf-border-strong);
+      color: #fff;
+    }
+
+    /* =====================================================================
+       Live Classroom Stage & Control Bar (Polished UI & Hierarchy)
+       ===================================================================== */
+    #liveClassroomStage {
+      display: none;
+      flex: 1;
+      height: calc(100vh - var(--sf-topbar-height));
+      min-height: 520px;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sf-stage-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sf-video-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.25rem;
+      gap: 1rem;
+      overflow-y: auto;
+      background: radial-gradient(circle at center, #111827 0%, #070b14 100%);
+    }
+
+    /* Screen share spotlight */
+    #screenShareContainer {
+      display: none;
+      flex: 2;
+      min-height: 300px;
+      background: #000;
+      border-radius: 16px;
+      border: 2px solid rgba(14, 165, 233, 0.55);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+    #screenShareContainer video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Camera Grid */
+    .sf-camera-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      align-content: stretch;
+      min-height: 240px;
+    }
+
+    .sf-video-tile {
+      position: relative;
+      background: #0f172a;
+      border: 2px solid var(--sf-border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .sf-video-tile.active-speaker {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28);
+    }
+
+    .sf-video-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .sf-video-tile.local-tile video {
+      transform: scaleX(-1);
+    }
+
+    .sf-tile-overlay-bottom {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .sf-name-tag {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.32rem 0.75rem;
+      border-radius: 9px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .sf-hand-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 0.78rem;
+      padding: 0.32rem 0.75rem;
+      border-radius: 999px;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+      z-index: 5;
+    }
+
+    /* Side Drawer (Chat / Participants / AI Assistant) */
+    .sf-side-panel {
+      width: 380px;
+      background: var(--sf-surface);
+      border-left: 1px solid var(--sf-border);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+    }
+
+    .sf-side-panel.collapsed {
+      display: none;
+    }
+
+    .sf-panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--sf-border);
+      background: rgba(15, 23, 42, 0.75);
+      padding: 0.25rem 0.35rem 0;
+      gap: 0.25rem;
+    }
+
+    .sf-panel-tab {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--sf-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+    }
+    .sf-panel-tab:hover {
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .sf-panel-tab.active {
+      color: #fff;
+      border-bottom-color: #6366f1;
+      background: rgba(79, 70, 229, 0.14);
+    }
+
+    .sf-tab-pane {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sf-tab-pane.active {
+      display: flex;
+    }
+
+    .sf-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .sf-chat-bubble {
+      background: var(--sf-surface-2);
+      border: 1px solid var(--sf-border);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.86rem;
+    }
+    .sf-chat-bubble.own-message {
+      background: rgba(79, 70, 229, 0.22);
+      border-color: rgba(99, 102, 241, 0.42);
+    }
+
+    /* Mentor Host Control Cards */
+    .sf-host-controls-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--sf-border);
+      border-radius: 14px;
+      padding: 0.85rem;
+    }
+
+    .sf-host-action-btn {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid var(--sf-border-strong);
+      border-radius: 11px;
+      padding: 0.65rem 0.8rem;
+      color: #f8fafc;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      text-align: left;
+    }
+    .sf-host-action-btn:hover:not(:disabled) {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(148, 163, 184, 0.5);
+      transform: translateY(-1px);
+    }
+    .sf-host-action-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45);
+    }
+    .sf-host-action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .sf-host-action-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+    .sf-host-action-icon.amber {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .sf-host-action-icon.cyan {
+      background: rgba(14, 165, 233, 0.18);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+    }
+    .sf-host-action-icon.indigo {
+      background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    /* Bottom Control Bar */
+    .sf-toolbar {
+      min-height: 80px;
+      background: rgba(15, 23, 42, 0.97);
+      border-top: 1px solid var(--sf-border-strong);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem;
+      z-index: 95;
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .sf-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .sf-ctrl-btn {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.24rem;
+      min-width: 78px;
+      height: 56px;
+      padding: 0.35rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid var(--sf-border-strong);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+      color: #f1f5f9;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      position: relative;
+      user-select: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    .sf-ctrl-btn iconify-icon {
+      font-size: 1.25rem;
+      transition: transform 0.16s ease;
+    }
+    .sf-ctrl-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(148, 163, 184, 0.5);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .sf-ctrl-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .sf-ctrl-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+    }
+    .sf-ctrl-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* Muted / Camera Off State */
+    .sf-ctrl-btn.danger-state {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.24) 0%, rgba(185, 28, 28, 0.2) 100%);
+      border-color: rgba(248, 113, 113, 0.55);
+      color: #fecaca;
+    }
+    .sf-ctrl-btn.danger-state:hover:not(:disabled) {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.34) 0%, rgba(185, 28, 28, 0.3) 100%);
+      border-color: #f87171;
+      color: #fff;
+    }
+
+    /* Active Panel Toggle State */
+    .sf-ctrl-btn.active-state {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      border-color: #818cf8;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.38);
+    }
+    .sf-ctrl-btn.active-state:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+    }
+
+    /* Screen Share Active State */
+    .sf-ctrl-btn.screen-active-state {
+      background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+      border-color: #38bdf8;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.38);
+    }
+
+    /* Hand Raised Active State */
+    .sf-ctrl-btn.hand-active-state {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.25) 100%);
+      border-color: rgba(251, 191, 36, 0.7);
+      color: #fde68a;
+      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.25);
+    }
+
+    /* Primary Complete Session Button */
+    .sf-btn-complete-session {
+      height: 52px;
+      padding: 0 1.15rem;
+      border-radius: 14px;
+      border: 1px solid rgba(52, 211, 153, 0.5);
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #fff;
+      font-size: 0.84rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.32);
+      white-space: nowrap;
+    }
+    .sf-btn-complete-session:hover:not(:disabled) {
+      background: linear-gradient(135deg, #047857 0%, #059669 100%);
+      border-color: #6ee7b7;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(16, 185, 129, 0.44);
+      color: #fff;
+    }
+    .sf-btn-complete-session:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5);
+    }
+    .sf-btn-complete-session:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Leave Classroom Button */
+    .sf-btn-leave-room {
+      height: 52px;
+      padding: 0 1.1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(248, 113, 113, 0.5);
+      background: rgba(239, 68, 68, 0.16);
+      color: #fecaca;
+      font-size: 0.84rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .sf-btn-leave-room:hover:not(:disabled) {
+      background: #ef4444;
+      border-color: #f87171;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.38);
+    }
+    .sf-btn-leave-room:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
+    }
+
+    .sf-unread-dot {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      display: none;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Complete Session Modal Styling */
+    .sf-modal-content {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid var(--sf-border-strong);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+    }
+
+    .sf-modal-icon-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.38);
+      color: #34d399;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .sf-modal-checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .sf-modal-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid var(--sf-border);
+      padding: 0.65rem 0.85rem;
+      border-radius: 11px;
+      color: #e2e8f0;
+      font-size: 0.84rem;
+    }
+    .sf-modal-checklist li iconify-icon {
+      color: #34d399;
+      font-size: 1.1rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Responsive Breakpoints (Desktop, Tablet, Mobile) */
+    @media (max-width: 991px) {
+      .sf-topbar {
+        padding: 0.6rem 1rem;
+      }
+      .sf-session-topic {
+        max-width: 240px;
+      }
+      .sf-side-panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 360px;
+        z-index: 88;
+        box-shadow: -12px 0 32px rgba(0, 0, 0, 0.55);
+      }
+      .sf-toolbar {
+        padding: 0.55rem 0.85rem;
+        gap: 0.5rem;
+      }
+      .sf-ctrl-btn {
+        min-width: 58px;
+        height: 50px;
+        padding: 0.25rem 0.55rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .sf-header-divider,
+      .sf-session-meta {
+        display: none;
+      }
+      .sf-lobby-wrapper {
+        margin: 1rem auto 1.75rem;
+        padding: 0 0.85rem;
+      }
+      .sf-ctrl-btn span.ctrl-label {
+        display: none;
+      }
+      .sf-ctrl-btn {
+        min-width: 46px;
+        height: 46px;
+        padding: 0;
+      }
+      .sf-btn-complete-session,
+      .sf-btn-leave-room {
+        height: 46px;
+        padding: 0 0.85rem;
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+<body class="sf-classroom-body">
+
+  <!-- Top Header Bar -->
+  <header class="sf-topbar">
+    <div class="sf-topbar-inner">
+      <div class="sf-topbar-left">
+        <a href="{% if classroom_meta.participant_role == 'mentor' %}{% url 'users:mentor_sessions_list' %}{% else %}{% url 'users:profile' %}{% endif %}" class="sf-brand-badge">
+          <span class="sf-brand-icon"><iconify-icon icon="solar:videocamera-record-bold-duotone"></iconify-icon></span>
+          <span>SkillForge <span class="text-info fw-semibold">Classroom</span></span>
+        </a>
+        <div class="sf-header-divider"></div>
+        <div class="sf-session-meta">
+          <div class="sf-session-topic" title="{{ classroom_meta.topic }}">{{ classroom_meta.topic }}</div>
+          <div class="sf-session-schedule">
+            {{ classroom_meta.date }} &bull; {{ classroom_meta.start_time }}–{{ classroom_meta.end_time }} ({{ classroom_meta.timezone }})
+          </div>
+        </div>
+      </div>
+
+      <div class="sf-topbar-right">
+        <div id="liveTimerBadge" class="sf-timer-pill d-none" aria-label="Session elapsed time">
+          <iconify-icon icon="solar:clock-circle-bold" class="text-info"></iconify-icon>
+          <span id="liveTimerValue">00:00</span>
+        </div>
+
+        <div id="connectionStatusPill" class="sf-conn-pill" role="status" aria-live="polite">
+          <span class="sf-conn-dot"></span>
+          <span id="connectionStatusText">Lobby Ready</span>
+        </div>
+
+        <span class="sf-role-pill">
+          <iconify-icon icon="solar:user-id-bold"></iconify-icon>
+          <span>{{ classroom_meta.participant_role }}</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Alert Banner -->
+  <div id="classroomAlertContainer" class="sf-alert-host" style="display: none;">
+    <div id="classroomAlertBox" class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between mb-0 rounded-3" role="alert">
+      <div class="d-flex align-items-center gap-2">
+        <iconify-icon id="classroomAlertIcon" icon="solar:shield-warning-bold-duotone" class="fs-5 flex-shrink-0"></iconify-icon>
+        <span id="classroomAlertText" class="small fw-semibold"></span>
+      </div>
+      <button type="button" class="btn-close" aria-label="Dismiss alert" onclick="document.getElementById('classroomAlertContainer').style.display='none'"></button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: PRE-JOIN LOBBY & DEVICE CHECK                                 -->
+  <!-- ===================================================================== -->
+  <main id="preJoinLobby" class="sf-lobby-wrapper">
+    <div class="sf-lobby-card p-4 p-lg-5">
+      <div class="row g-4 align-items-center">
+        <!-- Left Column: Camera & Mic Hardware Preview -->
+        <div class="col-lg-7">
+          <div class="sf-preview-box" id="lobbyVideoWrapper">
+            <video id="lobbyPreviewVideo" autoplay playsinline muted style="display: none;"></video>
+            <div id="lobbyPreviewPlaceholder" class="sf-preview-placeholder">
+              <div class="sf-avatar-circle">
+                {{ classroom_meta.participant_name|slice:":1"|upper }}
+              </div>
+              <h6 class="text-white fw-bold mb-1">{{ classroom_meta.participant_name }}</h6>
+              <p id="previewStatusSubtext" class="small text-white-50 mb-0">
+                Camera preview is off or initializing...
+              </p>
+            </div>
+
+            <div class="sf-preview-controls">
+              <button type="button" id="lobbyMicToggleBtn" class="sf-icon-btn" title="Toggle Microphone" aria-label="Toggle Microphone" aria-pressed="true">
+                <iconify-icon id="lobbyMicIcon" icon="solar:microphone-3-bold"></iconify-icon>
+              </button>
+              <button type="button" id="lobbyCamToggleBtn" class="sf-icon-btn" title="Toggle Camera" aria-label="Toggle Camera" aria-pressed="true">
+                <iconify-icon id="lobbyCamIcon" icon="solar:videocamera-bold"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Audio/Video Device Selectors -->
+          <div class="row g-2 mt-3">
+            <div class="col-sm-6">
+              <label for="audioInputSelect" class="form-label small text-white-50 mb-1">
+                <iconify-icon icon="solar:microphone-2-linear" class="me-1"></iconify-icon>Microphone
+              </label>
+              <select id="audioInputSelect" class="sf-device-select">
+                <option value="">Default Microphone</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label for="videoInputSelect" class="form-label small text-white-50 mb-1">
+                <iconify-icon icon="solar:videocamera-linear" class="me-1"></iconify-icon>Camera
+              </label>
+              <select id="videoInputSelect" class="sf-device-select">
+                <option value="">Default Camera</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="mediaPermissionHelp" class="alert alert-info bg-opacity-10 border-info border-opacity-25 text-info small mt-3 mb-0" style="display: none;">
+            <iconify-icon icon="solar:info-circle-bold" class="me-1"></iconify-icon>
+            <span id="mediaPermissionHelpText">
+              Browser camera/microphone permission was not granted. You can still join the classroom in listen-only or chat mode, or allow permissions in your browser address bar.
+            </span>
+          </div>
+        </div>
+
+        <!-- Right Column: Session Details, Readiness & Join Controls -->
+        <div class="col-lg-5">
+          <div class="p-3 p-xl-4 rounded-4" style="background: rgba(30, 41, 59, 0.55); border: 1px solid var(--sf-border);">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill">
+                <iconify-icon icon="solar:shield-check-bold" class="me-1"></iconify-icon>Encrypted LiveKit Room
+              </span>
+              <span id="lobbyStatusBadge" class="badge bg-secondary bg-opacity-25 text-light px-3 py-1 rounded-pill text-uppercase">
+                {{ classroom_meta.booking_status }}
+              </span>
+            </div>
+
+            <h3 class="fw-bolder text-white mb-2">{{ classroom_meta.topic }}</h3>
+            {% if classroom_meta.student_goal %}
+            <p class="small text-white-50 mb-3">
+              <strong>Session Goal:</strong> {{ classroom_meta.student_goal }}
+            </p>
+            {% endif %}
+
+            <!-- Participant Cards (Live-Synced in Real Time) -->
+            <div class="d-flex flex-column gap-2 mb-4">
+              <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background: rgba(15, 23, 42, 0.65);">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge text-white rounded-circle p-2" style="background: #4f46e5;">M</span>
+                  <div>
+                    <div class="small fw-bold text-white">{{ classroom_meta.mentor.name }}</div>
+                    <div class="text-white-50" style="font-size: 0.72rem;">Mentor (Host)</div>
+                  </div>
+                </div>
+                <span id="lobbyMentorPresenceBadge" class="badge {% if classroom_meta.attendance.mentor.currently_connected %}bg-success-subtle text-success{% else %}bg-dark text-white-50{% endif %} small">
+                  {% if classroom_meta.attendance.mentor.currently_connected %}In Room{% else %}Not Joined Yet{% endif %}
+                </span>
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background: rgba(15, 23, 42, 0.65);">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-info text-dark rounded-circle p-2">S</span>
+                  <div>
+                    <div class="small fw-bold text-white">{{ classroom_meta.student.name }}</div>
+                    <div class="text-white-50" style="font-size: 0.72rem;">Student</div>
+                  </div>
+                </div>
+                <span id="lobbyStudentPresenceBadge" class="badge {% if classroom_meta.attendance.student.currently_connected %}bg-success-subtle text-success{% else %}bg-dark text-white-50{% endif %} small">
+                  {% if classroom_meta.attendance.student.currently_connected %}In Room{% else %}Not Joined Yet{% endif %}
+                </span>
+              </div>
+            </div>
+
+            <!-- Schedule Summary -->
+            <div class="small text-white-50 mb-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.45); border: 1px dashed var(--sf-border);">
+              <div class="d-flex justify-content-between mb-1">
+                <span>Scheduled Date:</span>
+                <strong class="text-white">{{ classroom_meta.date }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span>Time Window:</span>
+                <strong class="text-white">{{ classroom_meta.start_time }} – {{ classroom_meta.end_time }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Timezone:</span>
+                <strong class="text-info">{{ classroom_meta.timezone }}</strong>
+              </div>
+            </div>
+
+            <!-- Configuration Check Warning -->
+            {% if not classroom_meta.livekit_configured %}
+            <div class="alert alert-danger border-0 small mb-3">
+              <strong>LiveKit Not Configured:</strong> {{ classroom_meta.livekit_config_message }}
+            </div>
+            {% endif %}
+
+            <!-- Access Status Message (Auto-updated via Live Sync) -->
+            <div id="accessStateBox" class="p-3 rounded-3 mb-3 {% if classroom_meta.access.can_join %}bg-success bg-opacity-10 border border-success border-opacity-25 text-success{% else %}bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning{% endif %} small">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <div class="fw-bold" id="accessStateTitle">
+                  {% if classroom_meta.access.can_join %}
+                    Classroom is Open &amp; Ready
+                  {% elif classroom_meta.booking_status == 'completed' %}
+                    Session Completed
+                  {% else %}
+                    Classroom Access Notice
+                  {% endif %}
+                </div>
+                <span class="badge bg-dark bg-opacity-50 text-white-50" style="font-size: 0.66rem;" id="liveSyncIndicator">
+                  Live Sync Active
+                </span>
+              </div>
+              <div id="accessStateMessage">{{ classroom_meta.access.message }}</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button type="button" id="joinClassroomBtn"
+                      class="sf-btn-primary-join"
+                      {% if not classroom_meta.access.can_join or not classroom_meta.livekit_configured %}disabled{% endif %}>
+                <iconify-icon icon="solar:login-3-bold" class="fs-5"></iconify-icon>
+                <span id="joinClassroomBtnLabel">Join Virtual Classroom</span>
+              </button>
+
+              <button type="button" id="mentorUnlockEarlyBtn"
+                      class="sf-btn-unlock-early"
+                      style="{% if not classroom_meta.access.can_mentor_open_early or not classroom_meta.livekit_configured %}display: none;{% endif %}">
+                <iconify-icon icon="solar:lock-keyhole-minimalistic-unlocked-bold" class="fs-5"></iconify-icon>
+                <span id="mentorUnlockEarlyBtnLabel">Unlock &amp; Open Classroom Early (Host)</span>
+              </button>
+
+              <a id="lobbyStudentReviewBtn"
+                 href="{% url 'users:student_submit_review' classroom_meta.booking_id %}"
+                 class="btn btn-success fw-bold py-2 d-flex align-items-center justify-content-center gap-2 rounded-3"
+                 style="{% if classroom_meta.booking_status == 'completed' and classroom_meta.participant_role == 'student' %}display: inline-flex;{% else %}display: none;{% endif %}">
+                <iconify-icon icon="solar:star-bold" class="fs-5"></iconify-icon>
+                <span>Leave Verified Session Feedback</span>
+              </a>
+
+              <a href="{% if classroom_meta.participant_role == 'mentor' %}{% url 'users:mentor_sessions_list' %}{% else %}{% url 'users:profile' %}{% endif %}"
+                 class="sf-btn-return mt-1">
+                <iconify-icon icon="solar:arrow-left-linear"></iconify-icon>
+                <span>Return to {% if classroom_meta.participant_role == 'mentor' %}Mentor Sessions Dashboard{% else %}My Learning Profile{% endif %}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: LIVE VIRTUAL CLASSROOM STAGE                                  -->
+  <!-- ===================================================================== -->
+  <section id="liveClassroomStage">
+    <div class="sf-stage-body">
+      <!-- Main Video & Screen Share Stage -->
+      <div class="sf-video-area">
+        <!-- Screen Share Spotlight Container -->
+        <div id="screenShareContainer">
+          <video id="screenShareVideo" autoplay playsinline></video>
+          <div class="sf-tile-overlay-bottom">
+            <span class="sf-name-tag bg-info text-dark fw-bold">
+              <iconify-icon icon="solar:screencast-2-bold"></iconify-icon>
+              <span id="screenShareLabel">Screen Share</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Participant Camera Grid -->
+        <div class="sf-camera-grid" id="cameraGrid">
+          <!-- Remote Participant Tile -->
+          <div class="sf-video-tile" id="remoteParticipantTile">
+            <video id="remoteVideoElement" autoplay playsinline style="display: none;"></video>
+            <div id="remotePlaceholder" class="sf-preview-placeholder">
+              <div class="sf-avatar-circle" style="background: linear-gradient(135deg, #0ea5e9, #6366f1);">
+                {% if classroom_meta.participant_role == 'mentor' %}
+                  {{ classroom_meta.student.name|slice:":1"|upper }}
+                {% else %}
+                  {{ classroom_meta.mentor.name|slice:":1"|upper }}
+                {% endif %}
+              </div>
+              <h6 class="text-white fw-bold mb-1" id="remoteParticipantTitle">
+                {% if classroom_meta.participant_role == 'mentor' %}
+                  {{ classroom_meta.student.name }} (Student)
+                {% else %}
+                  {{ classroom_meta.mentor.name }} (Mentor)
+                {% endif %}
+              </h6>
+              <p class="small text-white-50 mb-0" id="remoteWaitingStatus">
+                Waiting for participant to join the room...
+              </p>
+            </div>
+
+            <div id="remoteHandBadge" class="sf-hand-badge">
+              <span>✋</span> <span>Hand Raised</span>
+            </div>
+
+            <div class="sf-tile-overlay-bottom">
+              <span class="sf-name-tag">
+                <span id="remoteNameTag">
+                  {% if classroom_meta.participant_role == 'mentor' %}
+                    {{ classroom_meta.student.name }} (Student)
+                  {% else %}
+                    {{ classroom_meta.mentor.name }} (Mentor)
+                  {% endif %}
+                </span>
+              </span>
+              <span id="remoteMicBadge" class="badge bg-dark bg-opacity-75 text-white-50">
+                <iconify-icon id="remoteMicBadgeIcon" icon="solar:microphone-3-bold"></iconify-icon>
+              </span>
+            </div>
+          </div>
+
+          <!-- Local Participant Tile -->
+          <div class="sf-video-tile local-tile" id="localParticipantTile">
+            <video id="localVideoElement" autoplay playsinline muted style="display: none;"></video>
+            <div id="localPlaceholder" class="sf-preview-placeholder">
+              <div class="sf-avatar-circle">
+                {{ classroom_meta.participant_name|slice:":1"|upper }}
+              </div>
+              <h6 class="text-white fw-bold mb-1">{{ classroom_meta.participant_name }} (You)</h6>
+              <p class="small text-white-50 mb-0" id="localTileSubtext">Camera is off</p>
+            </div>
+
+            <div id="localHandBadge" class="sf-hand-badge">
+              <span>✋</span> <span>Hand Raised</span>
+            </div>
+
+            <div class="sf-tile-overlay-bottom">
+              <span class="sf-name-tag">
+                <span>{{ classroom_meta.participant_name }} (You &bull; {{ classroom_meta.participant_role|title }})</span>
+              </span>
+              <span id="localMicBadge" class="badge bg-success bg-opacity-75 text-white">
+                <iconify-icon id="localMicBadgeIcon" icon="solar:microphone-3-bold"></iconify-icon>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dedicated container for remote audio tracks -->
+        <div id="remoteAudioContainer" style="display: none;"></div>
+      </div>
+
+      <!-- Collapsible Right Drawer: Chat, Participants, AI Study Assistant -->
+      <aside id="classroomSidePanel" class="sf-side-panel">
+        <div class="sf-panel-tabs" role="tablist">
+          <button type="button" class="sf-panel-tab active" data-tab="chatTab" role="tab" aria-selected="true">
+            <iconify-icon icon="solar:chat-round-dots-bold"></iconify-icon>
+            <span>Chat</span>
+          </button>
+          <button type="button" class="sf-panel-tab" data-tab="participantsTab" role="tab" aria-selected="false">
+            <iconify-icon icon="solar:users-group-rounded-bold"></iconify-icon>
+            <span>People</span>
+          </button>
+          <button type="button" class="sf-panel-tab" data-tab="aiTab" role="tab" aria-selected="false">
+            <iconify-icon icon="solar:magic-stick-3-bold"></iconify-icon>
+            <span>AI Study</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: IN-ROOM CHAT -->
+        <div id="chatTab" class="sf-tab-pane active" role="tabpanel">
+          <div id="chatMessagesContainer" class="sf-chat-messages">
+            <div id="chatEmptyState" class="text-center text-white-50 small my-auto py-4">
+              <iconify-icon icon="solar:chat-line-linear" class="fs-2 d-block mx-auto mb-2 opacity-50"></iconify-icon>
+              No messages yet. Share links, code snippets, or questions here!
+            </div>
+          </div>
+          <form id="chatSendForm" class="p-3 border-top border-secondary border-opacity-25 d-flex gap-2">
+            <input type="text" id="chatInputField" class="form-control bg-dark text-white border-secondary"
+                   placeholder="Write a message..." maxlength="1500" autocomplete="off">
+            <button type="submit" id="chatSendBtn" class="btn btn-primary px-3" title="Send Message" aria-label="Send Message">
+              <iconify-icon icon="solar:plain-bold"></iconify-icon>
+            </button>
+          </form>
+        </div>
+
+        <!-- TAB 2: PARTICIPANTS & MENTOR MODERATION -->
+        <div id="participantsTab" class="sf-tab-pane p-3 overflow-auto" role="tabpanel">
+          <h6 class="text-uppercase text-white-50 fw-bold small mb-3">Session Participants</h6>
+
+          <div class="p-3 rounded-3 mb-2" style="background: var(--sf-surface-2); border: 1px solid var(--sf-border);">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-bold text-white small">{{ classroom_meta.mentor.name }}</div>
+                <div class="text-info" style="font-size: 0.73rem;">Mentor (Session Host)</div>
+              </div>
+              <span id="panelMentorStatus" class="badge bg-secondary small">Waiting</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-3 mb-4" style="background: var(--sf-surface-2); border: 1px solid var(--sf-border);">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-bold text-white small">{{ classroom_meta.student.name }}</div>
+                <div class="text-white-50" style="font-size: 0.73rem;">Student</div>
+              </div>
+              <span id="panelStudentStatus" class="badge bg-secondary small">Waiting</span>
+            </div>
+          </div>
+
+          {% if classroom_meta.participant_role == 'mentor' %}
+          <div class="sf-host-controls-card mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="text-uppercase text-white-50 fw-bold small mb-0">Mentor Host Controls</h6>
+              <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25" style="font-size: 0.65rem;">HOST</span>
+            </div>
+            <div class="d-grid gap-2">
+              <button type="button" id="hostMuteStudentBtn" class="sf-host-action-btn">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="sf-host-action-icon amber">
+                    <iconify-icon icon="solar:microphone-slash-bold"></iconify-icon>
+                  </span>
+                  <span>
+                    <span class="d-block text-white" id="hostMuteStudentLabel">Mute Student Microphone</span>
+                    <small class="text-white-50 fw-normal" style="font-size: 0.7rem;">Send immediate mute signal</small>
+                  </span>
+                </span>
+                <span class="badge bg-warning text-dark">Host</span>
+              </button>
+
+              <button type="button" id="hostLowerHandBtn" class="sf-host-action-btn">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="sf-host-action-icon cyan">
+                    <iconify-icon icon="solar:hand-shake-bold"></iconify-icon>
+                  </span>
+                  <span>
+                    <span class="d-block text-white" id="hostLowerHandLabel">Lower Raised Hand</span>
+                    <small class="text-white-50 fw-normal" style="font-size: 0.7rem;">Clear active hand indicator</small>
+                  </span>
+                </span>
+                <span class="badge bg-info text-dark">Host</span>
+              </button>
+
+              <button type="button" id="hostResendInviteBtn" class="sf-host-action-btn"
+                      data-resend-url="{% url 'users:mentor_resend_invitation' classroom_meta.booking_id %}">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="sf-host-action-icon indigo">
+                    <iconify-icon id="hostResendInviteIcon" icon="solar:letter-bold"></iconify-icon>
+                  </span>
+                  <span>
+                    <span class="d-block text-white" id="hostResendInviteLabel">Resend Student Email Invitation</span>
+                    <small class="text-white-50 fw-normal" style="font-size: 0.7rem;" id="hostResendInviteSub">Send direct classroom join link</small>
+                  </span>
+                </span>
+                <span class="badge bg-secondary text-light">Email</span>
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="p-3 rounded-3 small text-white-50" style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--sf-border);">
+            <div class="fw-bold text-white mb-1">Session Security</div>
+            <div>Room ID: <code class="text-info">{{ classroom_meta.room_name }}</code></div>
+            <div class="mt-1">Short-lived role-scoped JWT verification active.</div>
+          </div>
+        </div>
+
+        <!-- TAB 3: GROQ AI STUDY ASSISTANT -->
+        <div id="aiTab" class="sf-tab-pane p-3 overflow-auto" role="tabpanel">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary"><iconify-icon icon="solar:magic-stick-3-bold"></iconify-icon></span>
+            <h6 class="fw-bold text-white mb-0 small">SkillForge AI Study Assistant</h6>
+          </div>
+          <p class="text-white-50" style="font-size: 0.76rem;">
+            Need a quick concept explanation, code example, or study summary during your session? Ask the AI assistant below.
+          </p>
+
+          <div class="mb-2">
+            <label for="aiPromptType" class="form-label small text-white-50 mb-1">Assistance Mode</label>
+            <select id="aiPromptType" class="sf-device-select">
+              <option value="explain_concept">Explain a Concept Simply</option>
+              <option value="practice_questions">Generate 3 Practice Questions</option>
+              <option value="summarize_notes">Structure Session Notes into Action Items</option>
+              <option value="follow_up_questions">Suggest Follow-Up Study Plan</option>
+            </select>
+          </div>
+
+          <div class="mb-2">
+            <textarea id="aiUserInput" rows="3" class="form-control bg-dark text-white border-secondary small"
+                      placeholder="Type a question, topic, or rough session notes..."></textarea>
+          </div>
+
+          <button type="button" id="aiAskBtn" class="btn btn-primary btn-sm fw-bold w-100 mb-3">
+            <iconify-icon icon="solar:magic-stick-3-bold" class="me-1"></iconify-icon>Generate Study Insight
+          </button>
+
+          <div id="aiResponseBox" class="p-3 rounded-3 small text-light"
+               style="background: var(--sf-surface-2); border: 1px solid var(--sf-border); white-space: pre-wrap; display: none;">
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom Meeting Control Bar -->
+    <footer class="sf-toolbar" role="toolbar" aria-label="Classroom controls">
+      <div class="sf-toolbar-group">
+        <button type="button" id="stageMicBtn" class="sf-ctrl-btn" title="Mute or Unmute Microphone" aria-label="Mute or Unmute Microphone" aria-pressed="true">
+          <iconify-icon id="stageMicIcon" icon="solar:microphone-3-bold"></iconify-icon>
+          <span class="ctrl-label" id="stageMicLabel">Mute</span>
+        </button>
+
+        <button type="button" id="stageCamBtn" class="sf-ctrl-btn" title="Start or Stop Video" aria-label="Start or Stop Video" aria-pressed="true">
+          <iconify-icon id="stageCamIcon" icon="solar:videocamera-bold"></iconify-icon>
+          <span class="ctrl-label" id="stageCamLabel">Stop Video</span>
+        </button>
+
+        <button type="button" id="stageScreenBtn" class="sf-ctrl-btn" title="Share Screen" aria-label="Share Screen" aria-pressed="false">
+          <iconify-icon id="stageScreenIcon" icon="solar:screencast-2-bold"></iconify-icon>
+          <span class="ctrl-label" id="stageScreenLabel">Share Screen</span>
+        </button>
+
+        <button type="button" id="stageHandBtn" class="sf-ctrl-btn" title="Raise or Lower Hand" aria-label="Raise or Lower Hand" aria-pressed="false">
+          <iconify-icon id="stageHandIcon" icon="solar:hand-stars-bold"></iconify-icon>
+          <span class="ctrl-label" id="stageHandLabel">Raise Hand</span>
+        </button>
+      </div>
+
+      <div class="sf-toolbar-group">
+        <button type="button" id="toggleChatPanelBtn" class="sf-ctrl-btn active-state" title="Toggle Side Panel" aria-label="Toggle Side Panel" aria-expanded="true">
+          <span id="unreadChatBadge" class="sf-unread-dot">0</span>
+          <iconify-icon icon="solar:chat-round-dots-bold"></iconify-icon>
+          <span class="ctrl-label">Side Panel</span>
+        </button>
+      </div>
+
+      <div class="sf-toolbar-group">
+        {% if classroom_meta.participant_role == 'mentor' %}
+        <button type="button" id="mentorCompleteSessionBtn" class="sf-btn-complete-session" title="Complete & End Mentorship Session">
+          <iconify-icon icon="solar:check-circle-bold" class="fs-5"></iconify-icon>
+          <span class="d-none d-sm-inline">Complete &amp; End Session</span>
+        </button>
+        {% endif %}
+
+        <button type="button" id="leaveClassroomBtn" class="sf-btn-leave-room" title="Leave Classroom Without Completing Session">
+          <iconify-icon icon="solar:logout-3-bold" class="fs-5"></iconify-icon>
+          <span>Leave</span>
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- Mentor Complete Session Confirmation Modal -->
+  {% if classroom_meta.participant_role == 'mentor' %}
+  <div class="modal fade" id="completeSessionModal" tabindex="-1" aria-labelledby="completeSessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content sf-modal-content">
+        <div class="modal-header border-secondary border-opacity-25 p-4 pb-3">
+          <div class="d-flex align-items-center gap-3">
+            <span class="sf-modal-icon-badge">
+              <iconify-icon icon="solar:verified-check-bold-duotone"></iconify-icon>
+            </span>
+            <div>
+              <h5 class="modal-title fw-bold mb-0 text-white" id="completeSessionModalLabel">Complete &amp; End Mentorship Session?</h5>
+              <small class="text-white-50">Confirm final session wrap-up</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body px-4 py-3">
+          <p class="small text-white-50 mb-3">
+            Marking this session as <strong class="text-white">Completed</strong> will:
+          </p>
+          <ul class="sf-modal-checklist">
+            <li>
+              <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+              <span>Record final session completion and attendance timestamps in SkillForge.</span>
+            </li>
+            <li>
+              <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+              <span>Close the live classroom for both participants.</span>
+            </li>
+            <li>
+              <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+              <span>Unlock the verified post-session review form for <strong class="text-white">{{ classroom_meta.student.name }}</strong>.</span>
+            </li>
+          </ul>
+
+          <div id="completeModalErrorBox" class="alert alert-danger border-0 small mt-3 mb-0 py-2 px-3" style="display: none;" role="alert"></div>
+        </div>
+
+        <div class="modal-footer border-secondary border-opacity-25 px-4 py-3 d-flex justify-content-end gap-2">
+          <button type="button" id="cancelCompleteSessionBtn" class="btn btn-outline-light fw-semibold px-3 py-2 rounded-3" data-bs-dismiss="modal">
+            Continue Session
+          </button>
+          <button type="button" id="confirmCompleteSessionBtn" class="btn btn-success fw-bold px-4 py-2 rounded-3 d-inline-flex align-items-center gap-2">
+            <iconify-icon id="confirmCompleteIcon" icon="solar:check-circle-bold"></iconify-icon>
+            <span id="confirmCompleteLabel">Yes, Complete Session</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Bootstrap & Icons -->
+  <script src="{% static 'libs/jquery/dist/jquery.min.js' %}"></script>
+  <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+  <!-- Vendored Official LiveKit Browser SDK -->
+  <script src="{% static 'mentors/js/livekit-client.umd.min.js' %}"></script>
+
+  <!-- Classroom Application Logic -->
+  <script>
+    (function () {
+      "use strict";
+
+      let CLASSROOM_META = {{ classroom_meta_json|safe }};
+      const BOOKING_ID = "{{ booking_id|escapejs }}";
+      const CSRF_TOKEN = "{{ csrf_token|escapejs }}";
+
+      const URLS = {
+        metadata: "{% url 'users:classroom_metadata_api' booking_id %}",
+        token: "{% url 'users:classroom_token_api' booking_id %}",
+        attendance: "{% url 'users:classroom_attendance_api' booking_id %}",
+        chat: "{% url 'users:classroom_chat_api' booking_id %}",
+        moderate: "{% url 'users:classroom_moderate_api' booking_id %}",
+        complete: "{% url 'users:classroom_complete_api' booking_id %}",
+        aiAssist: "{% url 'users:classroom_ai_assist_api' booking_id %}",
+        resendInvite: "{% url 'users:mentor_resend_invitation' booking_id %}",
+        mentorDashboard: "{% url 'users:mentor_sessions_list' %}",
+        studentProfile: "{% url 'users:profile' %}",
+        studentReview: "{% url 'users:student_submit_review' booking_id %}"
+      };
+
+      // State
+      let previewStream = null;
+      let wantMicEnabled = true;
+      let wantCamEnabled = true;
+      let selectedAudioDeviceId = "";
+      let selectedVideoDeviceId = "";
+
+      let lkRoom = null;
+      let isInLiveStage = false;
+      let isJoiningRoom = false;
+      let isCompletingSession = false;
+      let isHandRaised = false;
+      let isScreenSharing = false;
+      let sessionTimerInterval = null;
+      let heartbeatInterval = null;
+      let metadataSyncInterval = null;
+      let joinedTimestampMs = null;
+      let unreadChatCount = 0;
+      let lastProcessedModerationId = (
+        CLASSROOM_META.last_moderation_signal && CLASSROOM_META.last_moderation_signal.id
+      ) ? CLASSROOM_META.last_moderation_signal.id : "";
+      let remoteMediaStateOverride = null;
+      const renderedMessageIds = new Set();
+
+      // DOM Elements
+      const alertContainer = document.getElementById("classroomAlertContainer");
+      const alertText = document.getElementById("classroomAlertText");
+      const connPill = document.getElementById("connectionStatusPill");
+      const connText = document.getElementById("connectionStatusText");
+      const liveTimerBadge = document.getElementById("liveTimerBadge");
+      const liveTimerValue = document.getElementById("liveTimerValue");
+
+      const lobbyView = document.getElementById("preJoinLobby");
+      const stageView = document.getElementById("liveClassroomStage");
+
+      const lobbyPreviewVideo = document.getElementById("lobbyPreviewVideo");
+      const lobbyPreviewPlaceholder = document.getElementById("lobbyPreviewPlaceholder");
+      const previewStatusSubtext = document.getElementById("previewStatusSubtext");
+      const lobbyMicToggleBtn = document.getElementById("lobbyMicToggleBtn");
+      const lobbyCamToggleBtn = document.getElementById("lobbyCamToggleBtn");
+      const lobbyMicIcon = document.getElementById("lobbyMicIcon");
+      const lobbyCamIcon = document.getElementById("lobbyCamIcon");
+      const audioInputSelect = document.getElementById("audioInputSelect");
+      const videoInputSelect = document.getElementById("videoInputSelect");
+      const mediaPermissionHelp = document.getElementById("mediaPermissionHelp");
+
+      const joinClassroomBtn = document.getElementById("joinClassroomBtn");
+      const joinClassroomBtnLabel = document.getElementById("joinClassroomBtnLabel");
+      const mentorUnlockEarlyBtn = document.getElementById("mentorUnlockEarlyBtn");
+      const mentorUnlockEarlyBtnLabel = document.getElementById("mentorUnlockEarlyBtnLabel");
+      const lobbyStudentReviewBtn = document.getElementById("lobbyStudentReviewBtn");
+
+      const localVideoElement = document.getElementById("localVideoElement");
+      const localPlaceholder = document.getElementById("localPlaceholder");
+      const localTileSubtext = document.getElementById("localTileSubtext");
+      const remoteVideoElement = document.getElementById("remoteVideoElement");
+      const remotePlaceholder = document.getElementById("remotePlaceholder");
+      const remoteWaitingStatus = document.getElementById("remoteWaitingStatus");
+      const remoteAudioContainer = document.getElementById("remoteAudioContainer");
+      const screenShareContainer = document.getElementById("screenShareContainer");
+      const screenShareVideo = document.getElementById("screenShareVideo");
+      const screenShareLabel = document.getElementById("screenShareLabel");
+
+      const chatMessagesContainer = document.getElementById("chatMessagesContainer");
+      const chatEmptyState = document.getElementById("chatEmptyState");
+      const chatSendForm = document.getElementById("chatSendForm");
+      const chatInputField = document.getElementById("chatInputField");
+      const unreadChatBadge = document.getElementById("unreadChatBadge");
+
+      let completeModalInstance = null;
+
+      function getCompleteModal() {
+        const modalEl = document.getElementById("completeSessionModal");
+        if (!modalEl || !window.bootstrap) return null;
+        if (!completeModalInstance) {
+          completeModalInstance = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+        }
+        return completeModalInstance;
+      }
+
+      function showBanner(msg, type = "warning") {
+        if (!alertContainer || !alertText) return;
+        alertText.textContent = msg;
+        const box = document.getElementById("classroomAlertBox");
+        if (box) {
+          box.className = `alert alert-${type} border-0 shadow-sm d-flex align-items-center justify-content-between mb-0 rounded-3`;
+        }
+        alertContainer.style.display = "block";
+      }
+
+      function setConnectionStatus(stateLabel, cssModifier) {
+        if (!connPill || !connText) return;
+        connText.textContent = stateLabel;
+        connPill.className = "sf-conn-pill" + (cssModifier ? " " + cssModifier : "");
+      }
+
+      async function apiPost(url, data) {
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+              "X-CSRFToken": CSRF_TOKEN
+            },
+            body: JSON.stringify(data || {})
+          });
+          const json = await response.json().catch(() => ({}));
+          return { status: response.status, data: json };
+        } catch (err) {
+          return { status: 0, data: { ok: false, error: "Network error — please check your connection." } };
+        }
+      }
+
+      async function apiGet(url) {
+        try {
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            cache: "no-store"
+          });
+          const json = await response.json().catch(() => ({}));
+          return { status: response.status, data: json };
+        } catch (err) {
+          return { status: 0, data: { ok: false } };
+        }
+      }
+
+      // -------------------------------------------------------------------
+      // 1. Pre-Join Media Preview & Device Selection
+      // -------------------------------------------------------------------
+      async function initLobbyPreview() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          if (mediaPermissionHelp) mediaPermissionHelp.style.display = "block";
+          if (previewStatusSubtext) previewStatusSubtext.textContent = "Media devices API unavailable in this browser.";
+          updateLobbyButtonsUI();
+          return;
+        }
+
+        try {
+          const constraints = {
+            audio: selectedAudioDeviceId ? { deviceId: { exact: selectedAudioDeviceId } } : true,
+            video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : { width: 1280, height: 720 }
+          };
+          stopLobbyPreview();
+          previewStream = await navigator.mediaDevices.getUserMedia(constraints);
+          updateLobbyPreviewTracks();
+          await populateDeviceDropdowns();
+        } catch (err) {
+          // Try audio-only fallback if camera is unavailable or denied
+          try {
+            previewStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            wantCamEnabled = false;
+            updateLobbyPreviewTracks();
+            await populateDeviceDropdowns();
+          } catch (audioErr) {
+            wantMicEnabled = false;
+            wantCamEnabled = false;
+            updateLobbyButtonsUI();
+            if (mediaPermissionHelp) mediaPermissionHelp.style.display = "block";
+            if (previewStatusSubtext) {
+              previewStatusSubtext.textContent = "Camera & microphone off — you can still join the classroom.";
+            }
+          }
+        }
+      }
+
+      function stopLobbyPreview() {
+        if (previewStream) {
+          previewStream.getTracks().forEach((t) => t.stop());
+          previewStream = null;
+        }
+        if (lobbyPreviewVideo) {
+          lobbyPreviewVideo.srcObject = null;
+          lobbyPreviewVideo.style.display = "none";
+        }
+        if (lobbyPreviewPlaceholder) {
+          lobbyPreviewPlaceholder.style.display = "block";
+        }
+      }
+
+      function updateLobbyPreviewTracks() {
+        if (!previewStream) {
+          updateLobbyButtonsUI();
+          return;
+        }
+        const audioTracks = previewStream.getAudioTracks();
+        const videoTracks = previewStream.getVideoTracks();
+
+        audioTracks.forEach((t) => { t.enabled = wantMicEnabled; });
+        videoTracks.forEach((t) => { t.enabled = wantCamEnabled; });
+
+        if (videoTracks.length > 0 && wantCamEnabled) {
+          lobbyPreviewVideo.srcObject = previewStream;
+          lobbyPreviewVideo.style.display = "block";
+          lobbyPreviewPlaceholder.style.display = "none";
+        } else {
+          lobbyPreviewVideo.style.display = "none";
+          lobbyPreviewPlaceholder.style.display = "block";
+          if (previewStatusSubtext) {
+            previewStatusSubtext.textContent = wantMicEnabled
+              ? "Camera is off • Microphone is ready"
+              : "Camera and microphone are muted";
+          }
+        }
+        updateLobbyButtonsUI();
+      }
+
+      function updateLobbyButtonsUI() {
+        if (lobbyMicToggleBtn) {
+          lobbyMicToggleBtn.classList.toggle("muted-off", !wantMicEnabled);
+          lobbyMicToggleBtn.setAttribute("aria-pressed", String(wantMicEnabled));
+          if (lobbyMicIcon) {
+            lobbyMicIcon.setAttribute("icon", wantMicEnabled ? "solar:microphone-3-bold" : "solar:microphone-slash-bold");
+          }
+        }
+        if (lobbyCamToggleBtn) {
+          lobbyCamToggleBtn.classList.toggle("muted-off", !wantCamEnabled);
+          lobbyCamToggleBtn.setAttribute("aria-pressed", String(wantCamEnabled));
+          if (lobbyCamIcon) {
+            lobbyCamIcon.setAttribute("icon", wantCamEnabled ? "solar:videocamera-bold" : "solar:videocamera-slash-bold");
+          }
+        }
+      }
+
+      async function populateDeviceDropdowns() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter((d) => d.kind === "audioinput");
+        const videoInputs = devices.filter((d) => d.kind === "videoinput");
+
+        if (audioInputSelect && audioInputs.length) {
+          audioInputSelect.innerHTML = "";
+          audioInputs.forEach((d, idx) => {
+            const opt = document.createElement("option");
+            opt.value = d.deviceId;
+            opt.textContent = d.label || `Microphone ${idx + 1}`;
+            if (selectedAudioDeviceId && d.deviceId === selectedAudioDeviceId) opt.selected = true;
+            audioInputSelect.appendChild(opt);
+          });
+        }
+
+        if (videoInputSelect && videoInputs.length) {
+          videoInputSelect.innerHTML = "";
+          videoInputs.forEach((d, idx) => {
+            const opt = document.createElement("option");
+            opt.value = d.deviceId;
+            opt.textContent = d.label || `Camera ${idx + 1}`;
+            if (selectedVideoDeviceId && d.deviceId === selectedVideoDeviceId) opt.selected = true;
+            videoInputSelect.appendChild(opt);
+          });
+        }
+      }
+
+      if (lobbyMicToggleBtn) {
+        lobbyMicToggleBtn.addEventListener("click", function () {
+          wantMicEnabled = !wantMicEnabled;
+          updateLobbyPreviewTracks();
+        });
+      }
+
+      if (lobbyCamToggleBtn) {
+        lobbyCamToggleBtn.addEventListener("click", function () {
+          wantCamEnabled = !wantCamEnabled;
+          updateLobbyPreviewTracks();
+        });
+      }
+
+      if (audioInputSelect) {
+        audioInputSelect.addEventListener("change", function () {
+          selectedAudioDeviceId = this.value;
+          initLobbyPreview();
+        });
+      }
+
+      if (videoInputSelect) {
+        videoInputSelect.addEventListener("change", function () {
+          selectedVideoDeviceId = this.value;
+          initLobbyPreview();
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 2. Real-Time Metadata Synchronization (Lobby & Live Stage)
+      // -------------------------------------------------------------------
+      function applyMetadataToUI(meta, previousMeta) {
+        if (!meta) return;
+
+        // 1. Update Lobby Status Badge
+        const lobbyStatusBadge = document.getElementById("lobbyStatusBadge");
+        if (lobbyStatusBadge) {
+          lobbyStatusBadge.textContent = meta.classroom_status === "in_progress"
+            ? "in progress"
+            : (meta.booking_status || "scheduled");
+        }
+
+        // 2. Update Lobby Mentor & Student Presence Badges
+        const mentorBadge = document.getElementById("lobbyMentorPresenceBadge");
+        if (mentorBadge && meta.attendance && meta.attendance.mentor) {
+          const mConn = Boolean(meta.attendance.mentor.currently_connected);
+          const mJoined = Boolean(meta.attendance.mentor.joined || meta.attendance.mentor_joined);
+          mentorBadge.textContent = mConn ? "In Room" : (mJoined ? "Left Room" : "Not Joined Yet");
+          mentorBadge.className = mConn
+            ? "badge bg-success-subtle text-success small"
+            : "badge bg-dark text-white-50 small";
+        }
+
+        const studentBadge = document.getElementById("lobbyStudentPresenceBadge");
+        if (studentBadge && meta.attendance && meta.attendance.student) {
+          const sConn = Boolean(meta.attendance.student.currently_connected);
+          const sJoined = Boolean(meta.attendance.student.joined || meta.attendance.student_joined);
+          studentBadge.textContent = sConn ? "In Room" : (sJoined ? "Left Room" : "Not Joined Yet");
+          studentBadge.className = sConn
+            ? "badge bg-success-subtle text-success small"
+            : "badge bg-dark text-white-50 small";
+        }
+
+        // 3. Update Access Box & Join / Unlock / Review Buttons in Lobby
+        const accessBox = document.getElementById("accessStateBox");
+        const accessTitle = document.getElementById("accessStateTitle");
+        const accessMsg = document.getElementById("accessStateMessage");
+        const canJoinNow = Boolean(meta.access && meta.access.can_join && meta.livekit_configured);
+        const wasJoinableBefore = Boolean(
+          previousMeta && previousMeta.access && previousMeta.access.can_join
+        );
+
+        if (accessBox && accessTitle && accessMsg && meta.access) {
+          if (meta.booking_status === "completed" || meta.classroom_status === "completed") {
+            accessBox.className = "p-3 rounded-3 mb-3 bg-info bg-opacity-10 border border-info border-opacity-25 text-info small";
+            accessTitle.textContent = "Session Completed";
+            accessMsg.textContent = meta.access.message || "This mentorship session has been completed and closed.";
+          } else if (meta.access.can_join) {
+            accessBox.className = "p-3 rounded-3 mb-3 bg-success bg-opacity-10 border border-success border-opacity-25 text-success small";
+            accessTitle.textContent = "Classroom is Open & Ready";
+            accessMsg.textContent = meta.access.message || "Classroom is open and ready to join.";
+          } else {
+            accessBox.className = "p-3 rounded-3 mb-3 bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning small";
+            accessTitle.textContent = "Classroom Access Notice";
+            accessMsg.textContent = meta.access.message || "";
+          }
+        }
+
+        if (joinClassroomBtn && !isJoiningRoom && !isInLiveStage) {
+          joinClassroomBtn.disabled = !canJoinNow;
+          if (meta.booking_status === "completed" || meta.classroom_status === "completed") {
+            if (joinClassroomBtnLabel) joinClassroomBtnLabel.textContent = "Session Completed";
+          } else if (joinClassroomBtnLabel && joinClassroomBtnLabel.textContent === "Session Completed") {
+            joinClassroomBtnLabel.textContent = "Join Virtual Classroom";
+          }
+        }
+
+        if (mentorUnlockEarlyBtn && !isInLiveStage) {
+          const showUnlock = Boolean(meta.access && meta.access.can_mentor_open_early && meta.livekit_configured);
+          mentorUnlockEarlyBtn.style.display = showUnlock ? "inline-flex" : "none";
+        }
+
+        if (lobbyStudentReviewBtn) {
+          const showReview = (
+            (meta.booking_status === "completed" || meta.classroom_status === "completed") &&
+            meta.participant_role === "student"
+          );
+          lobbyStudentReviewBtn.style.display = showReview ? "inline-flex" : "none";
+        }
+
+        // Notify student in real time when the classroom transitions from locked -> open!
+        if (!isInLiveStage && !wasJoinableBefore && canJoinNow) {
+          showBanner("The classroom is now open and active! Click 'Join Virtual Classroom' to enter.", "success");
+          setConnectionStatus("Classroom Open", "connected");
+        }
+
+        // 4. Sync chat messages from server metadata
+        if (Array.isArray(meta.chat_messages)) {
+          meta.chat_messages.forEach((m) => {
+            const isOwn = m.sender_role === meta.participant_role;
+            appendChatMessage(m, isOwn);
+          });
+        }
+
+        // 5. Apply any new host moderation signal if missed over WebRTC DataChannel
+        if (meta.last_moderation_signal && meta.last_moderation_signal.id) {
+          const sig = meta.last_moderation_signal;
+          if (sig.id !== lastProcessedModerationId) {
+            lastProcessedModerationId = sig.id;
+            applyHostModerationSignal(sig.action);
+          }
+        }
+
+        // 6. If session was marked completed while participant is in the live stage or lobby
+        if (meta.booking_status === "completed" || meta.classroom_status === "completed") {
+          handleRemoteSessionCompleted(meta.student_review_url || URLS.studentReview);
+        }
+
+        // 7. Update stage participant badges when in live stage
+        if (isInLiveStage) {
+          updateSidePanelParticipantBadges(meta);
+        }
+      }
+
+      async function syncClassroomMetadata() {
+        if (isCompletingSession) return;
+        const { status, data } = await apiGet(URLS.metadata);
+        if (status === 200 && data && data.ok && data.classroom) {
+          const prev = CLASSROOM_META;
+          CLASSROOM_META = data.classroom;
+          applyMetadataToUI(CLASSROOM_META, prev);
+        }
+      }
+
+      function startMetadataSyncLoop() {
+        if (metadataSyncInterval) clearInterval(metadataSyncInterval);
+        metadataSyncInterval = setInterval(syncClassroomMetadata, 3500);
+      }
+
+      // -------------------------------------------------------------------
+      // 3. Join Classroom & LiveKit Room Connection
+      // -------------------------------------------------------------------
+      async function startJoinFlow(unlockEarly = false) {
+        if (isJoiningRoom) return;
+        if (!window.LivekitClient) {
+          showBanner("LiveKit client SDK failed to load. Please refresh the page.", "danger");
+          return;
+        }
+
+        isJoiningRoom = true;
+        if (joinClassroomBtn) joinClassroomBtn.disabled = true;
+        if (mentorUnlockEarlyBtn) mentorUnlockEarlyBtn.disabled = true;
+        if (unlockEarly && mentorUnlockEarlyBtnLabel) {
+          mentorUnlockEarlyBtnLabel.textContent = "Unlocking & Connecting...";
+        } else if (joinClassroomBtnLabel) {
+          joinClassroomBtnLabel.textContent = "Requesting Secure Room Token...";
+        }
+        setConnectionStatus("Connecting...", "reconnecting");
+
+        const { status, data } = await apiPost(URLS.token, { unlock_early: unlockEarly });
+        if (status !== 200 || !data.ok) {
+          isJoiningRoom = false;
+          if (mentorUnlockEarlyBtn) mentorUnlockEarlyBtn.disabled = false;
+          if (mentorUnlockEarlyBtnLabel) {
+            mentorUnlockEarlyBtnLabel.textContent = "Unlock & Open Classroom Early (Host)";
+          }
+          if (joinClassroomBtnLabel) joinClassroomBtnLabel.textContent = "Join Virtual Classroom";
+          setConnectionStatus("Lobby Ready", "");
+          showBanner(data.error || "Unable to join classroom at this time.", "warning");
+          await syncClassroomMetadata();
+          return;
+        }
+
+        // Stop lobby preview stream before LiveKit acquires tracks
+        stopLobbyPreview();
+
+        const LK = window.LivekitClient;
+        lkRoom = new LK.Room({
+          adaptiveStream: true,
+          dynacast: true,
+          videoCaptureDefaults: {
+            deviceId: selectedVideoDeviceId || undefined,
+            resolution: LK.VideoPresets.h720.resolution
+          },
+          audioCaptureDefaults: {
+            deviceId: selectedAudioDeviceId || undefined,
+            echoCancellation: true,
+            noiseSuppression: true
+          }
+        });
+
+        bindRoomEvents(lkRoom, LK);
+
+        try {
+          await lkRoom.connect(data.livekit_url, data.token);
+        } catch (connErr) {
+          isJoiningRoom = false;
+          if (joinClassroomBtn) joinClassroomBtn.disabled = false;
+          if (mentorUnlockEarlyBtn) mentorUnlockEarlyBtn.disabled = false;
+          if (joinClassroomBtnLabel) joinClassroomBtnLabel.textContent = "Join Virtual Classroom";
+          if (mentorUnlockEarlyBtnLabel) {
+            mentorUnlockEarlyBtnLabel.textContent = "Unlock & Open Classroom Early (Host)";
+          }
+          setConnectionStatus("Connection Failed", "");
+          showBanner("Could not establish WebRTC connection to LiveKit server: " + (connErr.message || connErr), "danger");
+          return;
+        }
+
+        isJoiningRoom = false;
+        isInLiveStage = true;
+
+        // Switch UI from Lobby to Live Stage
+        lobbyView.style.display = "none";
+        stageView.style.display = "flex";
+        setConnectionStatus("Connected", "connected");
+        startSessionClock();
+
+        // Record attendance join event & start heartbeat
+        await apiPost(URLS.attendance, { event_type: "join" });
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        heartbeatInterval = setInterval(() => {
+          if (isInLiveStage) {
+            apiPost(URLS.attendance, { event_type: "heartbeat" });
+          }
+        }, 30000);
+
+        // Publish local camera & microphone according to pre-join selection
+        try {
+          await lkRoom.localParticipant.setMicrophoneEnabled(wantMicEnabled);
+        } catch (e) {
+          wantMicEnabled = false;
+        }
+        try {
+          await lkRoom.localParticipant.setCameraEnabled(wantCamEnabled);
+        } catch (e) {
+          wantCamEnabled = false;
+        }
+
+        syncLocalMediaUI();
+        syncRemoteParticipants();
+        broadcastDataPacket({
+          type: "participant_media_state",
+          mic_enabled: wantMicEnabled,
+          cam_enabled: wantCamEnabled
+        });
+        await syncClassroomMetadata();
+      }
+
+      if (joinClassroomBtn) {
+        joinClassroomBtn.addEventListener("click", function () {
+          startJoinFlow(false);
+        });
+      }
+
+      if (mentorUnlockEarlyBtn) {
+        mentorUnlockEarlyBtn.addEventListener("click", function () {
+          startJoinFlow(true);
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 4. LiveKit Room Event Listeners
+      // -------------------------------------------------------------------
+      function bindRoomEvents(room, LK) {
+        const RoomEvent = LK.RoomEvent;
+        const Track = LK.Track;
+
+        room
+          .on(RoomEvent.ConnectionStateChanged, (state) => {
+            if (state === "connected") {
+              setConnectionStatus("Connected", "connected");
+            } else if (state === "reconnecting") {
+              setConnectionStatus("Reconnecting...", "reconnecting");
+              apiPost(URLS.attendance, { event_type: "reconnect" });
+            } else if (state === "disconnected") {
+              setConnectionStatus("Disconnected", "");
+            }
+          })
+          .on(RoomEvent.ParticipantConnected, (participant) => {
+            remoteMediaStateOverride = null;
+            const roleLabel = CLASSROOM_META.participant_role === "mentor" ? "Student" : "Mentor";
+            showBanner(`${participant.name || roleLabel} joined the live classroom.`, "success");
+            syncRemoteParticipants();
+            syncClassroomMetadata();
+          })
+          .on(RoomEvent.ParticipantDisconnected, (participant) => {
+            remoteMediaStateOverride = null;
+            const roleLabel = CLASSROOM_META.participant_role === "mentor" ? "Student" : "Mentor";
+            showBanner(`${participant.name || roleLabel} left the room.`, "info");
+            syncRemoteParticipants();
+            syncClassroomMetadata();
+          })
+          .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+            if (track.kind === Track.Kind.Audio) {
+              const audioEl = track.attach();
+              audioEl.dataset.participantIdentity = participant.identity;
+              remoteAudioContainer.appendChild(audioEl);
+            }
+            syncRemoteParticipants();
+          })
+          .on(RoomEvent.TrackUnsubscribed, (track) => {
+            track.detach().forEach((el) => el.remove());
+            syncRemoteParticipants();
+          })
+          .on(RoomEvent.TrackMuted, () => {
+            syncLocalMediaUI();
+            syncRemoteParticipants();
+          })
+          .on(RoomEvent.TrackUnmuted, () => {
+            syncLocalMediaUI();
+            syncRemoteParticipants();
+          })
+          .on(RoomEvent.LocalTrackPublished, () => {
+            syncLocalMediaUI();
+          })
+          .on(RoomEvent.LocalTrackUnpublished, () => {
+            syncLocalMediaUI();
+          })
+          .on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+            const activeIds = new Set(speakers.map((s) => s.identity));
+            const localTile = document.getElementById("localParticipantTile");
+            const remoteTile = document.getElementById("remoteParticipantTile");
+            if (localTile && room.localParticipant) {
+              localTile.classList.toggle("active-speaker", activeIds.has(room.localParticipant.identity));
+            }
+            if (remoteTile) {
+              let remoteSpeaking = false;
+              room.remoteParticipants.forEach((p) => {
+                if (activeIds.has(p.identity)) remoteSpeaking = true;
+              });
+              remoteTile.classList.toggle("active-speaker", remoteSpeaking);
+            }
+          })
+          .on(RoomEvent.DataReceived, (payloadBytes) => {
+            try {
+              const decoded = new TextDecoder().decode(payloadBytes);
+              const packet = JSON.parse(decoded);
+              handleIncomingDataPacket(packet);
+            } catch (e) {
+              // Ignore malformed data packets
+            }
+          });
+      }
+
+      // -------------------------------------------------------------------
+      // 5. Synchronizing Local & Remote Video/Screen Tracks
+      // -------------------------------------------------------------------
+      function syncLocalMediaUI() {
+        const LK = window.LivekitClient;
+        const lp = lkRoom && lkRoom.localParticipant ? lkRoom.localParticipant : null;
+
+        const isMicOn = lp ? Boolean(lp.isMicrophoneEnabled) : Boolean(wantMicEnabled);
+        const isCamOn = lp ? Boolean(lp.isCameraEnabled) : Boolean(wantCamEnabled);
+        isScreenSharing = lp ? Boolean(lp.isScreenShareEnabled) : Boolean(isScreenSharing);
+
+        wantMicEnabled = isMicOn;
+        wantCamEnabled = isCamOn;
+
+        // Update bottom toolbar Microphone button
+        const stageMicBtn = document.getElementById("stageMicBtn");
+        const stageMicIcon = document.getElementById("stageMicIcon");
+        const stageMicLabel = document.getElementById("stageMicLabel");
+        const localMicBadge = document.getElementById("localMicBadge");
+        const localMicBadgeIcon = document.getElementById("localMicBadgeIcon");
+
+        if (stageMicBtn) {
+          stageMicBtn.classList.toggle("danger-state", !isMicOn);
+          stageMicBtn.setAttribute("aria-pressed", String(isMicOn));
+        }
+        if (stageMicIcon) {
+          stageMicIcon.setAttribute("icon", isMicOn ? "solar:microphone-3-bold" : "solar:microphone-slash-bold");
+        }
+        if (stageMicLabel) {
+          stageMicLabel.textContent = isMicOn ? "Mute" : "Unmute";
+        }
+        if (localMicBadge) {
+          localMicBadge.className = isMicOn
+            ? "badge bg-success bg-opacity-75 text-white"
+            : "badge bg-danger text-white";
+        }
+        if (localMicBadgeIcon) {
+          localMicBadgeIcon.setAttribute("icon", isMicOn ? "solar:microphone-3-bold" : "solar:microphone-slash-bold");
+        }
+
+        // Update bottom toolbar Camera button
+        const stageCamBtn = document.getElementById("stageCamBtn");
+        const stageCamIcon = document.getElementById("stageCamIcon");
+        const stageCamLabel = document.getElementById("stageCamLabel");
+        if (stageCamBtn) {
+          stageCamBtn.classList.toggle("danger-state", !isCamOn);
+          stageCamBtn.setAttribute("aria-pressed", String(isCamOn));
+        }
+        if (stageCamIcon) {
+          stageCamIcon.setAttribute("icon", isCamOn ? "solar:videocamera-bold" : "solar:videocamera-slash-bold");
+        }
+        if (stageCamLabel) {
+          stageCamLabel.textContent = isCamOn ? "Stop Video" : "Start Video";
+        }
+        if (localTileSubtext) {
+          localTileSubtext.textContent = isCamOn
+            ? "Camera is active"
+            : (isMicOn ? "Camera is off • Mic active" : "Camera and microphone are muted");
+        }
+
+        // Update Screen Share button
+        const stageScreenBtn = document.getElementById("stageScreenBtn");
+        const stageScreenLabel = document.getElementById("stageScreenLabel");
+        if (stageScreenBtn) {
+          stageScreenBtn.classList.toggle("screen-active-state", isScreenSharing);
+          stageScreenBtn.setAttribute("aria-pressed", String(isScreenSharing));
+        }
+        if (stageScreenLabel) {
+          stageScreenLabel.textContent = isScreenSharing ? "Stop Share" : "Share Screen";
+        }
+
+        // Attach local camera track
+        const camPub = (lp && LK) ? lp.getTrackPublication(LK.Track.Source.Camera) : null;
+        if (camPub && camPub.track && isCamOn) {
+          camPub.track.attach(localVideoElement);
+          localVideoElement.style.display = "block";
+          localPlaceholder.style.display = "none";
+        } else {
+          localVideoElement.style.display = "none";
+          localPlaceholder.style.display = "block";
+        }
+
+        updateScreenShareSpotlight();
+        updateSidePanelParticipantBadges(CLASSROOM_META);
+      }
+
+      function syncRemoteParticipants() {
+        if (!lkRoom) return;
+        const LK = window.LivekitClient;
+        const remotes = Array.from(lkRoom.remoteParticipants.values());
+        const remoteMicBadge = document.getElementById("remoteMicBadge");
+        const remoteMicBadgeIcon = document.getElementById("remoteMicBadgeIcon");
+
+        if (remotes.length === 0) {
+          remoteVideoElement.style.display = "none";
+          remotePlaceholder.style.display = "block";
+          const otherRole = CLASSROOM_META.participant_role === "mentor" ? "student" : "mentor";
+          const otherAtt = CLASSROOM_META.attendance && CLASSROOM_META.attendance[otherRole];
+          const everJoined = Boolean(otherAtt && (otherAtt.joined || otherAtt.join_count > 0));
+          if (remoteWaitingStatus) {
+            remoteWaitingStatus.textContent = everJoined
+              ? "Participant left the room — waiting to rejoin..."
+              : "Waiting for participant to join the room...";
+          }
+          if (remoteMicBadge) {
+            remoteMicBadge.className = "badge bg-dark bg-opacity-75 text-white-50";
+          }
+          updateScreenShareSpotlight();
+          updateSidePanelParticipantBadges(CLASSROOM_META);
+          return;
+        }
+
+        const remote = remotes[0];
+        const remoteNameTag = document.getElementById("remoteNameTag");
+        if (remoteNameTag && remote.name) {
+          remoteNameTag.textContent = remote.name;
+        }
+
+        const camPub = remote.getTrackPublication(LK.Track.Source.Camera);
+        const camActive = Boolean(
+          camPub && camPub.track && !camPub.isMuted &&
+          (!remoteMediaStateOverride || remoteMediaStateOverride.cam_enabled !== false)
+        );
+        if (camActive) {
+          camPub.track.attach(remoteVideoElement);
+          remoteVideoElement.style.display = "block";
+          remotePlaceholder.style.display = "none";
+        } else {
+          remoteVideoElement.style.display = "none";
+          remotePlaceholder.style.display = "block";
+          if (remoteWaitingStatus) {
+            remoteWaitingStatus.textContent = "Connected in room • Camera is off";
+          }
+        }
+
+        const micPub = remote.getTrackPublication(LK.Track.Source.Microphone);
+        const remoteMicOn = Boolean(
+          micPub && !micPub.isMuted &&
+          (!remoteMediaStateOverride || remoteMediaStateOverride.mic_enabled !== false)
+        );
+        if (remoteMicBadge) {
+          remoteMicBadge.className = remoteMicOn
+            ? "badge bg-success bg-opacity-75 text-white"
+            : "badge bg-danger text-white";
+        }
+        if (remoteMicBadgeIcon) {
+          remoteMicBadgeIcon.setAttribute("icon", remoteMicOn ? "solar:microphone-3-bold" : "solar:microphone-slash-bold");
+        }
+
+        updateScreenShareSpotlight();
+        updateSidePanelParticipantBadges(CLASSROOM_META);
+      }
+
+      function updateScreenShareSpotlight() {
+        if (!lkRoom) return;
+        const LK = window.LivekitClient;
+
+        let activeScreenTrack = null;
+        let presenterName = "";
+
+        lkRoom.remoteParticipants.forEach((p) => {
+          const pub = p.getTrackPublication(LK.Track.Source.ScreenShare);
+          if (pub && pub.track && !pub.isMuted) {
+            activeScreenTrack = pub.track;
+            presenterName = (p.name || "Participant") + "'s Screen";
+          }
+        });
+
+        if (!activeScreenTrack && lkRoom.localParticipant) {
+          const localPub = lkRoom.localParticipant.getTrackPublication(LK.Track.Source.ScreenShare);
+          if (localPub && localPub.track && lkRoom.localParticipant.isScreenShareEnabled) {
+            activeScreenTrack = localPub.track;
+            presenterName = "Your Screen Share";
+          }
+        }
+
+        if (activeScreenTrack) {
+          activeScreenTrack.attach(screenShareVideo);
+          screenShareLabel.textContent = presenterName;
+          screenShareContainer.style.display = "flex";
+        } else {
+          screenShareVideo.srcObject = null;
+          screenShareContainer.style.display = "none";
+        }
+      }
+
+      function updateSidePanelParticipantBadges(meta) {
+        const mentorBadge = document.getElementById("panelMentorStatus");
+        const studentBadge = document.getElementById("panelStudentStatus");
+
+        const isLocalMentor = CLASSROOM_META.participant_role === "mentor";
+        const hasRemote = Boolean(lkRoom && lkRoom.remoteParticipants && lkRoom.remoteParticipants.size > 0);
+        const mAtt = meta && meta.attendance && meta.attendance.mentor ? meta.attendance.mentor : {};
+        const sAtt = meta && meta.attendance && meta.attendance.student ? meta.attendance.student : {};
+
+        const mentorOnline = isLocalMentor ? isInLiveStage : (hasRemote || Boolean(mAtt.currently_connected));
+        const studentOnline = !isLocalMentor ? isInLiveStage : (hasRemote || Boolean(sAtt.currently_connected));
+
+        if (mentorBadge) {
+          mentorBadge.textContent = mentorOnline ? "Connected" : (mAtt.joined ? "Left Room" : "Waiting");
+          mentorBadge.className = mentorOnline ? "badge bg-success small" : "badge bg-secondary small";
+        }
+        if (studentBadge) {
+          studentBadge.textContent = studentOnline ? "Connected" : (sAtt.joined ? "Left Room" : "Waiting");
+          studentBadge.className = studentOnline ? "badge bg-success small" : "badge bg-secondary small";
+        }
+      }
+
+      // -------------------------------------------------------------------
+      // 6. Stage Controls (Mic, Cam, Screen Share, Hand Raise, Side Panel, Leave)
+      // -------------------------------------------------------------------
+      let isMicToggling = false;
+      const stageMicBtn = document.getElementById("stageMicBtn");
+      if (stageMicBtn) {
+        stageMicBtn.addEventListener("click", async function () {
+          if (isMicToggling) return;
+          isMicToggling = true;
+          stageMicBtn.disabled = true;
+          const currentMic = (lkRoom && lkRoom.localParticipant)
+            ? Boolean(lkRoom.localParticipant.isMicrophoneEnabled)
+            : Boolean(wantMicEnabled);
+          const nextState = !currentMic;
+          wantMicEnabled = nextState;
+
+          try {
+            if (lkRoom && lkRoom.localParticipant) {
+              await lkRoom.localParticipant.setMicrophoneEnabled(nextState);
+            }
+          } catch (err) {
+            wantMicEnabled = false;
+            showBanner("Microphone permission or hardware unavailable. Continuing in muted mode.", "warning");
+          } finally {
+            stageMicBtn.disabled = false;
+            isMicToggling = false;
+            syncLocalMediaUI();
+            broadcastDataPacket({
+              type: "participant_media_state",
+              mic_enabled: wantMicEnabled,
+              cam_enabled: wantCamEnabled
+            });
+          }
+        });
+      }
+
+      let isCamToggling = false;
+      const stageCamBtn = document.getElementById("stageCamBtn");
+      if (stageCamBtn) {
+        stageCamBtn.addEventListener("click", async function () {
+          if (isCamToggling) return;
+          isCamToggling = true;
+          stageCamBtn.disabled = true;
+          const currentCam = (lkRoom && lkRoom.localParticipant)
+            ? Boolean(lkRoom.localParticipant.isCameraEnabled)
+            : Boolean(wantCamEnabled);
+          const nextState = !currentCam;
+          wantCamEnabled = nextState;
+
+          try {
+            if (lkRoom && lkRoom.localParticipant) {
+              await lkRoom.localParticipant.setCameraEnabled(nextState);
+            }
+          } catch (err) {
+            wantCamEnabled = false;
+            showBanner("Camera permission or hardware unavailable. Continuing with video off.", "warning");
+          } finally {
+            stageCamBtn.disabled = false;
+            isCamToggling = false;
+            syncLocalMediaUI();
+            broadcastDataPacket({
+              type: "participant_media_state",
+              mic_enabled: wantMicEnabled,
+              cam_enabled: wantCamEnabled
+            });
+          }
+        });
+      }
+
+      let isScreenToggling = false;
+      const stageScreenBtn = document.getElementById("stageScreenBtn");
+      if (stageScreenBtn) {
+        stageScreenBtn.addEventListener("click", async function () {
+          if (isScreenToggling || !lkRoom || !lkRoom.localParticipant) return;
+          isScreenToggling = true;
+          stageScreenBtn.disabled = true;
+          const nextState = !lkRoom.localParticipant.isScreenShareEnabled;
+          try {
+            await lkRoom.localParticipant.setScreenShareEnabled(nextState, { audio: false });
+          } catch (err) {
+            // User cancelled screen picker or browser blocked screen capture
+          } finally {
+            stageScreenBtn.disabled = false;
+            isScreenToggling = false;
+            syncLocalMediaUI();
+          }
+        });
+      }
+
+      const stageHandBtn = document.getElementById("stageHandBtn");
+      function setLocalHandState(raised) {
+        isHandRaised = Boolean(raised);
+        const localHandBadge = document.getElementById("localHandBadge");
+        const stageHandLabel = document.getElementById("stageHandLabel");
+        if (localHandBadge) localHandBadge.style.display = isHandRaised ? "inline-flex" : "none";
+        if (stageHandLabel) stageHandLabel.textContent = isHandRaised ? "Lower Hand" : "Raise Hand";
+        if (stageHandBtn) {
+          stageHandBtn.classList.toggle("hand-active-state", isHandRaised);
+          stageHandBtn.setAttribute("aria-pressed", String(isHandRaised));
+        }
+      }
+
+      if (stageHandBtn) {
+        stageHandBtn.addEventListener("click", function () {
+          setLocalHandState(!isHandRaised);
+          broadcastDataPacket({ type: "hand_raise", raised: isHandRaised });
+        });
+      }
+
+      // Leave Button: Disconnects from the live stage cleanly WITHOUT completing the session
+      const leaveClassroomBtn = document.getElementById("leaveClassroomBtn");
+      if (leaveClassroomBtn) {
+        leaveClassroomBtn.addEventListener("click", async function () {
+          leaveClassroomBtn.disabled = true;
+          broadcastDataPacket({
+            type: "participant_leaving",
+            role: CLASSROOM_META.participant_role
+          });
+          await cleanlyDisconnectAndLeave();
+          leaveClassroomBtn.disabled = false;
+
+          // Return to Pre-Join Lobby so the participant can rejoin or return to dashboard
+          stageView.style.display = "none";
+          lobbyView.style.display = "block";
+          if (joinClassroomBtnLabel) {
+            joinClassroomBtnLabel.textContent = "Rejoin Virtual Classroom";
+          }
+          setConnectionStatus("Lobby Ready", "");
+          showBanner("You left the live classroom. The session remains open — you can rejoin anytime or return to your dashboard.", "info");
+          initLobbyPreview();
+          await syncClassroomMetadata();
+        });
+      }
+
+      async function cleanlyDisconnectAndLeave() {
+        isInLiveStage = false;
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+        if (sessionTimerInterval) {
+          clearInterval(sessionTimerInterval);
+          sessionTimerInterval = null;
+        }
+        if (liveTimerBadge) {
+          liveTimerBadge.classList.add("d-none");
+        }
+        try {
+          await apiPost(URLS.attendance, { event_type: "leave" });
+        } catch (e) {}
+        if (lkRoom) {
+          try {
+            await lkRoom.disconnect();
+          } catch (e) {}
+          lkRoom = null;
+        }
+      }
+
+      window.addEventListener("beforeunload", function () {
+        if (lkRoom && navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify({ event_type: "leave" })], { type: "application/json" });
+          navigator.sendBeacon(URLS.attendance, blob);
+        }
+      });
+
+      // -------------------------------------------------------------------
+      // 7. DataChannel Packets (Chat, Hand Raise, Host Moderation, Session End)
+      // -------------------------------------------------------------------
+      function broadcastDataPacket(packet) {
+        if (!lkRoom || !lkRoom.localParticipant) return;
+        try {
+          const encoded = new TextEncoder().encode(JSON.stringify(packet));
+          lkRoom.localParticipant.publishData(encoded, { reliable: true });
+        } catch (e) {}
+      }
+
+      function applyHostModerationSignal(action) {
+        const clean = String(action || "").toLowerCase();
+        if (
+          (clean === "mute_student_request" || clean === "request_mute_student") &&
+          CLASSROOM_META.participant_role === "student"
+        ) {
+          wantMicEnabled = false;
+          if (lkRoom && lkRoom.localParticipant) {
+            try {
+              lkRoom.localParticipant.setMicrophoneEnabled(false);
+            } catch (e) {}
+          }
+          syncLocalMediaUI();
+          broadcastDataPacket({
+            type: "participant_media_state",
+            mic_enabled: false,
+            cam_enabled: wantCamEnabled
+          });
+          showBanner("Your mentor muted your microphone.", "info");
+        } else if (
+          clean === "lower_hand" ||
+          clean === "lower_student_hand" ||
+          clean === "clear_raised_hands"
+        ) {
+          setLocalHandState(false);
+          const remoteHandBadge = document.getElementById("remoteHandBadge");
+          if (remoteHandBadge) remoteHandBadge.style.display = "none";
+          if (CLASSROOM_META.participant_role === "student") {
+            showBanner("Your mentor lowered your raised hand.", "info");
+          }
+        }
+      }
+
+      let hasHandledCompletion = false;
+      async function handleRemoteSessionCompleted(studentReviewUrl) {
+        if (hasHandledCompletion) return;
+        hasHandledCompletion = true;
+
+        const modal = getCompleteModal();
+        if (modal) modal.hide();
+
+        if (isInLiveStage) {
+          await cleanlyDisconnectAndLeave();
+          stageView.style.display = "none";
+          lobbyView.style.display = "block";
+        }
+
+        setConnectionStatus("Session Completed", "");
+        if (joinClassroomBtn) joinClassroomBtn.disabled = true;
+        if (joinClassroomBtnLabel) joinClassroomBtnLabel.textContent = "Session Completed";
+        if (mentorUnlockEarlyBtn) mentorUnlockEarlyBtn.style.display = "none";
+
+        if (CLASSROOM_META.participant_role === "student") {
+          if (lobbyStudentReviewBtn) {
+            lobbyStudentReviewBtn.href = studentReviewUrl || URLS.studentReview;
+            lobbyStudentReviewBtn.style.display = "inline-flex";
+          }
+          showBanner("The mentor has completed this session. Redirecting to your verified session feedback form...", "success");
+          setTimeout(() => {
+            window.location.href = studentReviewUrl || URLS.studentReview;
+          }, 1500);
+        } else {
+          showBanner("Session marked as completed and closed. Redirecting to your Mentor Sessions Dashboard...", "success");
+          setTimeout(() => {
+            window.location.href = URLS.mentorDashboard;
+          }, 1200);
+        }
+      }
+
+      function handleIncomingDataPacket(packet) {
+        if (!packet || !packet.type) return;
+
+        if (packet.type === "chat_message" && packet.message) {
+          appendChatMessage(packet.message, false);
+          const sidePanel = document.getElementById("classroomSidePanel");
+          const chatTab = document.getElementById("chatTab");
+          if (sidePanel.classList.contains("collapsed") || !chatTab.classList.contains("active")) {
+            unreadChatCount += 1;
+            if (unreadChatBadge) {
+              unreadChatBadge.textContent = String(unreadChatCount);
+              unreadChatBadge.style.display = "inline-block";
+            }
+          }
+        } else if (packet.type === "hand_raise") {
+          const remoteHandBadge = document.getElementById("remoteHandBadge");
+          if (remoteHandBadge) {
+            remoteHandBadge.style.display = packet.raised ? "inline-flex" : "none";
+          }
+        } else if (packet.type === "participant_media_state") {
+          remoteMediaStateOverride = {
+            mic_enabled: packet.mic_enabled,
+            cam_enabled: packet.cam_enabled
+          };
+          syncRemoteParticipants();
+        } else if (packet.type === "participant_leaving") {
+          syncRemoteParticipants();
+          syncClassroomMetadata();
+        } else if (packet.type === "host_moderation") {
+          if (packet.signal_id) {
+            lastProcessedModerationId = packet.signal_id;
+          }
+          applyHostModerationSignal(packet.action);
+        } else if (packet.type === "session_completed") {
+          handleRemoteSessionCompleted(packet.student_redirect_url || URLS.studentReview);
+        }
+      }
+
+      // -------------------------------------------------------------------
+      // 8. In-Room Chat (Persisted in MongoDB + Broadcast via DataChannel)
+      // -------------------------------------------------------------------
+      function appendChatMessage(msg, isOwn) {
+        if (!msg || !chatMessagesContainer) return;
+        if (msg.id && renderedMessageIds.has(msg.id)) return;
+        if (msg.id) renderedMessageIds.add(msg.id);
+
+        if (chatEmptyState) chatEmptyState.style.display = "none";
+
+        const bubble = document.createElement("div");
+        bubble.className = "sf-chat-bubble" + (isOwn ? " own-message" : "");
+
+        const header = document.createElement("div");
+        header.className = "d-flex justify-content-between align-items-center mb-1";
+
+        const senderSpan = document.createElement("span");
+        senderSpan.className = "fw-bold small text-info";
+        senderSpan.textContent = `${msg.sender_name || "Participant"} (${msg.sender_role || "member"})`;
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "text-white-50";
+        timeSpan.style.fontSize = "0.7rem";
+        if (msg.created_at) {
+          const dt = new Date(msg.created_at);
+          timeSpan.textContent = isNaN(dt.getTime())
+            ? (msg.time_display || "")
+            : dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        header.appendChild(senderSpan);
+        header.appendChild(timeSpan);
+
+        const body = document.createElement("div");
+        body.className = "text-light";
+        body.style.wordBreak = "break-word";
+        body.textContent = msg.message || "";
+
+        bubble.appendChild(header);
+        bubble.appendChild(body);
+        chatMessagesContainer.appendChild(bubble);
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+      }
+
+      if (Array.isArray(CLASSROOM_META.chat_messages)) {
+        CLASSROOM_META.chat_messages.forEach((m) => {
+          const isOwn = m.sender_role === CLASSROOM_META.participant_role;
+          appendChatMessage(m, isOwn);
+        });
+      }
+
+      if (chatSendForm) {
+        chatSendForm.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const text = (chatInputField.value || "").trim();
+          if (!text) return;
+          chatInputField.value = "";
+
+          const { status, data } = await apiPost(URLS.chat, { message: text });
+          if (status === 200 && data.ok && data.message) {
+            appendChatMessage(data.message, true);
+            broadcastDataPacket({ type: "chat_message", message: data.message });
+          } else {
+            showBanner(data.error || "Could not send chat message.", "warning");
+          }
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 9. Mentor Host Controls & Complete Session Workflow
+      // -------------------------------------------------------------------
+      const hostMuteStudentBtn = document.getElementById("hostMuteStudentBtn");
+      if (hostMuteStudentBtn) {
+        hostMuteStudentBtn.addEventListener("click", async function () {
+          if (hostMuteStudentBtn.disabled) return;
+          hostMuteStudentBtn.disabled = true;
+          const labelEl = document.getElementById("hostMuteStudentLabel");
+          const origText = labelEl ? labelEl.textContent : "Mute Student Microphone";
+          if (labelEl) labelEl.textContent = "Muting Student...";
+
+          const { status, data } = await apiPost(URLS.moderate, { action: "mute_student_request" });
+          hostMuteStudentBtn.disabled = false;
+          if (labelEl) labelEl.textContent = origText;
+
+          if (status === 200 && data.ok) {
+            if (data.signal_id) lastProcessedModerationId = data.signal_id;
+            broadcastDataPacket({
+              type: "host_moderation",
+              action: "mute_student_request",
+              signal_id: data.signal_id || ""
+            });
+            remoteMediaStateOverride = Object.assign({}, remoteMediaStateOverride || {}, { mic_enabled: false });
+            syncRemoteParticipants();
+            showBanner("Mute command sent to student microphone.", "info");
+          } else {
+            showBanner((data && data.error) || "Could not mute student microphone.", "warning");
+          }
+        });
+      }
+
+      const hostLowerHandBtn = document.getElementById("hostLowerHandBtn");
+      if (hostLowerHandBtn) {
+        hostLowerHandBtn.addEventListener("click", async function () {
+          if (hostLowerHandBtn.disabled) return;
+          hostLowerHandBtn.disabled = true;
+          const labelEl = document.getElementById("hostLowerHandLabel");
+          const origText = labelEl ? labelEl.textContent : "Lower Raised Hand";
+          if (labelEl) labelEl.textContent = "Lowering Hand...";
+
+          const { status, data } = await apiPost(URLS.moderate, { action: "lower_hand" });
+          hostLowerHandBtn.disabled = false;
+          if (labelEl) labelEl.textContent = origText;
+
+          if (status === 200 && data.ok) {
+            if (data.signal_id) lastProcessedModerationId = data.signal_id;
+            broadcastDataPacket({
+              type: "host_moderation",
+              action: "lower_hand",
+              signal_id: data.signal_id || ""
+            });
+            const remoteHandBadge = document.getElementById("remoteHandBadge");
+            if (remoteHandBadge) remoteHandBadge.style.display = "none";
+            showBanner("Lowered raised hand indicator.", "info");
+          } else {
+            showBanner((data && data.error) || "Could not lower raised hand.", "warning");
+          }
+        });
+      }
+
+      const hostResendInviteBtn = document.getElementById("hostResendInviteBtn");
+      if (hostResendInviteBtn) {
+        hostResendInviteBtn.addEventListener("click", async function () {
+          if (hostResendInviteBtn.disabled) return;
+          hostResendInviteBtn.disabled = true;
+          const labelEl = document.getElementById("hostResendInviteLabel");
+          const subEl = document.getElementById("hostResendInviteSub");
+          const origLabel = labelEl ? labelEl.textContent : "Resend Student Email Invitation";
+          if (labelEl) labelEl.textContent = "Sending Invitation Email...";
+
+          const targetUrl = hostResendInviteBtn.getAttribute("data-resend-url") || URLS.resendInvite;
+          const { status, data } = await apiPost(targetUrl, {});
+          hostResendInviteBtn.disabled = false;
+          if (labelEl) labelEl.textContent = origLabel;
+
+          if (status === 200 && data && data.ok) {
+            if (subEl) subEl.textContent = "Invitation sent just now ✓";
+            showBanner(data.message || "Classroom invitation email resent to student.", "success");
+          } else {
+            showBanner((data && (data.error || data.message)) || "Could not resend invitation email.", "warning");
+          }
+        });
+      }
+
+      // Complete & End Session Modal + Action
+      const mentorCompleteSessionBtn = document.getElementById("mentorCompleteSessionBtn");
+      const confirmCompleteSessionBtn = document.getElementById("confirmCompleteSessionBtn");
+      const cancelCompleteSessionBtn = document.getElementById("cancelCompleteSessionBtn");
+      const completeModalErrorBox = document.getElementById("completeModalErrorBox");
+
+      if (mentorCompleteSessionBtn) {
+        mentorCompleteSessionBtn.addEventListener("click", function () {
+          if (completeModalErrorBox) {
+            completeModalErrorBox.style.display = "none";
+            completeModalErrorBox.textContent = "";
+          }
+          const modal = getCompleteModal();
+          if (modal) {
+            modal.show();
+          }
+        });
+      }
+
+      // Clicking "Continue Session" cleanly closes the confirmation dialog without ending the session
+      if (cancelCompleteSessionBtn) {
+        cancelCompleteSessionBtn.addEventListener("click", function () {
+          const modal = getCompleteModal();
+          if (modal) {
+            modal.hide();
+          }
+        });
+      }
+
+      if (confirmCompleteSessionBtn) {
+        confirmCompleteSessionBtn.addEventListener("click", async function () {
+          if (isCompletingSession) return;
+          isCompletingSession = true;
+          confirmCompleteSessionBtn.disabled = true;
+          if (cancelCompleteSessionBtn) cancelCompleteSessionBtn.disabled = true;
+          if (completeModalErrorBox) {
+            completeModalErrorBox.style.display = "none";
+            completeModalErrorBox.textContent = "";
+          }
+
+          const labelEl = document.getElementById("confirmCompleteLabel");
+          if (labelEl) labelEl.textContent = "Completing Session...";
+
+          const { status, data } = await apiPost(URLS.complete, {});
+          if (status === 200 && data && data.ok) {
+            broadcastDataPacket({
+              type: "session_completed",
+              student_redirect_url: data.student_redirect_url || URLS.studentReview
+            });
+            await handleRemoteSessionCompleted(data.student_redirect_url || URLS.studentReview);
+          } else {
+            isCompletingSession = false;
+            confirmCompleteSessionBtn.disabled = false;
+            if (cancelCompleteSessionBtn) cancelCompleteSessionBtn.disabled = false;
+            if (labelEl) labelEl.textContent = "Yes, Complete Session";
+            const errMsg = (data && data.error) || "Could not mark session as completed. Please try again.";
+            if (completeModalErrorBox) {
+              completeModalErrorBox.textContent = errMsg;
+              completeModalErrorBox.style.display = "block";
+            }
+            showBanner(errMsg, "danger");
+          }
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 10. Side Panel Tabs & Groq AI Study Assistant
+      // -------------------------------------------------------------------
+      const toggleChatPanelBtn = document.getElementById("toggleChatPanelBtn");
+      const sidePanel = document.getElementById("classroomSidePanel");
+      if (toggleChatPanelBtn && sidePanel) {
+        toggleChatPanelBtn.addEventListener("click", function () {
+          const isCollapsed = sidePanel.classList.toggle("collapsed");
+          toggleChatPanelBtn.classList.toggle("active-state", !isCollapsed);
+          toggleChatPanelBtn.setAttribute("aria-expanded", String(!isCollapsed));
+          if (!isCollapsed) {
+            unreadChatCount = 0;
+            if (unreadChatBadge) unreadChatBadge.style.display = "none";
+          }
+        });
+      }
+
+      document.querySelectorAll(".sf-panel-tab").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const targetId = this.getAttribute("data-tab");
+          document.querySelectorAll(".sf-panel-tab").forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-selected", "false");
+          });
+          document.querySelectorAll(".sf-tab-pane").forEach((p) => p.classList.remove("active"));
+          this.classList.add("active");
+          this.setAttribute("aria-selected", "true");
+          const pane = document.getElementById(targetId);
+          if (pane) pane.classList.add("active");
+          if (targetId === "chatTab") {
+            unreadChatCount = 0;
+            if (unreadChatBadge) unreadChatBadge.style.display = "none";
+          }
+        });
+      });
+
+      const aiAskBtn = document.getElementById("aiAskBtn");
+      const aiPromptType = document.getElementById("aiPromptType");
+      const aiUserInput = document.getElementById("aiUserInput");
+      const aiResponseBox = document.getElementById("aiResponseBox");
+
+      if (aiAskBtn) {
+        aiAskBtn.addEventListener("click", async function () {
+          aiAskBtn.disabled = true;
+          aiAskBtn.textContent = "Thinking...";
+          aiResponseBox.style.display = "block";
+          aiResponseBox.textContent = "Generating study insight with Groq AI...";
+
+          const { data } = await apiPost(URLS.aiAssist, {
+            prompt_type: aiPromptType ? aiPromptType.value : "explain_concept",
+            user_input: aiUserInput ? aiUserInput.value : ""
+          });
+
+          aiAskBtn.disabled = false;
+          aiAskBtn.innerHTML = '<iconify-icon icon="solar:magic-stick-3-bold" class="me-1"></iconify-icon>Generate Study Insight';
+          if (data && data.ok && data.response) {
+            aiResponseBox.textContent = data.response;
+          } else {
+            aiResponseBox.textContent = (data && data.error) || "AI assistant is temporarily unavailable.";
+          }
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 11. Session Duration Timer
+      // -------------------------------------------------------------------
+      function startSessionClock() {
+        joinedTimestampMs = Date.now();
+        if (liveTimerBadge) liveTimerBadge.classList.remove("d-none");
+        if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+        sessionTimerInterval = setInterval(() => {
+          const elapsedSec = Math.floor((Date.now() - joinedTimestampMs) / 1000);
+          const mins = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+          const secs = String(elapsedSec % 60).padStart(2, "0");
+          if (liveTimerValue) {
+            liveTimerValue.textContent = `${mins}:${secs}`;
+          } else if (liveTimerBadge) {
+            liveTimerBadge.textContent = `${mins}:${secs}`;
+          }
+        }, 1000);
+      }
+
+      // Initialize Lobby Camera/Microphone Preview and Real-Time Metadata Polling on load
+      initLobbyPreview();
+      startMetadataSyncLoop();
+    })();
+  </script>
+</body>
+</html>

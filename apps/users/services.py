@@ -15,7 +15,7 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 from apps.users import repositories
 
 USERS_COLLECTION: Collection[dict[str, Any]] = repositories.users_collection
-ALLOWED_ROLES = {"student", "instructor", "admin"}
+ALLOWED_ROLES = {"student", "instructor", "mentor", "admin"}
 
 
 class UserServiceError(Exception):

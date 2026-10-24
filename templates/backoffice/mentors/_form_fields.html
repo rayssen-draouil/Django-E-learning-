@@ -1,0 +1,245 @@
+<div class="availability-form-body">
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            {% if error %}
+                <div class="availability-alert availability-alert-error" role="alert" aria-live="assertive">
+                    <span class="alert-icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </span>
+                    <div class="alert-content">
+                        <p>{{ error }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="availability-form-grid">
+        <!-- Date Field -->
+        <div class="availability-field {% if form.date.errors %}has-error{% endif %}" data-field-wrapper="date">
+            <label for="{{ form.date.id_for_label }}">
+                Date <span class="required-star" aria-hidden="true">*</span>
+            </label>
+            <input
+                type="date"
+                name="{{ form.date.html_name }}"
+                id="{{ form.date.id_for_label }}"
+                value="{{ form.date.value|date:'Y-m-d'|default:form.date.value|default:'' }}"
+                min="{{ form.fields.date.widget.attrs.min }}"
+                data-today="{{ form.fields.date.widget.attrs.min }}"
+                class="availability-input {% if form.date.errors %}input-invalid{% endif %}"
+                required
+                aria-required="true"
+                {% if form.date.errors %}aria-invalid="true"{% endif %}
+                aria-describedby="error-{{ form.date.id_for_label }} hint-{{ form.date.id_for_label }}"
+            >
+            <small class="field-hint" id="hint-{{ form.date.id_for_label }}">Select today or a future date for your session.</small>
+            <div class="field-error" id="error-{{ form.date.id_for_label }}" data-field-error="date" role="alert">
+                {% for error in form.date.errors %}<span>{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <!-- Start & End Time Fields + Duration Preview -->
+        <div class="availability-time-row">
+            <div class="availability-field {% if form.start_time.errors %}has-error{% endif %}" data-field-wrapper="start_time">
+                <label for="{{ form.start_time.id_for_label }}">
+                    Start time <span class="required-star" aria-hidden="true">*</span>
+                </label>
+                <input
+                    type="time"
+                    name="{{ form.start_time.html_name }}"
+                    id="{{ form.start_time.id_for_label }}"
+                    value="{{ form.start_time.value|time:'H:i'|default:form.start_time.value|default:'' }}"
+                    data-current-time="{{ form.current_time_hhmm|default:'' }}"
+                    class="availability-input {% if form.start_time.errors %}input-invalid{% endif %}"
+                    required
+                    aria-required="true"
+                    {% if form.start_time.errors %}aria-invalid="true"{% endif %}
+                    aria-describedby="error-{{ form.start_time.id_for_label }}"
+                >
+                <div class="field-error" id="error-{{ form.start_time.id_for_label }}" data-field-error="start_time" role="alert">
+                    {% for error in form.start_time.errors %}<span>{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <div class="availability-field {% if form.end_time.errors %}has-error{% endif %}" data-field-wrapper="end_time">
+                <div class="label-with-badge">
+                    <label for="{{ form.end_time.id_for_label }}">
+                        End time <span class="required-star" aria-hidden="true">*</span>
+                    </label>
+                    <span class="duration-preview-badge" data-duration-preview aria-live="polite">
+                        {% if slot and slot.duration_minutes %}{{ slot.duration_minutes }} min{% else %}15–240 min{% endif %}
+                    </span>
+                </div>
+                <input
+                    type="time"
+                    name="{{ form.end_time.html_name }}"
+                    id="{{ form.end_time.id_for_label }}"
+                    value="{{ form.end_time.value|time:'H:i'|default:form.end_time.value|default:'' }}"
+                    class="availability-input {% if form.end_time.errors %}input-invalid{% endif %}"
+                    required
+                    aria-required="true"
+                    {% if form.end_time.errors %}aria-invalid="true"{% endif %}
+                    aria-describedby="error-{{ form.end_time.id_for_label }}"
+                >
+                <div class="field-error" id="error-{{ form.end_time.id_for_label }}" data-field-error="end_time" role="alert">
+                    {% for error in form.end_time.errors %}<span>{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mentoring Topic -->
+        <div class="availability-field {% if form.topic.errors %}has-error{% endif %}" data-field-wrapper="topic">
+            <label for="{{ form.topic.id_for_label }}">
+                Mentoring topic <span class="required-star" aria-hidden="true">*</span>
+            </label>
+            <select
+                name="{{ form.topic.html_name }}"
+                id="{{ form.topic.id_for_label }}"
+                class="availability-input {% if form.topic.errors %}input-invalid{% endif %}"
+                required
+                aria-required="true"
+                {% if form.topic.errors %}aria-invalid="true"{% endif %}
+                aria-describedby="error-{{ form.topic.id_for_label }}"
+                data-topic-select
+            >
+                <option value="">Select a mentoring topic...</option>
+                {% for topic_option in topics %}
+                    <option value="{{ topic_option }}" {% if form.topic.value == topic_option %}selected{% endif %}>{{ topic_option }}</option>
+                {% endfor %}
+            </select>
+            <div class="field-error" id="error-{{ form.topic.id_for_label }}" data-field-error="topic" role="alert">
+                {% for error in form.topic.errors %}<span>{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <!-- Conditional Custom Topic (when Topic == Other) -->
+        <div
+            class="availability-field conditional-field {% if form.custom_topic.errors %}has-error{% endif %}"
+            data-field-wrapper="custom_topic"
+            data-custom-topic-group
+            {% if form.topic.value != "Other" and not form.custom_topic.errors %}hidden{% endif %}
+        >
+            <label for="{{ form.custom_topic.id_for_label }}">
+                Custom topic <span class="required-star" aria-hidden="true">*</span>
+            </label>
+            <input
+                type="text"
+                name="{{ form.custom_topic.html_name }}"
+                id="{{ form.custom_topic.id_for_label }}"
+                value="{{ form.custom_topic.value|default:'' }}"
+                maxlength="120"
+                placeholder="e.g., System Design, Cloud Architecture, GraphQL..."
+                class="availability-input {% if form.custom_topic.errors %}input-invalid{% endif %}"
+                {% if form.topic.value == "Other" %}required aria-required="true"{% endif %}
+                {% if form.custom_topic.errors %}aria-invalid="true"{% endif %}
+                aria-describedby="error-{{ form.custom_topic.id_for_label }} hint-{{ form.custom_topic.id_for_label }}"
+            >
+            <small class="field-hint" id="hint-{{ form.custom_topic.id_for_label }}">Specify the custom subject you will mentor (max 120 characters).</small>
+            <div class="field-error" id="error-{{ form.custom_topic.id_for_label }}" data-field-error="custom_topic" role="alert">
+                {% for error in form.custom_topic.errors %}<span>{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+
+        <!-- Session Format (Radio Cards) -->
+        <fieldset class="availability-fieldset {% if form.session_type.errors %}has-error{% endif %}" data-field-wrapper="session_type">
+            <legend>
+                Session format <span class="required-star" aria-hidden="true">*</span>
+            </legend>
+            <div class="session-format-cards" role="radiogroup" aria-describedby="error-session-type">
+                <label class="session-format-card {% if form.session_type.value|default:'online' == 'online' %}selected{% endif %}" data-format-card="online">
+                    <input
+                        type="radio"
+                        name="{{ form.session_type.html_name }}"
+                        value="online"
+                        {% if form.session_type.value|default:'online' == 'online' %}checked{% endif %}
+                        data-session-type-radio
+                    >
+                    <span class="format-card-icon" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </span>
+                    <span class="format-card-content">
+                        <strong>Online</strong>
+                        <small>Remote video coaching session</small>
+                    </span>
+                </label>
+
+                <label class="session-format-card {% if form.session_type.value == 'in_person' %}selected{% endif %}" data-format-card="in_person">
+                    <input
+                        type="radio"
+                        name="{{ form.session_type.html_name }}"
+                        value="in_person"
+                        {% if form.session_type.value == 'in_person' %}checked{% endif %}
+                        data-session-type-radio
+                    >
+                    <span class="format-card-icon" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </span>
+                    <span class="format-card-content">
+                        <strong>In-person</strong>
+                        <small>Face-to-face mentoring session</small>
+                    </span>
+                </label>
+            </div>
+            <div class="field-error" id="error-session-type" data-field-error="session_type" role="alert">
+                {% for error in form.session_type.errors %}<span>{{ error }}</span>{% endfor %}
+            </div>
+        </fieldset>
+
+        <!-- Online informational note -->
+        <div
+            class="session-format-info"
+            data-online-info
+            {% if form.session_type.value == "in_person" %}hidden{% endif %}
+        >
+            <span class="info-badge-icon" aria-hidden="true">ℹ</span>
+            <p>Meeting details can be added when session booking is implemented.</p>
+        </div>
+
+        <!-- In-person optional location -->
+        <div
+            class="availability-field conditional-field {% if form.location.errors %}has-error{% endif %}"
+            data-field-wrapper="location"
+            data-location-group
+            {% if form.session_type.value != "in_person" and not form.location.errors %}hidden{% endif %}
+        >
+            <label for="{{ form.location.id_for_label }}">
+                Location or meeting venue <span class="optional-tag">(optional)</span>
+            </label>
+            <input
+                type="text"
+                name="{{ form.location.html_name }}"
+                id="{{ form.location.id_for_label }}"
+                value="{{ form.location.value|default:'' }}"
+                maxlength="200"
+                placeholder="e.g., Campus Room B204, Innovation Lab, or Coworking Space"
+                class="availability-input {% if form.location.errors %}input-invalid{% endif %}"
+                {% if form.location.errors %}aria-invalid="true"{% endif %}
+                aria-describedby="error-{{ form.location.id_for_label }}"
+            >
+            <div class="field-error" id="error-{{ form.location.id_for_label }}" data-field-error="location" role="alert">
+                {% for error in form.location.errors %}<span>{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="availability-form-actions">
+        <button
+            type="submit"
+            class="primary-button btn-save-availability"
+            data-submit-button
+            data-default-text="{{ submit_label|default:'Create Availability' }}"
+            data-loading-text="Saving..."
+        >
+            <span class="btn-spinner" aria-hidden="true" hidden></span>
+            <span data-submit-label>{{ submit_label|default:"Create Availability" }}</span>
+        </button>
+        <a
+            href="{% url 'users:mentor_availability_list' %}"
+            class="outline-button btn-cancel-availability"
+            data-close-modal
+        >
+            Cancel
+        </a>
+    </div>
+</div>

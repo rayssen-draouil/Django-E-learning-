@@ -1,0 +1,19 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">Mentorship Request Update</h2>
+<p>Hello {{ student_name }},</p>
+<p>We are writing to let you know that <strong>{{ mentor_name }}</strong> was unable to accept your request for the session on <strong>{{ date }} at {{ start_time }}</strong>.</p>
+
+{% if reason %}
+<div class="info-card" style="border-left-color: #ef4444;">
+    <div class="info-row"><span class="info-label">Mentor Note:</span></div>
+    <p style="margin: 4px 0 0; color: #334155;">{{ reason }}</p>
+</div>
+{% endif %}
+
+<p>Don't worry! You can browse other available slots or discover another mentor in our directory.</p>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">Browse Available Mentors</a>
+</p>
+{% endblock %}

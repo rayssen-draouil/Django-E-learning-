@@ -1,0 +1,220 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}Mentors Directory | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mentors-hero {
+        text-align: center;
+        padding: 2.5rem 1rem 1.5rem;
+    }
+    .mentors-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    .mentors-hero p {
+        font-size: 1.05rem;
+        color: #64748b;
+        max-width: 650px;
+        margin: 0 auto;
+    }
+    .mentors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.75rem;
+        margin-top: 2rem;
+        margin-bottom: 3.5rem;
+    }
+    .mentor-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .mentor-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
+    }
+    .mentor-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    .mentor-avatar {
+        width: 3.75rem;
+        height: 3.75rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+    .mentor-identity h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .mentor-experience {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin: 0.15rem 0 0;
+    }
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: #fef3c7;
+        color: #b45309;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.2rem 0.55rem;
+        border-radius: 0.5rem;
+        margin-top: 0.35rem;
+    }
+    .mentor-bio {
+        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.55;
+        margin-bottom: 1.25rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .mentor-topics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.5rem;
+    }
+    .topic-tag {
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+    }
+    .mentor-card-footer {
+        margin-top: auto;
+        padding-top: 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .next-slot-info {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    .next-slot-info strong {
+        display: block;
+        color: #0f172a;
+        font-weight: 600;
+    }
+    .btn-view-mentor {
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.55rem 1rem;
+        border-radius: 0.55rem;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+    }
+    .btn-view-mentor:hover {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mentors-container">
+    <header class="mentors-hero">
+        <h1>Connect with Verified Mentors</h1>
+        <p>Accelerate your learning journey with dedicated 1-on-1 coaching, code reviews, and career guidance.</p>
+
+        <!-- Intelligent AI Mentor Recommendation Quick Matcher -->
+        <div style="max-width: 760px; margin: 1.5rem auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 1rem; padding: 1.35rem 1.5rem; text-align: left; color: #ffffff; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem;">
+                <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd;">
+                    &#10024; Intelligent AI Mentor Recommendation System
+                </span>
+                <a href="{% url 'users:mentor_recommendations' %}" style="font-size: 0.8rem; color: #bfdbfe; text-decoration: underline;">Advanced Filters &amp; Side-by-Side Compare &rarr;</a>
+            </div>
+            <form method="get" action="{% url 'users:mentor_recommendations' %}" style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                <input type="text" name="learning_goal" placeholder="Describe your goal (e.g., 'Help me debug Django REST authentication and prepare for backend interviews')..."
+                       style="flex: 1; min-width: 240px; padding: 0.7rem 0.95rem; border-radius: 0.55rem; border: 1px solid rgba(255,255,255,0.25); font-size: 0.9rem; color: #0f172a; background: #ffffff;">
+                <button type="submit" style="background: #2563eb; color: #ffffff; border: 1px solid #60a5fa; border-radius: 0.55rem; padding: 0.7rem 1.25rem; font-size: 0.88rem; font-weight: 700; cursor: pointer;">
+                    Find My Best Mentor Match
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <div class="mentors-grid">
+        {% for mentor in mentors %}
+        <article class="mentor-card">
+            <div class="mentor-card-header">
+                <div class="mentor-avatar">{{ mentor.initials }}</div>
+                <div class="mentor-identity">
+                    <h3>{{ mentor.full_name }}</h3>
+                    <p class="mentor-experience">{{ mentor.experience }}</p>
+                    <div class="rating-badge">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#d97706" stroke="#d97706" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        {% if mentor.rating_summary.has_reviews %}
+                            <span>{{ mentor.rating_summary.average_rating }}</span>
+                            <span style="font-weight: normal; color: #92400e;">({{ mentor.rating_summary.review_count }} verified &bull; {{ mentor.rating_summary.confidence_label }})</span>
+                        {% else %}
+                            <span style="color: #92400e;">New Mentor</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <p class="mentor-bio">{{ mentor.bio }}</p>
+
+            <div class="mentor-topics">
+                {% for topic in mentor.topics %}
+                    <span class="topic-tag">{{ topic }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="mentor-card-footer">
+                <div class="next-slot-info">
+                    {% if mentor.next_slot_display %}
+                        <span>Next available slot:</span>
+                        <strong>{{ mentor.next_slot_display }}</strong>
+                    {% else %}
+                        <span>Availability:</span>
+                        <strong style="color: #94a3b8;">Check profile for slots</strong>
+                    {% endif %}
+                </div>
+                <a href="{% url 'users:mentor_public_detail' mentor.id %}" class="btn-view-mentor">View Profile &amp; Book</a>
+            </div>
+        </article>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; background: #ffffff; border-radius: 1rem; border: 1px dashed #cbd5e1;">
+            <p style="font-size: 1.1rem; color: #64748b; margin: 0 0 0.5rem;">No mentors available right now.</p>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Please check back shortly as new mentors join SkillForge!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

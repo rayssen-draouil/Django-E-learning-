@@ -37,7 +37,15 @@ body { margin: 0; font-family: "Poppins", sans-serif; color: var(--navy); }
 .outline-button, .profile-chip { border-radius: 999px; padding: .65rem 1rem; color: var(--navy); font-size: .78rem; font-weight: 600; text-decoration: none; }
 .outline-button { border: 1px solid #dfe4f0; background: #fff; }
 .profile-chip { display: flex; align-items: center; gap: .5rem; }
-.profile-chip span { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; color: white; background: var(--blue); }
+.profile-chip span:first-child { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; color: white; background: var(--blue); font-weight: 700; font-size: .8rem; }
+.user-header-profile { display: inline-flex; align-items: center; gap: .6rem; }
+.role-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .85rem; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .02em; user-select: none; transition: transform .15s ease; }
+.role-badge:hover { transform: translateY(-1px); }
+.role-badge-icon { font-size: .85rem; line-height: 1; }
+.role-badge-mentor { background: #fff2e1; color: #b45d00; border: 1px solid #ffd8a8; }
+.role-badge-instructor { background: #e5f7ff; color: #0c6e91; border: 1px solid #b8e6f7; }
+.role-badge-admin { background: #f2edff; color: #6236b5; border: 1px solid #d8ccff; }
+.role-badge-student { background: #e9fbf2; color: #159b64; border: 1px solid #b7ebd2; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
 .stat-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; border-radius: 1rem; }
 .stat-card p { margin: 0 0 .25rem; color: var(--muted); font-size: .72rem; }

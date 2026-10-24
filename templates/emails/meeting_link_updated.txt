@@ -1,0 +1,13 @@
+Meeting Details Updated
+
+Hello {{ student_name }},
+
+{{ mentor_name }} has added or updated the online meeting link for your upcoming session on {{ date }} at {{ start_time }}.
+
+Topic: {{ topic }}
+Meeting URL: {{ meeting_link }}
+
+View Session Details:
+{{ action_url }}
+
+SkillForge Platform
