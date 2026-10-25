@@ -8,7 +8,7 @@
                 <p class="header-subtitle">Review and assign requests, and move each one toward resolution.</p>
             </div>
             <div class="header-actions">
-                <a href="{% url 'support:list' %}?view=front" class="outline-button">Front Office Support</a>
+                <a href="{% url 'support:list' %}" class="outline-button">Front Office Support</a>
                 <a href="{% url 'support:notifications' %}" class="outline-button">Notifications{% if unread_count %} ({{ unread_count }}){% endif %}</a>
                 <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
                 <a href="{% url 'support:dashboard' %}" class="primary-button">Dashboard</a>
@@ -24,12 +24,13 @@
 
 <section class="panel" aria-label="Queue filters">
             <form class="support-form" method="get">
+                <input type="hidden" name="view" value="admin">
                 <div class="support-form-grid">
                     {% for field in filter_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
                 </div>
                 <div class="support-form-actions">
                     <button class="primary-button" type="submit">Filter</button>
-                    <a class="outline-button" href="{% url 'support:list' %}">Reset</a>
+                    <a class="outline-button" href="{% url 'support:list' %}?view=admin">Reset</a>
                 </div>
             </form>
         </section>

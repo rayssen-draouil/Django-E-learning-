@@ -10,7 +10,7 @@
             <div class="header-actions">
                 <span class="support-chip support-chip--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
                 <span class="support-chip support-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span>
-                <a href="{% url 'support:list' %}" class="outline-button">← Support queue</a>
+                <a href="{% url 'support:list' %}?view=admin" class="outline-button">← Support queue</a>
             </div>
         </header>
 

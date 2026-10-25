@@ -143,8 +143,14 @@ def ticket_list(request):
         messages.success(request, "Your request was created. The assistant also prepared some helpful suggestions.")
         return redirect("support:detail", ticket_id=ticket["_id"])
 
-    is_front = request.GET.get("view") == "front" or not is_admin
-    template_name = "support/list_student.html" if is_front else "support/list_admin.html"
+    is_admin_panel = is_admin and (
+        request.GET.get("view") == "admin"
+        or request.GET.get("panel") == "1"
+        or "status" in request.GET
+        or "assignee" in request.GET
+        or request.GET.get("sort") == "priority"
+    ) and request.GET.get("view") != "front"
+    template_name = "support/list_admin.html" if is_admin_panel else "support/list_student.html"
     return render(request, template_name, {"tickets": queue["tickets"], "queue": queue, "filters": filters,
         "filter_form": filter_form, "is_admin": is_admin, "unread_count": unread, "stats": stats,
         "creation_form": creation_form,

@@ -189,7 +189,7 @@
                             <h3>{% if user.role == 'admin' %}Console du support{% else %}Mon tableau de bord support{% endif %}</h3>
                             <p>{% if user.role == 'admin' %}Traitez la file complète : {{ support_stats.open }} ouverte{{ support_stats.open|pluralize }} · {{ support_stats.in_progress }} en cours · {{ support_stats.resolved }} résolue{{ support_stats.resolved|pluralize }}{% else %}Ouvertes : {{ support_stats.open }} · En cours : {{ support_stats.in_progress }} · Résolues : {{ support_stats.resolved }}{% if support_stats.unread %} · {{ support_stats.unread }} notification{{ support_stats.unread|pluralize }} non lue{{ support_stats.unread|pluralize }}{% endif %}{% endif %}</p>
                         </div>
-                        <a class="continue-button" href="{% if user.role == 'admin' %}{% url 'support:list' %}{% else %}{% url 'support:board' %}{% endif %}">{% if user.role == 'admin' %}Ouvrir la console{% else %}Consulter{% endif %}</a>
+                        <a class="continue-button" href="{% if user.role == 'admin' %}{% url 'support:list' %}?view=admin{% else %}{% url 'support:board' %}{% endif %}">{% if user.role == 'admin' %}Ouvrir la console{% else %}Consulter{% endif %}</a>
                     </article>
                     {% if user.role == 'admin' %}
                     <article class="course-row">
