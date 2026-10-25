@@ -7,9 +7,11 @@
             <h1>Cours</h1>
             <p class="header-subtitle">Créez, modifiez et publiez vos cours. Les brouillons restent privés.</p>
         </div>
-        <div class="course-header-actions">
-            <a class="course-button secondary" href="{% url 'users:course_manage_ai_report' %}">Rapport IA</a>
-            <a class="course-button" href="{% url 'users:course_manage_create' %}">Créer un cours</a>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_ai_report' %}">Rapport IA</a>
+            <a class="primary-button course-button" href="{% url 'users:course_manage_create' %}">+ Créer un cours</a>
+            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
         </div>
     </header>
 

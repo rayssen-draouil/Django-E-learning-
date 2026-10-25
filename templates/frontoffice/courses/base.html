@@ -5,35 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Cours{% endblock %} | SkillForge</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontoffice/css/courses.css' %}">
+    <script type="module" src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
 </head>
-<body class="course-site">
+<body class="course-site bg-gray-50 text-gray-800">
     <a class="course-skip-link" href="#main-content">Aller au contenu principal</a>
-    <header class="site-header">
-        <div class="site-header-inner">
-            <a class="site-brand" href="{% url 'home' %}">SkillForge</a>
-            <nav class="site-nav" aria-label="Navigation principale">
-                <a href="{% url 'home' %}">Accueil</a>
-                <a href="{% url 'users:courses' %}"{% if request.resolver_match.url_name == 'courses' or request.resolver_match.url_name == 'course_detail' %} aria-current="page"{% endif %}>Cours</a>
-                <a href="{% url 'learning_paths:list' %}">Parcours</a>
-                <a href="{% url 'users:mentors' %}">Mentors</a>
-                <a href="{% url 'users:quiz' %}">Quiz</a>
-                <a href="{% url 'support:list' %}">Support</a>
-                {% if request.session.user_id %}
-                    <a class="nav-cta" href="{% url 'users:backoffice' %}">Tableau de bord</a>
-                {% else %}
-                    <a href="{% url 'users:login' %}">Connexion</a>
-                    <a class="nav-cta" href="{% url 'users:register' %}">Inscription</a>
-                {% endif %}
-            </nav>
-        </div>
-    </header>
+    {% include "frontoffice/partials/navbar.html" %}
 
-    <main class="course-main" id="main-content">
+    <main class="course-main max-w-screen-xl mx-auto px-8 py-10" id="main-content">
         {% if messages %}
-            <div class="course-messages" aria-live="polite">
+            <div class="course-messages mb-6" aria-live="polite">
                 {% for message in messages %}
                     <p class="course-message {{ message.tags }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>
                 {% endfor %}
@@ -42,8 +28,30 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="site-footer">
-        <div class="site-footer-inner">SkillForge — Apprendre, pratiquer et progresser à son rythme.</div>
+    <footer class="site-footer mt-24 py-12" style="background-color: rgba(37, 38, 65, 1);">
+        <div class="max-w-screen-xl mx-auto px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center pb-8 border-b border-gray-700 gap-6">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl font-bold tracking-widest text-white">SkillForge</span>
+                    <span class="text-gray-400 text-sm border-l border-gray-600 pl-3">Apprendre, pratiquer et progresser à son rythme.</span>
+                </div>
+                <div class="flex flex-wrap gap-6 text-sm text-gray-300">
+                    <a href="{% url 'home' %}" class="hover:text-yellow-400 transition">Accueil</a>
+                    <a href="{% url 'users:courses' %}" class="hover:text-yellow-400 transition">Cours</a>
+                    <a href="{% url 'learning_paths:list' %}" class="hover:text-yellow-400 transition">Parcours</a>
+                    <a href="{% url 'users:mentors' %}" class="hover:text-yellow-400 transition">Mentors</a>
+                    <a href="{% url 'users:quiz' %}" class="hover:text-yellow-400 transition">Quiz</a>
+                    <a href="{% url 'support:list' %}" class="hover:text-yellow-400 transition">Support</a>
+                </div>
+            </div>
+            <div class="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 gap-4">
+                <p>&copy; 2026 SkillForge Inc. Tous droits réservés.</p>
+                <div class="flex gap-4">
+                    <a href="#!" class="hover:text-gray-200">Confidentialité</a>
+                    <a href="#!" class="hover:text-gray-200">Conditions d'utilisation</a>
+                </div>
+            </div>
+        </div>
     </footer>
 </body>
 </html>

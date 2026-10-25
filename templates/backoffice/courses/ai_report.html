@@ -8,8 +8,10 @@
             <h1>Rapport d'évaluation IA</h1>
             <p class="header-subtitle">Scores de classification de l'assistant IA sur le jeu de référence du module cours.</p>
         </div>
-        <div class="course-header-actions">
-            <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour à mes cours</a>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Retour à mes cours</a>
+            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
         </div>
     </header>
 

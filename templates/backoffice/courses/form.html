@@ -8,7 +8,11 @@
             <h1>{{ title }}</h1>
             <p class="header-subtitle">{% if course %}Mettez à jour les informations du cours « {{ course.title }} ».{% else %}Renseignez les informations du cours. Il sera créé en brouillon par défaut.{% endif %}</p>
         </div>
-        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour aux cours</a>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Retour aux cours</a>
+            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
+        </div>
     </header>
 
     {% if course %}

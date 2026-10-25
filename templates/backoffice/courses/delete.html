@@ -7,6 +7,11 @@
             <h1>Supprimer le cours</h1>
             <p class="header-subtitle">Cette action est définitive.</p>
         </div>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Retour aux cours</a>
+            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
+        </div>
     </header>
 
     <section class="panel" aria-labelledby="delete-confirmation-heading">

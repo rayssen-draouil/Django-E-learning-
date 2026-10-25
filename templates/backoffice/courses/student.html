@@ -7,7 +7,11 @@
             <h1>Mes cours</h1>
             <p class="header-subtitle">Découvrez les cours publiés et poursuivez votre apprentissage.</p>
         </div>
-        <a class="course-button secondary" href="{% url 'users:courses' %}">Explorer le catalogue</a>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:courses' %}">Explorer le catalogue</a>
+            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
+        </div>
     </header>
 
     {% if storage_error %}
