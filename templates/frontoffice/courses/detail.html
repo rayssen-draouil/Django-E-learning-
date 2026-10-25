@@ -1,0 +1,186 @@
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}{% if course %}{{ course.title }}{% else %}Cours indisponible{% endif %}{% endblock %}
+{% block content %}
+    {% if storage_error %}
+        <header>
+            <p class="course-eyebrow">Cours</p>
+            <h1 class="course-title">Cours temporairement indisponible</h1>
+            <p class="course-intro">La fiche de ce cours n'a pas pu être chargée. Réessayez dans quelques instants.</p>
+        </header>
+        <p class="course-alert" role="alert">Le service des cours ne répond pas pour le moment.</p>
+        <p><a class="course-button secondary" href="{% url 'users:courses' %}">Retour au catalogue</a></p>
+    {% else %}
+        <nav class="course-breadcrumb" aria-label="Fil d'Ariane">
+            <a href="{% url 'users:courses' %}">Catalogue des cours</a>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{{ course.title }}</span>
+        </nav>
+
+        <header class="course-detail-header">
+            <div class="badge-row">
+                <span class="course-badge category">{{ course.category_label }}</span>
+                <span class="course-badge level">{{ course.level_label }}</span>
+                {% if course.status == "draft" %}<span class="course-badge draft">Brouillon</span>{% endif %}
+            </div>
+            <h1 class="course-title">{{ course.title }}</h1>
+            <p class="course-intro">{{ course.description|truncatechars:180 }}</p>
+            <div class="course-detail-summary" aria-label="Résumé du cours">
+                <span><strong>{{ course.duration_hours }} h</strong> de contenu</span>
+                <span><strong>{{ course.language|upper }}</strong></span>
+                <span><strong>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</strong></span>
+            </div>
+        </header>
+
+        {% if course.status == "draft" and can_manage %}
+            <p class="course-notice" role="status">Ce cours est un brouillon : il n'est visible que par vous et les administrateurs.</p>
+        {% endif %}
+
+        <div class="course-detail-grid">
+            <section class="course-detail-card" aria-labelledby="course-description-heading">
+                <img class="course-detail-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}">
+                <h2 id="course-description-heading">À propos de ce cours</h2>
+                {{ course.description|linebreaks }}
+                {% if course.objectives %}
+                    <h2>Objectifs d'apprentissage</h2>
+                    <ul class="course-objectives">
+                        {% for objective in course.objectives %}<li>{{ objective }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                <section class="course-translation" aria-labelledby="course-translation-heading">
+                    <h2 id="course-translation-heading">Traduire ce cours</h2>
+                    <p class="course-translation-help">Choisissez une langue pour afficher le titre, la description et les objectifs traduits.</p>
+                    <form class="course-translation-form" id="course-translation-form" method="post" action="{% url 'users:course_translate' slug=course.slug %}">
+                        {% csrf_token %}
+                        <div class="course-translation-field">
+                            <label for="course-translation-language">Langue de traduction</label>
+                            <select id="course-translation-language" name="lang" required>
+                                {% for language in translation_languages %}
+                                    <option value="{{ language.code }}">{{ language.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button class="course-button" type="submit" id="course-translation-submit">Traduire</button>
+                        <button class="course-button secondary" type="button" id="course-translation-reset" hidden>Afficher l'original</button>
+                    </form>
+                    <p class="course-translation-status" id="course-translation-status" role="status" aria-live="polite"></p>
+                    <p class="course-alert course-translation-error" id="course-translation-error" role="alert" tabindex="-1" hidden></p>
+                    <div class="course-translated" id="course-translated" role="region" aria-label="Contenu traduit" hidden>
+                        <p class="course-translation-note" id="course-translation-note"></p>
+                        <h3 class="course-translated-title" id="course-translated-title"></h3>
+                        <p class="course-translated-description" id="course-translated-description"></p>
+                        <div class="course-translated-objectives" id="course-translated-objectives-wrapper" hidden>
+                            <h4>Objectifs d'apprentissage</h4>
+                            <ul class="course-objectives" id="course-translated-objectives"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                {% if can_manage %}
+                    <div class="course-detail-actions">
+                        <a class="course-button secondary" href="{% url 'users:course_manage_edit' course_id=course.id %}">Modifier dans le back office</a>
+                    </div>
+                {% endif %}
+            </section>
+
+            <aside class="course-detail-card" aria-labelledby="course-info-heading">
+                <h2 id="course-info-heading">Informations</h2>
+                <ul class="course-detail-meta">
+                    <li><span>Instructeur</span><strong>{{ course.instructor_name }}</strong></li>
+                    <li><span>Catégorie</span><strong>{{ course.category_label }}</strong></li>
+                    <li><span>Niveau</span><strong>{{ course.level_label }}</strong></li>
+                    <li><span>Durée</span><strong>{{ course.duration_hours }} h</strong></li>
+                    <li><span>Langue</span><strong>{{ course.language }}</strong></li>
+                    <li><span>Tarif</span><strong>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</strong></li>
+                    <li><span>Créé le</span><strong>{{ course.created_at|date:"d/m/Y" }}</strong></li>
+                </ul>
+                <p><a class="course-button secondary" href="{% url 'users:courses' %}">Retour au catalogue</a></p>
+            </aside>
+        </div>
+        <script>
+        (function () {
+            "use strict";
+            var form = document.getElementById("course-translation-form");
+            if (!form) { return; }
+            var language = document.getElementById("course-translation-language");
+            var submit = document.getElementById("course-translation-submit");
+            var reset = document.getElementById("course-translation-reset");
+            var status = document.getElementById("course-translation-status");
+            var errorBox = document.getElementById("course-translation-error");
+            var output = document.getElementById("course-translated");
+            var outputTitle = document.getElementById("course-translated-title");
+            var outputDescription = document.getElementById("course-translated-description");
+            var outputObjectives = document.getElementById("course-translated-objectives");
+            var objectivesWrapper = document.getElementById("course-translated-objectives-wrapper");
+            var note = document.getElementById("course-translation-note");
+
+            function clearError() {
+                errorBox.textContent = "";
+                errorBox.hidden = true;
+            }
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                clearError();
+                var selected = language.value;
+                status.textContent = "Traduction en cours...";
+                submit.disabled = true;
+                form.setAttribute("aria-busy", "true");
+                fetch(form.getAttribute("action"), {
+                    method: "POST",
+                    body: new FormData(form),
+                    credentials: "same-origin"
+                }).then(function (response) {
+                    return response.json().catch(function () { return {}; }).then(function (payload) {
+                        if (!response.ok) {
+                            throw new Error(payload.error || "La traduction a échoué. Réessayez dans quelques instants.");
+                        }
+                        return payload;
+                    });
+                }).then(function (payload) {
+                    outputTitle.textContent = payload.title || "";
+                    outputDescription.textContent = payload.description || "";
+                    outputObjectives.textContent = "";
+                    var objectives = Array.isArray(payload.objectives) ? payload.objectives : [];
+                    objectives.forEach(function (objective) {
+                        var item = document.createElement("li");
+                        item.textContent = String(objective);
+                        outputObjectives.appendChild(item);
+                    });
+                    objectivesWrapper.hidden = objectives.length === 0;
+                    output.lang = selected;
+                    output.dir = selected === "ar" ? "rtl" : "ltr";
+                    note.textContent = "Contenu affiché en " + language.options[language.selectedIndex].text + ".";
+                    output.hidden = false;
+                    reset.hidden = false;
+                    status.textContent = "Traduction terminée.";
+                }).catch(function (error) {
+                    status.textContent = "";
+                    output.hidden = true;
+                    reset.hidden = true;
+                    errorBox.textContent = error && error.message ? error.message : "La traduction a échoué. Réessayez dans quelques instants.";
+                    errorBox.hidden = false;
+                    errorBox.focus();
+                }).finally(function () {
+                    submit.disabled = false;
+                    form.removeAttribute("aria-busy");
+                });
+            });
+
+            reset.addEventListener("click", function () {
+                output.hidden = true;
+                output.removeAttribute("lang");
+                output.removeAttribute("dir");
+                outputTitle.textContent = "";
+                outputDescription.textContent = "";
+                outputObjectives.textContent = "";
+                objectivesWrapper.hidden = true;
+                reset.hidden = true;
+                clearError();
+                status.textContent = "Affichage de la version originale.";
+                language.focus();
+            });
+        })();
+        </script>
+    {% endif %}
+{% endblock %}

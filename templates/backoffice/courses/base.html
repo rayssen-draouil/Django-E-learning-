@@ -1,0 +1,32 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ title }}{% endblock %} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/courses.css' %}">
+</head>
+<body class="dashboard-body">
+    <a class="skip-link" href="#main-content">Aller au contenu principal</a>
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="courses" %}
+        <div class="dashboard-content">
+            <main class="dashboard-main" id="main-content">
+                {% if messages %}
+                    <div class="course-messages" aria-live="polite">
+                        {% for message in messages %}
+                            <p class="course-message {{ message.tags }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
+            <footer class="dashboard-footer">SkillForge — gestion des cours</footer>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,14 +1,12 @@
 [run]
-source = apps, config
+source = apps.courses
 omit =
-    */tests.py
-    */migrations/*
-    config/settings/*
-    config/wsgi.py
-    config/asgi.py
-    manage.py
+    apps/courses/tests/*
+    apps/courses/migrations/*
 
 [report]
 show_missing = True
 skip_covered = False
-precision = 0
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

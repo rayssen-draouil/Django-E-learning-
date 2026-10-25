@@ -1,0 +1,52 @@
+{% extends "backoffice/courses/base.html" %}
+{% block title %}Mes cours{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">ESPACE ÉTUDIANT</p>
+            <h1>Mes cours</h1>
+            <p class="header-subtitle">Découvrez les cours publiés et poursuivez votre apprentissage.</p>
+        </div>
+        <a class="course-button secondary" href="{% url 'users:courses' %}">Explorer le catalogue</a>
+    </header>
+
+    {% if storage_error %}
+        <div class="course-message error" role="alert">Les cours sont temporairement indisponibles. Réessayez dans quelques instants.</div>
+    {% endif %}
+
+    <section class="panel" aria-labelledby="student-courses-heading">
+        <div class="panel-heading">
+            <div>
+                <h2 id="student-courses-heading">Cours disponibles</h2>
+                <p>Seuls les cours publiés apparaissent dans cet espace.</p>
+            </div>
+            <span class="trend">{{ courses|length }} cours</span>
+        </div>
+        <div class="course-grid">
+            {% for course in courses %}
+                <article class="course-card">
+                    <img class="course-card-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}" loading="lazy">
+                    <div class="course-card-body">
+                        <div class="badge-row">
+                            <span class="course-badge category">{{ course.category_label }}</span>
+                            <span class="course-badge level">{{ course.level_label }}</span>
+                        </div>
+                        <h3>{{ course.title }}</h3>
+                        <p>{{ course.description|truncatechars:140 }}</p>
+                        <p class="course-instructor">Par {{ course.instructor_name }}</p>
+                    </div>
+                    <div class="course-card-footer">
+                        <span class="course-price">{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</span>
+                        <a class="course-button small" href="{% url 'users:course_detail' slug=course.slug %}">Voir le cours</a>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <h3>Aucun cours disponible</h3>
+                    <p>Les cours publiés apparaîtront ici dès qu'un instructeur les aura publiés.</p>
+                    <a class="course-button secondary" href="{% url 'users:courses' %}">Voir le catalogue</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

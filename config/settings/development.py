@@ -20,3 +20,10 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 # diagnostic (session posable en JS). Défaut sécurisé : HttpOnly actif sauf si
 # DJANGO_SESSION_HTTPONLY=0 est pose explicitement. Jamais en production.
 SESSION_COOKIE_HTTPONLY = os.environ.get("DJANGO_SESSION_HTTPONLY", "1") != "0"
+
+
+# Local development does not require Redis; Docker and production set this to false.
+CELERY_TASK_ALWAYS_EAGER = _env_bool("CELERY_TASK_ALWAYS_EAGER", True)
+CELERY_TASK_STORE_EAGER_RESULT = _env_bool("CELERY_TASK_STORE_EAGER_RESULT", True)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "cache+memory://")
+CELERY_CACHE_BACKEND = os.environ.get("CELERY_CACHE_BACKEND", "memory")

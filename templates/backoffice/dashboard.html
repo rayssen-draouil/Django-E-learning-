@@ -27,6 +27,10 @@
                         <a href="{% url 'users:mentor_sessions_list' %}" class="outline-button">Coaching Sessions</a>
                         <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability">+ Create Availability</a>
                     {% endif %}
+                    {% if user.role == 'instructor' or user.role == 'admin' %}
+                        <a href="{% url 'users:course_manage_list' %}" class="outline-button">Mes cours</a>
+                        <a href="{% url 'users:course_manage_create' %}" class="outline-button">Nouveau cours</a>
+                    {% endif %}
                     <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
                     {% include "backoffice/partials/user_role_chip.html" %}
                 </div>

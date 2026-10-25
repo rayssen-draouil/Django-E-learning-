@@ -1,0 +1,102 @@
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}Catalogue des cours{% endblock %}
+{% block content %}
+    <header>
+        <p class="course-eyebrow">Catalogue</p>
+        <h1 class="course-title">Tous les cours</h1>
+        <p class="course-intro">Recherchez un cours par titre, catégorie ou niveau et lancez votre prochain parcours.</p>
+    </header>
+
+    {% if storage_error %}
+        <p class="course-alert" role="alert">Le catalogue est temporairement indisponible. Réessayez dans quelques instants.</p>
+    {% endif %}
+
+    <form class="course-filters" method="get" action="{% url 'users:courses' %}" role="search">
+        <div class="filter-field">
+            <label for="course-search">Rechercher un cours</label>
+            <input id="course-search" type="search" name="q" value="{{ search }}" maxlength="100" placeholder="Ex. Python, design…">
+        </div>
+        <div class="filter-field">
+            <label for="course-category">Catégorie</label>
+            <select id="course-category" name="category">
+                <option value="">Toutes les catégories</option>
+                {% for value, label in category_choices %}
+                    <option value="{{ value }}"{% if category == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="course-level">Niveau</label>
+            <select id="course-level" name="level">
+                <option value="">Tous les niveaux</option>
+                {% for value, label in level_choices %}
+                    <option value="{{ value }}"{% if level == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="course-sort">Trier par</label>
+            <select id="course-sort" name="sort">
+                {% for value, label in sort_choices %}
+                    <option value="{{ value }}"{% if sort_by == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="course-button" type="submit">Filtrer</button>
+            {% if search or category or level or sort_by != 'recent' %}
+                <a class="course-button secondary" href="{% url 'users:courses' %}">Réinitialiser</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <p class="results-count" aria-live="polite">
+        {{ total }} cours {% if total > 1 %}trouvés{% else %}trouvé{% endif %}
+        {% if page_count > 1 %} — page {{ page }} sur {{ page_count }}{% endif %}
+    </p>
+
+    {% if courses %}
+        <div class="course-grid">
+            {% for course in courses %}
+                <article class="course-card">
+                    <img class="course-card-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}" loading="lazy">
+                    <div class="course-card-body">
+                        <div class="badge-row">
+                            <span class="course-badge category">{{ course.category_label }}</span>
+                            <span class="course-badge level">{{ course.level_label }}</span>
+                        </div>
+                        <h2><a href="{% url 'users:course_detail' slug=course.slug %}">{{ course.title }}</a></h2>
+                        <p>{{ course.description|truncatechars:150 }}</p>
+                        <ul class="course-card-facts" aria-label="Informations sur le cours">
+                            <li><span aria-hidden="true">◷</span> {{ course.duration_hours }} h</li>
+                            <li><span aria-hidden="true">◎</span> {{ course.language|upper }}</li>
+                        </ul>
+                        <p class="course-instructor">Par {{ course.instructor_name }}</p>
+                    </div>
+                    <div class="course-card-footer">
+                        <span class="course-price">{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</span>
+                        <a class="course-button small" href="{% url 'users:course_detail' slug=course.slug %}">Voir le cours</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>Aucun cours trouvé</h2>
+            <p>{% if search or category or level %}Aucun cours ne correspond à ces filtres. Essayez une autre recherche.{% else %}Aucun cours publié pour le moment. Revenez bientôt.{% endif %}</p>
+            {% if search or category or level or sort_by != 'recent' %}<a class="course-button secondary" href="{% url 'users:courses' %}">Voir tous les cours</a>{% endif %}
+        </div>
+    {% endif %}
+
+    {% if page_count > 1 %}
+        <nav class="pagination" aria-label="Pagination du catalogue">
+            {% if previous_page %}
+                <a class="course-button secondary small" href="?page={{ previous_page }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}" rel="prev">Page précédente</a>
+            {% endif %}
+            <span>Page {{ page }} sur {{ page_count }}</span>
+            {% if next_page %}
+                <a class="course-button secondary small" href="?page={{ next_page }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}" rel="next">Page suivante</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

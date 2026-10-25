@@ -1,0 +1,130 @@
+{% extends "backoffice/courses/base.html" %}
+{% load static %}
+{% block title %}Rapport IA{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">ESPACE {{ role_label|upper }}</p>
+            <h1>Rapport d'évaluation IA</h1>
+            <p class="header-subtitle">Scores de classification de l'assistant IA sur le jeu de référence du module cours.</p>
+        </div>
+        <div class="course-header-actions">
+            <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour à mes cours</a>
+        </div>
+    </header>
+
+    {% if can_run_evaluation %}
+        <section
+            class="panel ai-report-run"
+            id="ai-report-run"
+            aria-labelledby="ai-report-run-heading"
+            data-run-url="{% url 'users:course_manage_ai_report_run' %}"
+            data-status-url="{% url 'users:course_manage_ai_report_status' '__TASK__' %}"
+        >
+            <h2 id="ai-report-run-heading">Évaluation</h2>
+            <p class="course-help" id="ai-report-run-hint">Cette action est réservée aux administrateurs. Elle exécute la même évaluation réelle que <code>python manage.py ai_report --eval</code>.</p>
+            {% csrf_token %}
+            <div class="ai-report-run-actions">
+                <button type="button" class="course-button" id="ai-report-run-button" aria-describedby="ai-report-run-hint">
+                    Relancer l'évaluation
+                </button>
+            </div>
+
+            <div class="ai-report-run-confirmation" id="ai-report-run-confirmation" role="group" aria-labelledby="ai-report-run-confirm-heading" hidden>
+                <h3 id="ai-report-run-confirm-heading">Confirmer le lancement</h3>
+                <p>Cette évaluation est réelle : elle interroge Groq sur les 36 cours du jeu de référence, avec 2,5 secondes entre chaque appel. Elle prend plusieurs minutes et consomme du quota API. Un seul lancement est autorisé toutes les 10 minutes.</p>
+                <div class="ai-report-run-actions">
+                    <button type="button" class="course-button" id="ai-report-run-confirm">Confirmer le lancement</button>
+                    <button type="button" class="course-button secondary" id="ai-report-run-cancel">Annuler</button>
+                </div>
+            </div>
+
+            <div class="ai-report-run-progress" id="ai-report-run-progress" hidden>
+                <progress id="ai-report-run-progress-bar" max="36" value="0" aria-label="Progression de l'évaluation"></progress>
+                <p class="ai-report-run-status" id="ai-report-run-status" aria-live="polite" aria-atomic="true"></p>
+            </div>
+            <p class="ai-error" id="ai-report-run-error" role="alert" hidden></p>
+            <script src="{% static 'backoffice/courses-ai-report.js' %}" defer></script>
+        </section>
+    {% endif %}
+
+    {% if report_missing or report_invalid %}
+        <section class="panel" aria-labelledby="ai-report-empty-heading">
+            <div class="empty-state">
+                <h2 id="ai-report-empty-heading">
+                    {% if report_invalid %}Rapport IA illisible{% else %}Aucun rapport IA disponible{% endif %}
+                </h2>
+                {% if report_invalid %}
+                    <p>Le fichier <code>apps/courses/ai_eval/report.json</code> est vide, mal formé ou ne respecte pas le format attendu.</p>
+                {% else %}
+                    <p>Aucun rapport n'a encore été généré pour ce projet.</p>
+                {% endif %}
+                <p>Exécutez la commande suivante depuis la racine du projet, puis rechargez cette page :</p>
+                <p><code>python manage.py ai_report --eval</code></p>
+                <p>Pour une vérification hors ligne, utilisez <code>python manage.py ai_report --mock</code> : les scores sont alors simulés et non représentatifs.</p>
+                <a class="course-button secondary" href="{% url 'users:course_manage_ai_report' %}">Actualiser</a>
+            </div>
+        </section>
+    {% else %}
+        {% if report.is_mock %}
+            <div class="ai-report-banner" role="status">
+                <strong>Évaluation simulée, non représentative</strong>
+                <span>Le mode <code>--mock</code> réutilise les étiquettes du jeu de données : les scores sont parfaits par construction et ne mesurent pas les performances du modèle.</span>
+            </div>
+        {% endif %}
+
+        <div class="course-management-tip" role="note">
+            <strong>Modèle : {{ report.model }}</strong>
+            <span>
+                Généré le <time datetime="{{ report.generated_at }}">{{ report.generated_at_display }}</time>
+                · Couverture {{ report.coverage_display }} ({{ report.coverage_percent }})
+            </span>
+        </div>
+
+        <section class="ai-report-summary" aria-labelledby="ai-report-summary-heading">
+            <h2 id="ai-report-summary-heading" class="visually-hidden">Indicateurs principaux</h2>
+            <div class="ai-report-cards">
+                <article class="ai-report-card light-blue">
+                    <p>Exactitude (catégories)</p>
+                    <strong>{% if report.accuracy %}{{ report.accuracy }}{% else %}—{% endif %}</strong>
+                </article>
+                <article class="ai-report-card light-purple">
+                    <p>Macro-F1 (catégories)</p>
+                    <strong>{% if report.macro_f1 %}{{ report.macro_f1 }}{% else %}—{% endif %}</strong>
+                </article>
+                <article class="ai-report-card light-green">
+                    <p>Couverture</p>
+                    <strong>{{ report.coverage_display }}</strong>
+                    <span>{{ report.coverage_percent }} des cas répondus</span>
+                </article>
+                <article class="ai-report-card light-blue">
+                    <p>Latence moyenne</p>
+                    <strong>{{ report.mean_latency }}</strong>
+                </article>
+                <article class="ai-report-card light-purple">
+                    <p>Latence p95</p>
+                    <strong>{{ report.p95_latency }}</strong>
+                </article>
+                <article class="ai-report-card light-orange">
+                    <p>Erreurs</p>
+                    <strong>{{ report.error_total }}</strong>
+                    <span>API : {{ report.api_errors }} (429 : {{ report.rate_limit_errors }}, timeout : {{ report.timeout_errors }}, autres : {{ report.other_api_errors }})</span>
+                    <span>JSON/enum invalides : {{ report.invalid_model_errors }}</span>
+                </article>
+            </div>
+        </section>
+
+        <div class="course-management-tip" role="note">
+            <strong>Lecture des résultats</strong>
+            <span>Les métriques portent uniquement sur les cas répondus. Les erreurs API (429, timeout, réseau) et les sorties JSON/enum invalides sont exclues des calculs et comptées séparément.</span>
+        </div>
+
+        {% include "backoffice/courses/_ai_report_metrics.html" with anchor="categories" title="Catégories" singular="catégorie" metrics=report.categories %}
+        {% include "backoffice/courses/_ai_report_metrics.html" with anchor="niveaux" title="Niveaux" singular="niveau" metrics=report.levels %}
+
+        <section class="panel ai-report-section" aria-labelledby="ai-report-analysis-heading">
+            <h2 id="ai-report-analysis-heading">Analyse</h2>
+            <p class="ai-report-analysis">{{ report.analysis }}</p>
+        </section>
+    {% endif %}
+{% endblock %}

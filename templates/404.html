@@ -1,16 +1,8 @@
-<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Page introuvable | SkillForge</title>
-</head>
-<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#fffaf4;font-family:Arial,sans-serif;">
-    <main style="text-align:center;padding:2rem;">
-        <p style="margin:0 0 .5rem;color:#f48c06;font-weight:bold;letter-spacing:.12em;font-size:.8rem;">SKILLFORGE</p>
-        <h1 style="margin:0;color:#2f327d;font-size:3rem;">404</h1>
-        <p style="color:#77809b;">Cette page n'existe pas ou a été déplacée.</p>
-        <a href="/" style="display:inline-block;margin-top:.8rem;padding:.7rem 1.5rem;border-radius:999px;background:#f48c06;color:#fff;text-decoration:none;font-weight:bold;">Retour à l'accueil</a>
-    </main>
-</body>
-</html>
+{% extends "frontoffice/courses/base.html" %}
+{% block title %}Page introuvable{% endblock %}
+{% block content %}
+    <p class="course-eyebrow">Erreur 404</p>
+    <h1 class="course-title">Page introuvable</h1>
+    <p class="course-intro">La page demandée n'existe pas ou n'est plus accessible. Vérifiez l'adresse ou revenez au catalogue.</p>
+    <p><a class="course-button" href="{% url 'users:courses' %}">Voir les cours</a> <a class="course-button secondary" href="{% url 'home' %}">Retour à l'accueil</a></p>
+{% endblock %}
