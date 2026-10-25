@@ -967,7 +967,7 @@ def notification_unread_count_api(request):
 # Legacy & Availability Management (Phases 1 & Existing)
 # ---------------------------------------------------------------------------
 
-@roles_required("instructor", "admin")
+@roles_required("student", "instructor", "admin")
 def backoffice_mentors(request):
     return render(
         request,

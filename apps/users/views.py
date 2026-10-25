@@ -103,8 +103,6 @@ def _envoyer_lien_reset_email(request, user_id: str) -> None:
 @user_required
 def backoffice(request):
     role = request.mongo_user.get("role", "student")
-    if role == "student":
-        return HttpResponseForbidden("Students cannot access the back office. Please use your front-office learning space.")
 
     quiz_stats = {
         "attempts": [],
@@ -421,8 +419,6 @@ def login_view(request):
                 next_url = request.GET.get("next") or request.POST.get("next")
                 if next_url:
                     return redirect(next_url)
-                if user.get("role") == "student":
-                    return redirect("users:profile")
                 return redirect("users:backoffice")
             form.add_error(None, "Adresse e-mail ou mot de passe incorrect.")
     return render(request, "users/login.html", {"form": form})

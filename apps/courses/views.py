@@ -257,9 +257,11 @@ def course_translate(request, slug):
         return JsonResponse({"error": str(error)}, status=502)
 
 
-@roles_required("instructor", "admin")
+@roles_required("student", "instructor", "admin")
 @require_GET
 def backoffice_courses(request):
+    if request.mongo_user.get("role") in {"instructor", "admin"}:
+        return manage_course_list(request)
     storage_error = False
     courses_list: list[dict[str, Any]] = []
     try:
