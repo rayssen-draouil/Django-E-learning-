@@ -35,7 +35,7 @@
                 <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'users:mentors' %}">Mentors</a>
                 <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'users:quiz' %}">Quiz</a>
                 {% if request.session.user_id %}
-                    <a class="px-4 py-2 mt-2 text-sm text-darken font-semibold bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'support:list' %}">Support</a>
+                    <a class="px-4 py-2 mt-2 text-sm text-darken font-semibold bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'support:list' %}?view=front">Support</a>
                     <a class="px-8 py-3 mt-2 text-sm text-center bg-white text-gray-800 rounded-full md:mt-8 md:ml-4" href="{% url 'users:backoffice' %}">Dashboard</a>
                     <form method="post" action="{% url 'users:logout' %}" class="home-logout-form">
                         {% csrf_token %}
@@ -57,6 +57,7 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
+            {% if is_admin %}<a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="{% url 'support:list' %}">? Admin Queue Panel</a>{% endif %}
             <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="sx-badge">{{ unread_count }}</span>{% endif %}</a>
             <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ New request</a>
         </div>

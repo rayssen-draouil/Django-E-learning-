@@ -214,7 +214,7 @@
         <a class="nav-link-item" href="{% url 'users:mentors' %}">Mentors</a>
         <a class="nav-link-item" href="{% url 'users:quiz' %}">Quiz</a>
         {% if request.session.user_id %}
-            <a class="nav-link-item" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="nav-notif-badge" style="position:static; margin-left:0.35rem; display:inline-block; vertical-align:middle;">{{ support_unread_notifications }}</span>{% endif %}</a>
+            <a class="nav-link-item" href="{% url 'support:list' %}?view=front">Support{% if support_unread_notifications %}<span class="nav-notif-badge" style="position:static; margin-left:0.35rem; display:inline-block; vertical-align:middle;">{{ support_unread_notifications }}</span>{% endif %}</a>
             <!-- Role-specific Navigation for Mentors -->
             {% if is_mentor or current_user.role == "mentor" %}
                 <a class="nav-link-item" href="{% url 'users:mentor_sessions_list' %}">Sessions</a>
