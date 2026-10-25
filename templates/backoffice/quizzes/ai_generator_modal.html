@@ -1,0 +1,64 @@
+{% load static %}
+<div id="quiz-ai-modal" class="quiz-ai-modal" data-generate-url="{% url 'users:quiz_ai_generate' %}" data-create-url="{% url 'users:quiz_ai_create_draft' %}" hidden>
+    <div class="quiz-ai-backdrop" data-quiz-ai-close></div>
+    <section class="quiz-ai-dialog" role="dialog" aria-modal="true" aria-labelledby="quiz-ai-title">
+        <header class="quiz-ai-dialog-header">
+            <div class="quiz-ai-title-group"><span class="quiz-ai-brand-mark" aria-hidden="true">✦</span><div><p class="eyebrow">AI QUIZ ASSISTANT</p><h2 id="quiz-ai-title">Generate a quiz with AI</h2><p class="quiz-ai-dialog-subtitle">Set your learning goals, then refine each question.</p></div></div>
+            <div class="quiz-ai-header-tools"><span id="quiz-ai-step-label" class="quiz-ai-step-label">Step 1 of 2</span><button class="quiz-ai-icon-button" type="button" aria-label="Close" data-quiz-ai-close>×</button></div>
+        </header>
+        <div class="quiz-ai-stepper" aria-label="Creation steps"><span class="is-active" data-quiz-ai-step="1"><i>1</i><b>Setup</b></span><span class="quiz-ai-step-line"></span><span data-quiz-ai-step="2"><i>2</i><b>Preview</b></span></div>
+        <div id="quiz-ai-error" class="quiz-ai-error" role="alert" hidden></div>
+
+        <form id="quiz-ai-generation-form" novalidate>
+            {% csrf_token %}
+            <div class="quiz-ai-fields">
+                <label class="quiz-ai-field quiz-ai-field-wide" for="quiz-ai-topic">Quiz topic <span>*</span>
+                    <input id="quiz-ai-topic" name="topic" maxlength="160" required placeholder="e.g. Python fundamentals">
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-description">Description <span>*</span>
+                    <textarea id="quiz-ai-description" name="description" rows="3" maxlength="1500" required placeholder="Describe the topic and intended audience."></textarea>
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-objectives">Learning objectives <span>*</span>
+                    <textarea id="quiz-ai-objectives" name="objectives" rows="3" maxlength="1500" required placeholder="What should learners be able to do after this quiz?"></textarea>
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-count">Number of questions
+                    <select id="quiz-ai-count" name="question_count"><option value="5">5 questions</option><option value="10">10 questions</option><option value="15">15 questions</option><option value="20">20 questions</option></select>
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-difficulty">Difficulty
+                    <select id="quiz-ai-difficulty" name="difficulty"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select>
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-type">Question types
+                    <select id="quiz-ai-type" name="question_type"><option value="single_choice">Single choice</option><option value="multiple_choice">Multiple choice</option><option value="true_false">True / False</option><option value="mixed" selected>Mixed</option></select>
+                </label>
+                <label class="quiz-ai-field" for="quiz-ai-language">Language
+                    <select id="quiz-ai-language" name="language"><option value="en" selected>English</option><option value="fr">French</option></select>
+                </label>
+            </div>
+            <footer class="quiz-ai-actions">
+                <button class="outline-button" type="button" data-quiz-ai-close>Cancel</button>
+                <button id="quiz-ai-generate" class="primary-button" type="submit">Generate with AI</button>
+            </footer>
+        </form>
+
+        <section id="quiz-ai-preview-stage" hidden>
+            <div class="quiz-ai-preview-toolbar"><div class="quiz-ai-preview-note"><span class="quiz-ai-preview-check" aria-hidden="true">✓</span><div><strong>Your draft is ready</strong><span>Review the answers before saving.</span></div></div><span id="quiz-ai-question-count" class="quiz-ai-question-count">0 question</span></div>
+            <div class="quiz-ai-fields">
+                <label class="quiz-ai-field quiz-ai-field-wide" for="quiz-ai-preview-title">Quiz title <span>*</span>
+                    <input id="quiz-ai-preview-title" maxlength="160" required>
+                </label>
+                <label class="quiz-ai-field quiz-ai-field-wide" for="quiz-ai-preview-description">Description <span>*</span>
+                    <textarea id="quiz-ai-preview-description" rows="3" maxlength="4000" required></textarea>
+                </label>
+            </div>
+            <div id="quiz-ai-preview-questions" class="quiz-ai-preview-questions"></div>
+            <button id="quiz-ai-add-question" type="button" class="outline-button">+ Add a question</button>
+            <footer class="quiz-ai-actions">
+                <button id="quiz-ai-back" class="outline-button" type="button">Back to setup</button>
+                <button class="outline-button" type="button" data-quiz-ai-close>Cancel</button>
+                <button id="quiz-ai-save" class="primary-button" type="button">Create quiz as draft</button>
+            </footer>
+        </section>
+        <p id="quiz-ai-status" class="quiz-ai-status" role="status" aria-live="polite"></p>
+    </section>
+</div>
+<script src="{% static 'backoffice/quiz-ai-generator.js' %}?v=2" defer></script>

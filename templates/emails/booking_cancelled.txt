@@ -1,0 +1,14 @@
+Mentorship Booking Cancelled
+
+Hello {{ recipient_name }},
+
+The coaching session scheduled for {{ date }} at {{ start_time }} with {{ other_party_name }} has been cancelled by {{ cancelled_by }}.
+
+{% if reason %}
+Reason: {{ reason }}
+{% endif %}
+
+Dashboard:
+{{ action_url }}
+
+SkillForge Platform

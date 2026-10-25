@@ -1,0 +1,1650 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}AI Mentor Recommendation Engine | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .rec-container {
+        max-width: 1120px;
+        margin: 1.5rem auto 4rem;
+    }
+    .rec-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        color: #ffffff;
+        border-radius: 1.25rem;
+        padding: 2.5rem 2.25rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+    }
+    .rec-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #bfdbfe;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.3rem 0.75rem;
+        border-radius: 9999px;
+        margin-bottom: 0.85rem;
+    }
+    .rec-hero h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0 0 0.5rem;
+        color: #ffffff;
+    }
+    .rec-hero p {
+        font-size: 1rem;
+        color: #cbd5e1;
+        max-width: 720px;
+        margin: 0 0 1.25rem;
+        line-height: 1.55;
+    }
+    .rec-form-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.75rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    }
+    .goal-label {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: block;
+        margin-bottom: 0.45rem;
+    }
+    .availability-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.6rem;
+        font-family: inherit;
+        font-size: 0.92rem;
+        color: #0f172a;
+        background: #ffffff;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .availability-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+    .prompt-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.6rem;
+        margin-bottom: 1.25rem;
+    }
+    .prompt-chip {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 0.76rem;
+        font-weight: 500;
+        padding: 0.3rem 0.65rem;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .prompt-chip:hover {
+        background: #eff6ff;
+        border-color: #93c5fd;
+        color: #1d4ed8;
+    }
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        margin-bottom: 1.25rem;
+    }
+    .filter-field label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.3rem;
+    }
+    .rec-actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        padding-top: 0.5rem;
+    }
+    .rec-checkbox-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-size: 0.88rem;
+        color: #334155;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+        padding: 0.5rem 0.85rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.6rem;
+        transition: all 0.15s ease;
+        margin: 0;
+    }
+    .rec-checkbox-label:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    .rec-checkbox-label input[type="checkbox"],
+    input[type="checkbox"].rec-checkbox,
+    input[type="checkbox"].compare-checkbox {
+        width: 1.15rem !important;
+        min-width: 1.15rem !important;
+        max-width: 1.15rem !important;
+        height: 1.15rem !important;
+        min-height: 1.15rem !important;
+        max-height: 1.15rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        accent-color: #2563eb !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+    .btn-find-matches {
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        padding: 0.75rem 1.65rem;
+        border-radius: 0.65rem;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.15s ease;
+    }
+    .btn-find-matches:hover {
+        background: #1d4ed8;
+    }
+    .intent-banner {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.85rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .intent-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .intent-pill {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 0.22rem 0.6rem;
+        border-radius: 9999px;
+    }
+    .clarification-alert {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        color: #92400e;
+        font-size: 0.88rem;
+    }
+    .rec-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .rec-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.75rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .rec-card.top-match {
+        border-color: #93c5fd;
+        box-shadow: 0 6px 22px rgba(37, 99, 235, 0.08);
+    }
+    .rec-card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+    .rec-mentor-head {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .rec-avatar {
+        width: 3.75rem;
+        height: 3.75rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .match-score-box {
+        text-align: right;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 0.55rem 0.95rem;
+        border-radius: 0.75rem;
+    }
+    .match-score-box.tier-good {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+    .match-score-box.tier-partial {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    .match-score-val {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #15803d;
+        line-height: 1.1;
+    }
+    .match-score-box.tier-good .match-score-val {
+        color: #1d4ed8;
+    }
+    .match-score-box.tier-partial .match-score-val {
+        color: #475569;
+    }
+    .match-tier-label {
+        font-size: 0.73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #166534;
+    }
+    .match-score-box.tier-good .match-tier-label {
+        color: #1e40af;
+    }
+    .match-score-box.tier-partial .match-tier-label {
+        color: #64748b;
+    }
+    .why-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #2563eb;
+        border-radius: 0.65rem;
+        padding: 1rem 1.15rem;
+        margin-bottom: 1.15rem;
+    }
+    .why-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #1d4ed8;
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .why-text {
+        font-size: 0.92rem;
+        color: #1e293b;
+        line-height: 1.55;
+        margin: 0 0 0.6rem;
+    }
+    .reasons-list {
+        margin: 0;
+        padding-left: 1.15rem;
+        font-size: 0.83rem;
+        color: #475569;
+    }
+    .reasons-list li {
+        margin-bottom: 0.2rem;
+    }
+    .breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.15rem;
+    }
+    .breakdown-item {
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-radius: 0.5rem;
+        padding: 0.55rem 0.75rem;
+    }
+    .breakdown-head {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.3rem;
+    }
+    .breakdown-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+    .breakdown-fill {
+        height: 100%;
+        background: #2563eb;
+        border-radius: 9999px;
+    }
+    .slots-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        justify-content: space-between;
+    }
+    .slot-book-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.45rem 0.8rem;
+        border-radius: 0.55rem;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .slot-book-pill:hover {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+    /* ====================================================================
+       Revamped Floating Compare Dock & Side-by-Side Comparison Matrix
+       ==================================================================== */
+    .compare-bar {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: rgba(15, 23, 42, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        color: #ffffff;
+        padding: 0.65rem 1.25rem;
+        border-radius: 9999px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
+        display: none;
+        align-items: center;
+        gap: 1.15rem;
+        z-index: 999;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+        opacity: 0;
+    }
+    .compare-bar.is-visible {
+        display: flex;
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    .compare-avatar-stack {
+        display: flex;
+        align-items: center;
+    }
+    .compare-avatar-mini {
+        width: 34px;
+        height: 34px;
+        border-radius: 9999px;
+        margin-left: -9px;
+        border: 2px solid #0f172a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+    .compare-avatar-mini:first-child {
+        margin-left: 0;
+    }
+    .compare-bar-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+    .compare-bar-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #f8fafc;
+    }
+    .compare-bar-sub {
+        font-size: 0.72rem;
+        color: #94a3b8;
+    }
+    .compare-open-btn {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.55rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+    .compare-open-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(79, 70, 229, 0.55);
+        filter: brightness(1.1);
+    }
+    .compare-clear-btn {
+        background: transparent;
+        color: #94a3b8;
+        border: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.35rem 0.6rem;
+        border-radius: 0.4rem;
+        transition: color 0.15s ease;
+    }
+    .compare-clear-btn:hover {
+        color: #f1f5f9;
+        text-decoration: underline;
+    }
+
+    /* Modal Backdrop & Shell */
+    .compare-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .compare-modal-backdrop.is-open {
+        display: flex;
+        opacity: 1;
+    }
+    .compare-modal {
+        background: #f8fafc;
+        border-radius: 1.25rem;
+        max-width: 1240px;
+        width: 100%;
+        max-height: 92vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .compare-modal-backdrop.is-open .compare-modal {
+        transform: scale(1);
+    }
+    .comp-modal-top-accent {
+        height: 6px;
+        width: 100%;
+        background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 33%, #ec4899 66%, #10b981 100%);
+        flex-shrink: 0;
+    }
+    .comp-modal-header {
+        background: #ffffff;
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+    .comp-header-lead {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+    .comp-header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .comp-header-title {
+        margin: 0;
+        font-size: 1.28rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+    .comp-header-sub {
+        margin: 0.15rem 0 0;
+        font-size: 0.82rem;
+        color: #64748b;
+    }
+    .comp-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .comp-count-pill {
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid #e2e8f0;
+    }
+    .comp-close-btn {
+        background: #f1f5f9;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .comp-close-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+        transform: rotate(90deg);
+    }
+
+    /* Modal Scrollable Body */
+    .comp-modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1 1 auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .comp-grid {
+        display: grid;
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+    .comp-grid-1 {
+        grid-template-columns: minmax(0, 520px);
+        justify-content: center;
+    }
+    .comp-grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .comp-grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    @media (max-width: 960px) {
+        .comp-grid-2, .comp-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Comparison Card */
+    .comp-card {
+        background: #ffffff;
+        border-radius: 1.15rem;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .comp-card:hover {
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Themed Column Header Stripes & Avatars */
+    .comp-card-col-0 {
+        --comp-accent: #2563eb;
+        --comp-tint: #eff6ff;
+        --comp-border: #bfdbfe;
+        --comp-grad: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    }
+    .comp-card-col-1 {
+        --comp-accent: #7c3aed;
+        --comp-tint: #faf5ff;
+        --comp-border: #ddd6fe;
+        --comp-grad: linear-gradient(135deg, #6d28d9, #8b5cf6);
+    }
+    .comp-card-col-2 {
+        --comp-accent: #059669;
+        --comp-tint: #f0fdf4;
+        --comp-border: #bbf7d0;
+        --comp-grad: linear-gradient(135deg, #047857, #10b981);
+    }
+    .comp-card-topbar {
+        height: 5px;
+        background: var(--comp-grad);
+        width: 100%;
+    }
+    .comp-card-actions-bar {
+        padding: 0.65rem 0.85rem 0 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .comp-winner-ribbon {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #ffffff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 0.22rem 0.65rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+        letter-spacing: 0.02em;
+    }
+    .comp-rising-ribbon {
+        background: #dbeafe;
+        color: #1e40af;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.22rem 0.6rem;
+        border-radius: 9999px;
+    }
+    .comp-remove-card-btn {
+        background: #f1f5f9;
+        color: #94a3b8;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: auto;
+        transition: all 0.15s ease;
+    }
+    .comp-remove-card-btn:hover {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* Hero Section */
+    .comp-card-hero {
+        padding: 0.85rem 1.25rem 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .comp-avatar-lg {
+        width: 60px;
+        height: 60px;
+        border-radius: 9999px;
+        background: var(--comp-grad);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        margin-bottom: 0.65rem;
+        border: 3px solid #ffffff;
+    }
+    .comp-mentor-name {
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .comp-mentor-name:hover {
+        color: var(--comp-accent);
+    }
+    .comp-headline {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin: 0.25rem 0 0.5rem;
+        line-height: 1.35;
+    }
+    .comp-lang-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        justify-content: center;
+    }
+    .comp-lang-chip {
+        font-size: 0.72rem;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Score Gauge Block */
+    .comp-score-section {
+        padding: 1rem 1.25rem;
+        background: var(--comp-tint);
+        border-bottom: 1px solid var(--comp-border);
+    }
+    .comp-score-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    .comp-match-pill {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--comp-accent);
+    }
+    .comp-match-pill-pct {
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+    .comp-tier-chip {
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        background: #ffffff;
+        color: var(--comp-accent);
+        border: 1px solid var(--comp-border);
+    }
+    .comp-meter-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+    .comp-meter-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .comp-meter-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.73rem;
+        font-weight: 600;
+        color: #475569;
+    }
+    .comp-meter-track {
+        height: 6px;
+        background: rgba(203, 213, 225, 0.5);
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+    .comp-meter-fill {
+        height: 100%;
+        background: var(--comp-grad);
+        border-radius: 9999px;
+    }
+
+    /* Grounded Explanation Box */
+    .comp-section-box {
+        padding: 0.95rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .comp-section-lbl {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #94a3b8;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .comp-why-quote {
+        background: #f8fafc;
+        border-left: 3px solid var(--comp-accent);
+        padding: 0.65rem 0.85rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+        font-size: 0.8rem;
+        color: #334155;
+        line-height: 1.45;
+        margin: 0;
+    }
+
+    /* Verified Ratings Block */
+    .comp-ratings-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .comp-rating-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    .comp-star-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: #fef3c7;
+        color: #b45309;
+        font-size: 0.84rem;
+        font-weight: 800;
+        padding: 0.22rem 0.65rem;
+        border-radius: 0.45rem;
+    }
+    .comp-outcome-pill {
+        font-size: 0.74rem;
+        font-weight: 700;
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.2rem 0.55rem;
+        border-radius: 0.45rem;
+    }
+    .comp-subratings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+        background: #f8fafc;
+        padding: 0.55rem;
+        border-radius: 0.6rem;
+        border: 1px solid #f1f5f9;
+        text-align: center;
+    }
+    .comp-subitem-lbl {
+        font-size: 0.68rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+    .comp-subitem-val {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    /* Topic Pills */
+    .comp-topic-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .comp-topic-tag {
+        font-size: 0.73rem;
+        background: #f1f5f9;
+        color: #334155;
+        padding: 0.2rem 0.55rem;
+        border-radius: 0.4rem;
+        font-weight: 600;
+    }
+
+    /* Teaching Style */
+    .comp-style-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.55rem;
+    }
+
+    /* Availability */
+    .comp-slot-status {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+    .comp-slot-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #166534;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.5rem;
+        align-self: flex-start;
+    }
+    .comp-slot-pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: #22c55e;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        animation: compPulse 2s infinite;
+    }
+    @keyframes compPulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    .comp-next-slot-pill {
+        font-size: 0.77rem;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    /* Card Footer & CTAs */
+    .comp-card-footer {
+        padding: 1.1rem 1.25rem 1.25rem 1.25rem;
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        background: #ffffff;
+        border-top: 1px solid #f1f5f9;
+    }
+    .comp-btn-book {
+        background: var(--comp-grad);
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 0.65rem 1rem;
+        border-radius: 0.65rem;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        transition: transform 0.18s ease, filter 0.18s ease;
+    }
+    .comp-btn-book:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+        color: #ffffff;
+    }
+    .comp-link-profile {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        text-align: center;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    .comp-link-profile:hover {
+        color: var(--comp-accent);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rec-container">
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'users:mentors' %}" style="color: #64748b; text-decoration: none; font-size: 0.88rem; font-weight: 500;">&larr; Back to All Mentors Directory</a>
+    </div>
+
+    <section class="rec-hero">
+        <div class="rec-hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            Hybrid AI + Verified Data Matchmaker
+        </div>
+        <h1>Find Your Ideal Mentor</h1>
+        <p>Describe your learning objective, debugging challenge, or career goal in plain language. Our recommendation engine combines AI semantic intent analysis with real mentor expertise, verified student outcomes, and live slot availability.</p>
+    </section>
+
+    <!-- Guided Discovery Form -->
+    <form method="get" action="{% url 'users:mentor_recommendations' %}" class="rec-form-card" id="recommendForm">
+        <div>
+            <label for="{{ form.learning_goal.id_for_label }}" class="goal-label">What would you like help with?</label>
+            {{ form.learning_goal }}
+            <div class="prompt-chips">
+                <span style="font-size: 0.76rem; color: #64748b; padding: 0.3rem 0.2rem;">Try an example:</span>
+                {% for prompt in sample_prompts %}
+                    <button type="button" class="prompt-chip" data-prompt="{{ prompt }}">{{ prompt|truncatechars:62 }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="filters-grid">
+            <div class="filter-field">
+                <label for="{{ form.topic.id_for_label }}">{{ form.topic.label }}</label>
+                {{ form.topic }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.experience_level.id_for_label }}">{{ form.experience_level.label }}</label>
+                {{ form.experience_level }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.teaching_style.id_for_label }}">{{ form.teaching_style.label }}</label>
+                {{ form.teaching_style }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.preferred_language.id_for_label }}">{{ form.preferred_language.label }}</label>
+                {{ form.preferred_language }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.session_type.id_for_label }}">{{ form.session_type.label }}</label>
+                {{ form.session_type }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.preferred_date.id_for_label }}">{{ form.preferred_date.label }}</label>
+                {{ form.preferred_date }}
+            </div>
+            <div class="filter-field">
+                <label for="{{ form.preferred_duration.id_for_label }}">{{ form.preferred_duration.label }}</label>
+                {{ form.preferred_duration }}
+            </div>
+        </div>
+
+        <div class="rec-actions-row">
+            <label class="rec-checkbox-label" for="{{ form.require_available_slot.id_for_label }}">
+                {{ form.require_available_slot }}
+                <span>{{ form.require_available_slot.label }}</span>
+            </label>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <a href="{% url 'users:mentor_recommendations' %}" style="font-size: 0.85rem; color: #64748b; text-decoration: none;">Reset Filters</a>
+                <button type="submit" class="btn-find-matches">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Generate Ranked Recommendations
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Vague Goal Clarification Callout -->
+    {% if result.intent.is_vague and result.intent.clarification_question %}
+    <div class="clarification-alert">
+        <strong>Tip for sharper recommendations:</strong> {{ result.intent.clarification_question }}
+    </div>
+    {% endif %}
+
+    <!-- Extracted Intent Banner -->
+    <div class="intent-banner">
+        <div class="intent-pills">
+            <span style="font-size: 0.82rem; font-weight: 700; color: #334155; margin-right: 0.25rem;">Analysis Summary:</span>
+            <span style="font-size: 0.84rem; color: #475569;">{{ result.intent.intent_summary }}</span>
+            {% for t in result.intent.detected_topics %}
+                <span class="intent-pill">{{ t|title }}</span>
+            {% endfor %}
+            {% if result.intent.skill_level %}
+                <span class="intent-pill" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">Level: {{ result.intent.skill_level|title }}</span>
+            {% endif %}
+        </div>
+        <div>
+            {% if result.ai_used %}
+                <span style="font-size: 0.75rem; background: #ede9fe; color: #6d28d9; padding: 0.25rem 0.65rem; border-radius: 9999px; font-weight: 600;">AI-Enhanced Ranking ({{ result.ai_model }})</span>
+            {% else %}
+                <span style="font-size: 0.75rem; background: #f1f5f9; color: #475569; padding: 0.25rem 0.65rem; border-radius: 9999px; font-weight: 600;">Verified Multi-Factor Ranking</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ranked Recommendation Results -->
+    <div class="rec-list">
+        {% for rec in result.recommendations %}
+        <article class="rec-card {% if forloop.first %}top-match{% endif %}"
+                 data-mentor-id="{{ rec.mentor_id }}"
+                 data-mentor-name="{{ rec.full_name }}"
+                 data-match-score="{{ rec.match_score }}"
+                 data-rating="{% if rec.rating_summary.has_reviews %}{{ rec.rating_summary.average_rating }} ({{ rec.rating_summary.review_count }} reviews){% else %}New Mentor{% endif %}"
+                 data-topics="{{ rec.topics|join:', ' }}"
+                 data-slots="{{ rec.available_slot_count }} open slots"
+                 data-next-slot="{{ rec.next_slot_display|default:'None' }}">
+
+            <div class="rec-card-top">
+                <div class="rec-mentor-head">
+                    <div class="rec-avatar">{{ rec.initials }}</div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+                            <span style="font-size: 0.75rem; font-weight: 800; background: #0f172a; color: #fff; padding: 0.15rem 0.5rem; border-radius: 0.35rem;">#{{ forloop.counter }}</span>
+                            <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0;">{{ rec.full_name }}</h2>
+                            {% if rec.is_new_mentor %}
+                                <span style="font-size: 0.73rem; background: #dbeafe; color: #1e40af; padding: 0.18rem 0.55rem; border-radius: 9999px; font-weight: 600;">Rising Mentor</span>
+                            {% endif %}
+                        </div>
+                        <p style="font-size: 0.84rem; color: #64748b; margin: 0.2rem 0 0.35rem;">
+                            {{ rec.headline }}
+                            {% if rec.languages %} &bull; Languages: {{ rec.languages|join:", " }}{% endif %}
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.3rem; background: #fef3c7; color: #b45309; font-size: 0.78rem; font-weight: 600; padding: 0.18rem 0.55rem; border-radius: 0.4rem;">
+                                &#9733;
+                                {% if rec.rating_summary.has_reviews %}
+                                    {{ rec.rating_summary.average_rating }} ({{ rec.rating_summary.review_count }} verified) &bull; {{ rec.rating_summary.confidence_label }}
+                                {% else %}
+                                    New Mentor (No reviews yet)
+                                {% endif %}
+                            </span>
+                            {% if rec.rating_summary.positive_outcome_pct %}
+                                <span style="font-size: 0.76rem; background: #dcfce7; color: #166534; padding: 0.18rem 0.55rem; border-radius: 0.4rem; font-weight: 600;">
+                                    {{ rec.rating_summary.positive_outcome_pct }}% Positive Learning Outcomes
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #475569; cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.4rem 0.7rem; border-radius: 0.5rem;">
+                        <input type="checkbox" class="compare-checkbox" value="{{ rec.mentor_id }}" data-mentor-id="{{ rec.mentor_id }}" data-mentor-name="{{ rec.full_name }}" data-initials="{{ rec.initials }}">
+                        Compare
+                    </label>
+                    <script id="rec-mentor-data-{{ rec.mentor_id }}" type="application/json">
+                    {
+                        "id": "{{ rec.mentor_id|escapejs }}",
+                        "fullName": "{{ rec.full_name|escapejs }}",
+                        "firstName": "{{ rec.first_name|escapejs }}",
+                        "initials": "{{ rec.initials|escapejs }}",
+                        "headline": "{{ rec.headline|escapejs }}",
+                        "bio": "{{ rec.bio|escapejs }}",
+                        "matchScore": {{ rec.match_score|default:0 }},
+                        "matchTier": "{{ rec.match_tier|escapejs }}",
+                        "matchLabel": "{{ rec.match_label|escapejs }}",
+                        "explanation": "{{ rec.explanation|escapejs }}",
+                        "reasons": [{% for r in rec.reasons %}"{{ r|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+                        "tradeoffs": [{% for t in rec.tradeoffs %}"{{ t|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+                        "isRisingMentor": {{ rec.is_rising_mentor|yesno:"true,false" }},
+                        "isNewMentor": {{ rec.is_new_mentor|yesno:"true,false" }},
+                        "scoreBreakdown": {
+                            "expertise": {{ rec.score_breakdown.expertise|default:0 }},
+                            "goalAlignment": {{ rec.score_breakdown.goal_alignment|default:0 }},
+                            "availability": {{ rec.score_breakdown.availability|default:0 }},
+                            "ratingConfidence": {{ rec.score_breakdown.rating_confidence|default:0 }}
+                        },
+                        "ratingSummary": {
+                            "hasReviews": {{ rec.rating_summary.has_reviews|yesno:"true,false" }},
+                            "averageRating": {{ rec.rating_summary.average_rating|default:0.0 }},
+                            "reviewCount": {{ rec.rating_summary.review_count|default:0 }},
+                            "confidenceLabel": "{{ rec.rating_summary.confidence_label|escapejs }}",
+                            "avgHelpfulness": {{ rec.rating_summary.avg_helpfulness|default:0.0 }},
+                            "avgClarity": {{ rec.rating_summary.avg_clarity|default:0.0 }},
+                            "avgCommunication": {{ rec.rating_summary.avg_communication|default:0.0 }},
+                            "positiveOutcomePct": {{ rec.rating_summary.positive_outcome_pct|default:0 }},
+                            "topTags": [{% for tag in rec.rating_summary.top_tags %}{"label": "{{ tag.label|escapejs }}", "count": {{ tag.count|default:0 }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+                        },
+                        "topics": [{% for t in rec.topics %}"{{ t|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+                        "languages": [{% for l in rec.languages %}"{{ l|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+                        "teachingStyle": "{{ rec.teaching_style|escapejs }}",
+                        "availableSlotCount": {{ rec.available_slot_count|default:0 }},
+                        "nextSlotDisplay": "{{ rec.next_slot_display|default:''|escapejs }}",
+                        "profileUrl": "{% url 'users:mentor_public_detail' rec.mentor_id %}",
+                        "bookSlotUrl": "{% if rec.matching_slots %}{% url 'users:mentor_book_slot' rec.mentor_id rec.matching_slots.0.id %}?from_recommend=1&goal={{ result.criteria.learning_goal|urlencode }}&reason={{ rec.explanation|urlencode }}{% endif %}"
+                    }
+                    </script>
+                    <div class="match-score-box {% if rec.match_score < 60 %}tier-partial{% elif rec.match_score < 78 %}tier-good{% endif %}">
+                        <div class="match-score-val">{{ rec.match_score }}%</div>
+                        <div class="match-tier-label">{{ rec.match_tier }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transparent Grounded Explanation -->
+            <div class="why-box">
+                <div class="why-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Why {{ rec.first_name }} matches your goal
+                </div>
+                <p class="why-text">{{ rec.explanation }}</p>
+                <ul class="reasons-list">
+                    {% for r in rec.reasons %}
+                        <li>{{ r }}</li>
+                    {% endfor %}
+                </ul>
+                {% if rec.tradeoffs %}
+                <div style="margin-top: 0.55rem; padding-top: 0.45rem; border-top: 1px dashed #cbd5e1; font-size: 0.78rem; color: #64748b;">
+                    <strong>Considerations:</strong> {{ rec.tradeoffs|join:" | " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Transparent Multi-Factor Score Breakdown -->
+            <div class="breakdown-grid">
+                <div class="breakdown-item">
+                    <div class="breakdown-head"><span>Subject Expertise</span><span>{{ rec.score_breakdown.expertise }}%</span></div>
+                    <div class="breakdown-bar"><div class="breakdown-fill" style="width: {{ rec.score_breakdown.expertise }}%;"></div></div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-head"><span>Goal Alignment</span><span>{{ rec.score_breakdown.goal_alignment }}%</span></div>
+                    <div class="breakdown-bar"><div class="breakdown-fill" style="width: {{ rec.score_breakdown.goal_alignment }}%;"></div></div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-head"><span>Live Availability</span><span>{{ rec.score_breakdown.availability }}%</span></div>
+                    <div class="breakdown-bar"><div class="breakdown-fill" style="width: {{ rec.score_breakdown.availability }}%;"></div></div>
+                </div>
+                <div class="breakdown-item">
+                    <div class="breakdown-head"><span>Rating Confidence</span><span>{{ rec.score_breakdown.rating_confidence }}%</span></div>
+                    <div class="breakdown-bar"><div class="breakdown-fill" style="width: {{ rec.score_breakdown.rating_confidence }}%;"></div></div>
+                </div>
+            </div>
+
+            <!-- Topics & Top Student Praise Tags -->
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem;">
+                {% for topic in rec.topics %}
+                    <span style="background: #f1f5f9; color: #334155; font-size: 0.76rem; font-weight: 600; padding: 0.22rem 0.6rem; border-radius: 9999px;">{{ topic }}</span>
+                {% endfor %}
+                {% for tag_item in rec.rating_summary.top_tags %}
+                    <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 600; padding: 0.22rem 0.6rem; border-radius: 9999px;">&#10003; {{ tag_item.label }} ({{ tag_item.count }})</span>
+                {% endfor %}
+            </div>
+
+            <!-- Real Bookable Slots & Profile CTA (Explicit User Confirmation Required) -->
+            <div class="slots-preview">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #334155;">Bookable Slots ({{ rec.available_slot_count }}):</span>
+                    {% if rec.matching_slots %}
+                        {% for slot in rec.matching_slots %}
+                            <a href="{% url 'users:mentor_book_slot' rec.mentor_id slot.id %}?from_recommend=1&amp;goal={{ result.criteria.learning_goal|urlencode }}&amp;reason={{ rec.explanation|urlencode }}"
+                               class="slot-book-pill"
+                               title="Review &amp; confirm booking request for {{ slot.topic_label }}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                {{ slot.date }} &bull; {{ slot.start_time }} ({{ slot.topic_label }})
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <span style="font-size: 0.8rem; color: #94a3b8;">No open slots matching current date filter</span>
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'users:mentor_public_detail' rec.mentor_id %}" style="font-size: 0.85rem; font-weight: 600; color: #2563eb; text-decoration: none;">
+                    View Full Profile &amp; Reviews &rarr;
+                </a>
+            </div>
+        </article>
+        {% empty %}
+        <div style="text-align: center; padding: 3.5rem 1.5rem; background: #ffffff; border-radius: 1rem; border: 1px dashed #cbd5e1;">
+            <h3 style="font-size: 1.15rem; color: #0f172a; margin: 0 0 0.4rem;">No mentors matched all strict filters</h3>
+            <p style="font-size: 0.9rem; color: #64748b; margin: 0 0 1rem;">Try unchecking "Only show mentors with open bookable slots" or broadening your preferred date/topic filter.</p>
+            <a href="{% url 'users:mentor_recommendations' %}" class="btn-find-matches" style="text-decoration: none;">Reset Filters</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Floating Compare Dock -->
+<div class="compare-bar" id="compareBar">
+    <div class="compare-avatar-stack" id="compareAvatarStack"></div>
+    <div class="compare-bar-info">
+        <div class="compare-bar-title" id="compareCountTitle">0 Mentors Selected</div>
+        <div class="compare-bar-sub">Compare match score, ratings &amp; slots</div>
+    </div>
+    <button type="button" id="openCompareBtn" class="compare-open-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span id="compareBtnLabel">Compare Side-by-Side</span>
+    </button>
+    <button type="button" id="clearCompareBtn" class="compare-clear-btn">Clear</button>
+</div>
+
+<!-- Side-by-Side Comparison Modal -->
+<div class="compare-modal-backdrop" id="compareBackdrop" role="dialog" aria-modal="true" aria-labelledby="compModalHeading">
+    <div class="compare-modal">
+        <div class="comp-modal-top-accent"></div>
+        <div class="comp-modal-header">
+            <div class="comp-header-lead">
+                <div class="comp-header-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"/><circle cx="8" cy="12" r="2"/></svg>
+                </div>
+                <div>
+                    <h3 class="comp-header-title" id="compModalHeading">Side-by-Side Mentor Match Comparison</h3>
+                    <p class="comp-header-sub">Directly compare compatibility metrics, verified student feedback, topics, and real-time slots.</p>
+                </div>
+            </div>
+            <div class="comp-header-actions">
+                <span class="comp-count-pill" id="compModalCountPill">Comparing 2 Mentors</span>
+                <button type="button" id="closeCompareBtn" class="comp-close-btn" aria-label="Close comparison">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="comp-modal-body">
+            <div id="compareTableContainer" class="comp-grid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Quick sample prompt chips
+    const goalInput = document.getElementById("{{ form.learning_goal.id_for_label }}");
+    document.querySelectorAll(".prompt-chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            if (goalInput) {
+                goalInput.value = chip.getAttribute("data-prompt");
+                goalInput.focus();
+            }
+        });
+    });
+
+    // Side-by-side mentor comparison
+    const checkboxes = document.querySelectorAll(".compare-checkbox");
+    const compareBar = document.getElementById("compareBar");
+    const compareCountTitle = document.getElementById("compareCountTitle");
+    const compareBtnLabel = document.getElementById("compareBtnLabel");
+    const compareAvatarStack = document.getElementById("compareAvatarStack");
+    const compareBackdrop = document.getElementById("compareBackdrop");
+    const compareTableContainer = document.getElementById("compareTableContainer");
+    const compModalCountPill = document.getElementById("compModalCountPill");
+
+    const AVATAR_GRADIENTS = [
+        "linear-gradient(135deg, #1d4ed8, #3b82f6)",
+        "linear-gradient(135deg, #6d28d9, #8b5cf6)",
+        "linear-gradient(135deg, #047857, #10b981)"
+    ];
+
+    const STYLE_LABELS = {
+        "beginner_friendly": "🌱 Patient & Step-by-Step",
+        "project_focused": "🛠️ Hands-on & Practical",
+        "deep_technical": "🔬 Deep-Dive Architecture",
+        "career_coaching": "🚀 Career Guidance & Prep",
+        "any": "Flexible Mentoring Style"
+    };
+
+    function updateCompareBar() {
+        const checked = Array.from(checkboxes).filter(cb => cb.checked);
+        if (checked.length > 0) {
+            compareBar.classList.add("is-visible");
+            compareCountTitle.textContent = checked.length + " of 3 Mentors Selected";
+            compareBtnLabel.textContent = "Compare Side-by-Side (" + checked.length + ")";
+
+            // Render mini avatar circles
+            let stackHtml = "";
+            checked.forEach(function (cb, idx) {
+                const initials = (cb.dataset.initials || "M").substring(0, 2).toUpperCase();
+                const grad = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
+                stackHtml += '<div class="compare-avatar-mini" style="background:' + grad + ';" title="' + (cb.dataset.mentorName || "Mentor") + '">' + initials + '</div>';
+            });
+            compareAvatarStack.innerHTML = stackHtml;
+        } else {
+            compareBar.classList.remove("is-visible");
+            compareAvatarStack.innerHTML = "";
+        }
+    }
+
+    checkboxes.forEach(function (cb) {
+        cb.addEventListener("change", function () {
+            const checked = Array.from(checkboxes).filter(c => c.checked);
+            if (checked.length > 3) {
+                cb.checked = false;
+                alert("You can compare up to 3 mentors side-by-side.");
+                return;
+            }
+            updateCompareBar();
+        });
+    });
+
+    document.getElementById("clearCompareBtn").addEventListener("click", function () {
+        checkboxes.forEach(function (cb) { cb.checked = false; });
+        updateCompareBar();
+        closeModal();
+    });
+
+    function getMentorPayload(id) {
+        const scriptEl = document.getElementById("rec-mentor-data-" + id);
+        if (!scriptEl) return null;
+        try {
+            return JSON.parse(scriptEl.textContent);
+        } catch (err) {
+            console.error("Failed to parse mentor JSON for id " + id, err);
+            return null;
+        }
+    }
+
+    function renderComparisonCards() {
+        const checked = Array.from(checkboxes).filter(c => c.checked);
+        if (!checked.length) {
+            closeModal();
+            return;
+        }
+
+        const mentors = checked.map(cb => getMentorPayload(cb.value)).filter(Boolean);
+        if (!mentors.length) return;
+
+        // Determine highest score for the winner ribbon
+        const maxScore = Math.max.apply(null, mentors.map(m => m.matchScore || 0));
+        const colCount = mentors.length;
+        compareTableContainer.className = "comp-grid comp-grid-" + colCount;
+        compModalCountPill.textContent = "Comparing " + colCount + " Mentor" + (colCount > 1 ? "s" : "");
+
+        let cardsHtml = "";
+        mentors.forEach(function (rec, idx) {
+            const colThemeClass = "comp-card-col-" + (idx % 3);
+            const isTopWinner = (mentors.length > 1 && rec.matchScore === maxScore);
+            const ratingSum = rec.ratingSummary || {};
+            const breakdown = rec.scoreBreakdown || {};
+            const styleLabel = STYLE_LABELS[rec.teachingStyle] || (rec.teachingStyle ? rec.teachingStyle : "Flexible Mentoring");
+
+            let winnerBadgeHtml = "";
+            if (isTopWinner) {
+                winnerBadgeHtml = '<div class="comp-winner-ribbon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg> Top Match (' + rec.matchScore + '%)</div>';
+            } else if (rec.isRisingMentor) {
+                winnerBadgeHtml = '<div class="comp-rising-ribbon">✨ Rising Mentor</div>';
+            }
+
+            // Spoken languages chips
+            let langsHtml = "";
+            if (rec.languages && rec.languages.length) {
+                langsHtml = '<div class="comp-lang-chips">' +
+                    '<span class="comp-lang-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg> ' +
+                    rec.languages.join(", ") + '</span></div>';
+            }
+
+            // Ratings & Outcomes markup
+            let ratingsHtml = "";
+            if (ratingSum.hasReviews) {
+                const avgNum = parseFloat(ratingSum.averageRating || 0).toFixed(1);
+                ratingsHtml += '<div class="comp-rating-head">';
+                ratingsHtml += '<span class="comp-star-badge">&#9733; ' + avgNum + ' (' + (ratingSum.reviewCount || 0) + ' reviews)</span>';
+                if (ratingSum.positiveOutcomePct > 0) {
+                    ratingsHtml += '<span class="comp-outcome-pill">📈 ' + ratingSum.positiveOutcomePct + '% Success</span>';
+                }
+                ratingsHtml += '</div>';
+
+                // Sub-ratings breakdown
+                ratingsHtml += '<div class="comp-subratings-grid">';
+                ratingsHtml += '<div><div class="comp-subitem-lbl">Helpfulness</div><div class="comp-subitem-val">&#9733; ' + (ratingSum.avgHelpfulness || 0).toFixed(1) + '</div></div>';
+                ratingsHtml += '<div><div class="comp-subitem-lbl">Clarity</div><div class="comp-subitem-val">&#9733; ' + (ratingSum.avgClarity || 0).toFixed(1) + '</div></div>';
+                ratingsHtml += '<div><div class="comp-subitem-lbl">Comm.</div><div class="comp-subitem-val">&#9733; ' + (ratingSum.avgCommunication || 0).toFixed(1) + '</div></div>';
+                ratingsHtml += '</div>';
+
+                // Endorsement tags
+                if (ratingSum.topTags && ratingSum.topTags.length) {
+                    ratingsHtml += '<div class="comp-topic-wrap" style="margin-top:0.35rem;">';
+                    ratingSum.topTags.slice(0, 2).forEach(function (t) {
+                        ratingsHtml += '<span class="comp-topic-tag" style="background:#eff6ff; color:#1d4ed8;">&#10003; ' + t.label + '</span>';
+                    });
+                    ratingsHtml += '</div>';
+                }
+            } else {
+                ratingsHtml += '<div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:0.6rem; padding:0.65rem; text-align:center;">';
+                ratingsHtml += '<div style="font-size:0.8rem; font-weight:700; color:#334155;">🌱 New Verified Mentor</div>';
+                ratingsHtml += '<div style="font-size:0.72rem; color:#64748b;">No post-session reviews yet. High topic & schedule relevance.</div>';
+                ratingsHtml += '</div>';
+            }
+
+            // Topic pills
+            let topicsHtml = '<div class="comp-topic-wrap">';
+            (rec.topics || []).slice(0, 5).forEach(function (topic) {
+                topicsHtml += '<span class="comp-topic-tag">' + topic + '</span>';
+            });
+            topicsHtml += '</div>';
+
+            // Availability status
+            let availHtml = '<div class="comp-slot-status">';
+            if (rec.availableSlotCount > 0) {
+                availHtml += '<div class="comp-slot-count-badge"><span class="comp-slot-pulse"></span>' + rec.availableSlotCount + ' Bookable Slots Open</div>';
+                if (rec.nextSlotDisplay) {
+                    availHtml += '<div class="comp-next-slot-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Next: <strong>' + rec.nextSlotDisplay + '</strong></div>';
+                }
+            } else {
+                availHtml += '<div style="font-size:0.78rem; color:#94a3b8; display:inline-flex; align-items:center; gap:0.35rem;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No open slots currently</div>';
+            }
+            availHtml += '</div>';
+
+            // Primary Booking Action
+            let primaryBtnHtml = "";
+            if (rec.bookSlotUrl) {
+                primaryBtnHtml = '<a href="' + rec.bookSlotUrl + '" class="comp-btn-book">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' +
+                    'Book Next Slot Now</a>';
+            } else {
+                primaryBtnHtml = '<a href="' + rec.profileUrl + '" class="comp-btn-book" style="background:#334155;">' +
+                    'Request Session on Profile &rarr;</a>';
+            }
+
+            cardsHtml += '<div class="comp-card ' + colThemeClass + '">' +
+                '<div class="comp-card-topbar"></div>' +
+                '<div class="comp-card-actions-bar">' +
+                    winnerBadgeHtml +
+                    '<button type="button" class="comp-remove-card-btn" data-remove-id="' + rec.id + '" title="Remove from comparison">&times;</button>' +
+                '</div>' +
+                '<div class="comp-card-hero">' +
+                    '<div class="comp-avatar-lg">' + rec.initials + '</div>' +
+                    '<a href="' + rec.profileUrl + '" class="comp-mentor-name">' + rec.fullName + ' <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>' +
+                    '<div class="comp-headline">' + rec.headline + '</div>' +
+                    langsHtml +
+                '</div>' +
+                '<div class="comp-score-section">' +
+                    '<div class="comp-score-header">' +
+                        '<div class="comp-match-pill">' + rec.matchScore + '<span class="comp-match-pill-pct">% Match</span></div>' +
+                        '<span class="comp-tier-chip">' + (rec.matchTier === "strong" ? "🌟 " : "") + rec.matchLabel + '</span>' +
+                    '</div>' +
+                    '<div class="comp-meter-list">' +
+                        '<div class="comp-meter-row"><div class="comp-meter-labels"><span>Subject Expertise</span><span>' + (breakdown.expertise || 0) + '%</span></div><div class="comp-meter-track"><div class="comp-meter-fill" style="width:' + (breakdown.expertise || 0) + '%;"></div></div></div>' +
+                        '<div class="comp-meter-row"><div class="comp-meter-labels"><span>Goal Alignment</span><span>' + (breakdown.goalAlignment || 0) + '%</span></div><div class="comp-meter-track"><div class="comp-meter-fill" style="width:' + (breakdown.goalAlignment || 0) + '%;"></div></div></div>' +
+                        '<div class="comp-meter-row"><div class="comp-meter-labels"><span>Availability</span><span>' + (breakdown.availability || 0) + '%</span></div><div class="comp-meter-track"><div class="comp-meter-fill" style="width:' + (breakdown.availability || 0) + '%;"></div></div></div>' +
+                        '<div class="comp-meter-row"><div class="comp-meter-labels"><span>Rating Quality</span><span>' + (breakdown.ratingConfidence || 0) + '%</span></div><div class="comp-meter-track"><div class="comp-meter-fill" style="width:' + (breakdown.ratingConfidence || 0) + '%;"></div></div></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="comp-section-box">' +
+                    '<div class="comp-section-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Why Matched</div>' +
+                    '<blockquote class="comp-why-quote">' + rec.explanation + '</blockquote>' +
+                '</div>' +
+                '<div class="comp-section-box">' +
+                    '<div class="comp-section-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Verified Feedback &amp; Outcomes</div>' +
+                    '<div class="comp-ratings-summary">' + ratingsHtml + '</div>' +
+                '</div>' +
+                '<div class="comp-section-box">' +
+                    '<div class="comp-section-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Expertise Topics</div>' +
+                    topicsHtml +
+                '</div>' +
+                '<div class="comp-section-box">' +
+                    '<div class="comp-section-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Teaching Approach</div>' +
+                    '<div class="comp-style-pill">' + styleLabel + '</div>' +
+                '</div>' +
+                '<div class="comp-section-box">' +
+                    '<div class="comp-section-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Real-Time Slots</div>' +
+                    availHtml +
+                '</div>' +
+                '<div class="comp-card-footer">' +
+                    primaryBtnHtml +
+                    '<a href="' + rec.profileUrl + '" class="comp-link-profile">View Full Profile &amp; Reviews &rarr;</a>' +
+                '</div>' +
+            '</div>';
+        });
+
+        compareTableContainer.innerHTML = cardsHtml;
+
+        // Attach card remove button handlers
+        compareTableContainer.querySelectorAll(".comp-remove-card-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const removeId = btn.getAttribute("data-remove-id");
+                const targetCb = document.querySelector('.compare-checkbox[value="' + removeId + '"]');
+                if (targetCb) {
+                    targetCb.checked = false;
+                }
+                updateCompareBar();
+                renderComparisonCards();
+            });
+        });
+    }
+
+    function openModal() {
+        renderComparisonCards();
+        compareBackdrop.classList.add("is-open");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+        compareBackdrop.classList.remove("is-open");
+        document.body.style.overflow = "";
+    }
+
+    document.getElementById("openCompareBtn").addEventListener("click", openModal);
+    document.getElementById("closeCompareBtn").addEventListener("click", closeModal);
+
+    // Close on backdrop click outside modal
+    compareBackdrop.addEventListener("click", function (evt) {
+        if (evt.target === compareBackdrop) {
+            closeModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", function (evt) {
+        if (evt.key === "Escape" && compareBackdrop.classList.contains("is-open")) {
+            closeModal();
+        }
+    });
+});
+</script>
+{% endblock %}

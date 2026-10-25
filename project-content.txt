@@ -1,0 +1,187 @@
+﻿================================================================================
+PROJECT OVERVIEW & SPECIFICATION: SKILLFORGE E-LEARNING PLATFORM
+================================================================================
+
+1. PROJECT SUMMARY
+--------------------------------------------------------------------------------
+SkillForge is a full-stack e-learning web platform built with Django 5.2 and
+MongoDB (PyMongo). The platform is specifically architected as a purely NoSQL-
+driven application: relational databases (SQL / SQLite / PostgreSQL) and standard
+Django ORM / django.contrib.auth have been completely decommissioned. All user
+identities, custom session management, and educational quiz workflows are
+persisted directly in MongoDB.
+
+The application serves both public visitors (front-office landing and catalog
+pages) and authenticated users (role-based back-office dashboards for students,
+instructors, and administrators).
+
+
+2. TECHNICAL STACK & ENVIRONMENT
+--------------------------------------------------------------------------------
+- Backend Framework: Django 5.2.18 (Python 3.13)
+- Database: MongoDB (Engine: PyMongo 4.18.3, dnspython 2.9.0)
+  * Default Local URI: mongodb://localhost:27017/
+  * Database Name: e_learning
+  * No relational DB / No standard Django SQL models / migrations used.
+- Authentication & Sessions:
+  * Custom MongoDB authentication repository (apps/users/repositories.py)
+  * Custom MongoDB session backend (apps/users/sessions.py) storing sessions in
+    the 'django_sessions' collection with automatic TTL index expiration.
+  * Native Django password hashing algorithms (PBKDF2 SHA256) preserved.
+  * Signed Cookie message storage (django.contrib.messages.storage.cookie).
+- Frontend & UI:
+  * Django Templates engine (HTML5, Jinja-style syntax)
+  * Responsive CSS3, JavaScript, Bootstrap components
+  * Skilline educational theme & backoffice dashboard templates
+  * Standalone Gulp/SASS assets under backoffice/ directory
+- Testing & Tooling:
+  * Django test runner with PyMongo integration
+  * Custom management commands (e.g., 'python manage.py create_user_indexes')
+
+
+3. DIRECTORY & CODEBASE STRUCTURE
+--------------------------------------------------------------------------------
+D:\5TWIN\Djangro/
+├── config/                     # Project configuration & settings
+│   ├── settings/
+│   │   ├── base.py             # Shared settings, apps, middlewares, MongoDB URI
+│   │   ├── development.py      # Debug settings, local allowed hosts
+│   │   └── production.py       # Strict security, SSL, HSTS configuration
+│   ├── mongodb.py              # PyMongo client initialization & database helpers
+│   ├── urls.py                 # Main root routing configuration
+│   └── views.py                # Root landing page (home) view
+├── apps/
+│   ├── users/                  # User accounts, auth, roles, and sessions
+│   │   ├── management/commands/create_user_indexes.py # MongoDB unique & TTL indexes
+│   │   ├── forms.py            # Registration and login forms
+│   │   ├── repositories.py     # Direct PyMongo CRUD operations for users
+│   │   ├── services.py         # Business logic for auth, registration, validation
+│   │   ├── sessions.py         # Custom session engine backed by MongoDB
+│   │   ├── decorators.py       # @roles_required, @user_required access control
+│   │   └── views.py            # Login, register, logout, profile, backoffice view
+│   ├── quizzes/                # Complete interactive quiz management & taking
+│   │   ├── repositories.py     # PyMongo repository for 'quizzes' and 'quiz_attempts'
+│   │   ├── services.py         # Quiz creation, scoring, publication, attempt history
+│   │   ├── forms.py            # Quiz builder, question management & submission forms
+│   │   └── views.py            # Front-office quiz taking + back-office quiz editor
+│   ├── courses/                # Courses catalog & student dashboard
+│   │   └── views.py            # Front-office catalog & backoffice courses dashboard
+│   └── mentors/                # Mentors directory & coaching sessions
+│       └── views.py            # Front-office mentor profiles & backoffice mentor stats
+├── templates/
+│   ├── base_site.html          # Global site wrapper & header/navigation
+│   ├── frontoffice/            # Public-facing views (home, catalog, quiz taking)
+│   ├── backoffice/             # Student & instructor dashboard templates, sidebar
+│   └── quizzes/                # Dedicated quiz CRUD, results, and evaluation views
+├── static/                     # CSS, images, vendor libraries
+├── manage.py                   # Django CLI entrypoint
+├── requirements.txt            # Python dependencies (django, pymongo, etc.)
+└── .env.example                # Template for environment configuration
+
+
+4. EXISTING MODULES & FUNCTIONALITIES
+--------------------------------------------------------------------------------
+
+[A] USERS & AUTHENTICATION (apps/users)
+- User Registration: Creates a user document in MongoDB with email, name, role,
+  and securely hashed password.
+- User Login & Logout: Authenticates against MongoDB collection 'users';
+  generates a session persisted in 'django_sessions' with TTL auto-expiry.
+- Role-Based Access Control (RBAC):
+  * Supported roles: 'student', 'instructor', 'admin'.
+  * Decorators: '@roles_required("student")', '@user_required'.
+- User Profile: View current account details and role permissions.
+- Backoffice Hub: Unified portal dispatching to course, mentor, and quiz dashboards.
+
+[B] QUIZZES & ASSESSMENTS (apps/quizzes) - Fully Persistent
+- Quiz Authoring & Management (Instructor/Admin Backoffice):
+  * Create, edit, list, and delete quizzes.
+  * Define multiple-choice questions with options and designate correct answers.
+  * Publish/unpublish toggle to control student visibility.
+- Quiz Taking & Evaluation (Student Front-Office):
+  * Browse published quizzes with question counts and descriptions.
+  * Interactive quiz-taking interface with client-side timer.
+  * Automatic submission scoring and instant result display with percentage breakdown.
+  * Persisted student attempt history stored in 'quiz_attempts' collection.
+
+[C] COURSES (apps/courses) - Currently In-Memory Mock
+- Public catalog listing learning paths (e.g., Python for beginners, Web Dev, Databases).
+- Back-office student dashboard displaying mock progress metrics, active modules,
+  and completion percentages.
+- (Status: Needs real MongoDB persistence, curriculum modeling, and lesson content).
+
+[D] MENTORS & COACHING (apps/mentors) - Currently In-Memory Mock
+- Public catalog displaying mentor profiles, bios, specialties, and experience.
+- Back-office coaching dashboard displaying mock mentoring sessions and ratings.
+- (Status: Needs real MongoDB persistence, appointment booking, and availability slots).
+
+
+5. DATABASE COLLECTIONS SCHEMA (MongoDB)
+--------------------------------------------------------------------------------
+1. 'users':
+   - _id: ObjectId
+   - email: string (Unique Index)
+   - password: string (PBKDF2 hash)
+   - name: string
+   - role: string ('student' | 'instructor' | 'admin')
+   - created_at: datetime
+
+2. 'django_sessions':
+   - _id: session_key (string)
+   - session_data: encoded payload string
+   - expire_date: datetime (TTL Index for automatic database expiration)
+
+3. 'quizzes':
+   - _id: ObjectId
+   - title: string
+   - description: string
+   - author_id: ObjectId / string
+   - is_published: boolean
+   - questions: list of sub-documents:
+     * _id: ObjectId
+     * text: string
+     * options: list of [{ _id: ObjectId, text: string }]
+     * correct_option_ids: list of ObjectIds
+   - created_at: datetime
+
+4. 'quiz_attempts':
+   - _id: ObjectId
+   - quiz_id: ObjectId
+   - user_id: ObjectId / string
+   - score: integer
+   - total: integer
+   - percentage: float
+   - answers: dictionary of student choices
+   - submitted_at: datetime
+
+
+6. CURRENT LIMITATIONS & DEVELOPMENT GAPS
+--------------------------------------------------------------------------------
+1. No Relational ORM: Any new feature must use PyMongo repository patterns,
+   aggregations, and documents rather than Django SQL models.
+2. In-Memory Courses & Mentors: The Courses and Mentors modules currently return
+   static mock dictionaries and lack MongoDB database collections.
+3. No Enrollment / Progress Tracking: No mechanism currently binds a student to a
+   specific course, tracks module completion, or records video playback time.
+4. No Native Admin Interface: Django's built-in /admin/ panel is disabled; all
+   management features must be implemented via custom backoffice views.
+5. Media & Content Delivery: No video uploading, file storage (S3/GridFS), or PDF
+   document handling configured.
+6. Communication & Notifications: No real-time chat, notifications, or email alerts
+   between students and mentors/instructors.
+
+
+7. INSTRUCTIONS & CONTEXT FOR AI FEATURE SUGGESTIONS
+--------------------------------------------------------------------------------
+When proposing new features for this project, keep in mind:
+- Technology fit: Must integrate smoothly with Django 5.2 and PyMongo (MongoDB).
+- Roles: Features should target Students, Instructors, Mentors, or Administrators.
+- High-value domains to consider:
+  * Course & Curriculum Persistence (Chapters, lessons, rich content, video embeds).
+  * Student Enrollments & Dynamic Learning Progress.
+  * AI-Powered Learning (Quiz generation from text/PDF, AI tutor chatbot, automated code evaluation).
+  * Mentor Booking & Live Session Calendars.
+  * Gamification & Badges (XP, leaderboards, streak tracking, downloadable PDF certificates).
+  * Interactive Discussion Forums or Q&A per course lesson.
+  * E-Commerce / Payments (Stripe / Flouci / Konnect integration for course access).
+================================================================================

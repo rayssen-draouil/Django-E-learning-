@@ -1,0 +1,234 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}Book Session with {{ mentor.first_name }} | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .booking-wrapper {
+        max-width: 680px;
+        margin: 2rem auto 4rem;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2.25rem;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+    .booking-header {
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .booking-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.35rem;
+    }
+    .booking-header p {
+        font-size: 0.92rem;
+        color: #64748b;
+        margin: 0;
+    }
+    .slot-summary-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #2563eb;
+        border-radius: 0.5rem;
+        padding: 1.25rem;
+        margin-bottom: 1.75rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    .summary-item label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        display: block;
+        margin-bottom: 0.15rem;
+    }
+    .summary-item span {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+    }
+    .form-help {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .char-counter {
+        font-weight: 600;
+        color: #64748b;
+    }
+    .char-counter.near-limit {
+        color: #eab308;
+    }
+    .char-counter.at-limit {
+        color: #ef4444;
+    }
+    .btn-submit-booking {
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.8rem 1.75rem;
+        border-radius: 0.6rem;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.15s ease;
+    }
+    .btn-submit-booking:hover {
+        background: #1d4ed8;
+    }
+    .btn-cancel-link {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        color: #64748b;
+        font-size: 0.88rem;
+        text-decoration: none;
+    }
+    .btn-cancel-link:hover {
+        color: #0f172a;
+    }
+    .availability-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        font-family: inherit;
+        font-size: 0.95rem;
+        color: #0f172a;
+        background: #fff;
+    }
+    .availability-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-wrapper">
+    <header class="booking-header">
+        <h1>Request a Mentorship Session</h1>
+        <p>You are requesting a 1-on-1 coaching session with <strong>{{ mentor.first_name }} {{ mentor.last_name }}</strong>.</p>
+    </header>
+
+    {% if from_recommend %}
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 0.6rem; padding: 1rem 1.15rem; margin-bottom: 1.5rem;">
+        <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: #1d4ed8; margin-bottom: 0.25rem;">
+            &#10003; Recommended Match &mdash; Review &amp; Confirm Booking
+        </div>
+        {% if match_reason %}
+            <p style="font-size: 0.88rem; color: #1e293b; margin: 0 0 0.35rem;">{{ match_reason }}</p>
+        {% endif %}
+        <p style="font-size: 0.78rem; color: #475569; margin: 0;">Please review the session details and your pre-filled learning objective below before submitting your booking request.</p>
+    </div>
+    {% endif %}
+
+    <!-- Slot Summary Read-Only -->
+    <div class="slot-summary-card">
+        <div class="summary-item">
+            <label>Mentor</label>
+            <span>{{ mentor.first_name }} {{ mentor.last_name }}</span>
+        </div>
+        <div class="summary-item">
+            <label>Topic</label>
+            <span>{{ slot.topic_label }}</span>
+        </div>
+        <div class="summary-item">
+            <label>Date &amp; Time</label>
+            <span>{{ slot.date }} ({{ slot.start_time }} &ndash; {{ slot.end_time }})</span>
+        </div>
+        <div class="summary-item">
+            <label>Session Format</label>
+            <span>{{ slot.session_type_label }} ({{ slot.duration_minutes }} min)</span>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <form method="post" novalidate id="bookingForm">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 0.85rem; border-radius: 0.4rem; color: #991b1b; margin-bottom: 1.25rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.learning_objective.id_for_label }}">{{ form.learning_objective.label }} *</label>
+            {{ form.learning_objective }}
+            <div class="form-help">
+                <span>{{ form.learning_objective.help_text }}</span>
+                <span id="objective-counter" class="char-counter">0 / 500</span>
+            </div>
+            {% if form.learning_objective.errors %}
+                <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.learning_objective.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.problem_description.id_for_label }}">{{ form.problem_description.label }} *</label>
+            {{ form.problem_description }}
+            <div class="form-help">
+                <span>{{ form.problem_description.help_text }}</span>
+                <span id="problem-counter" class="char-counter">0 / 1000</span>
+            </div>
+            {% if form.problem_description.errors %}
+                <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.problem_description.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-submit-booking">Submit Mentorship Request</button>
+        <a href="{% url 'users:mentor_public_detail' mentor_id %}" class="btn-cancel-link">Cancel &amp; Return to Mentor Profile</a>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function setupCounter(inputSelector, counterId, maxLen) {
+            const input = document.querySelector(inputSelector);
+            const counter = document.getElementById(counterId);
+            if (!input || !counter) return;
+
+            function update() {
+                const len = input.value.length;
+                counter.textContent = `${len} / ${maxLen}`;
+                if (len >= maxLen) {
+                    counter.className = "char-counter at-limit";
+                } else if (len >= maxLen * 0.85) {
+                    counter.className = "char-counter near-limit";
+                } else {
+                    counter.className = "char-counter";
+                }
+            }
+            input.addEventListener("input", update);
+            update();
+        }
+
+        setupCounter("[data-char-counter='objective-counter']", "objective-counter", 500);
+        setupCounter("[data-char-counter='problem-counter']", "problem-counter", 1000);
+    });
+</script>
+{% endblock %}

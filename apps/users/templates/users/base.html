@@ -5,24 +5,206 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}SkillForge{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=6">
     {% block extra_head %}{% endblock %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .site-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem max(5%, calc((100% - 1280px) / 2));
+            background: #FFF2E1;
+            border-bottom: 1px solid rgba(244, 140, 6, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            font-family: 'Poppins', sans-serif;
+        }
+        .site-brand {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            min-height: 2.7rem;
+            color: #2f327d;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-decoration: none;
+        }
+        .site-brand-mark {
+            width: 2.25rem;
+            height: 2.25rem;
+            margin-right: -.55rem;
+            border-radius: .25rem;
+            background: #65daff;
+            transform: rotate(45deg);
+        }
+        .site-brand > span:last-child {
+            position: relative;
+            z-index: 1;
+        }
+        .site-nav-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+        .site-nav-links a.nav-link-item {
+            color: #2F327D;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            padding: 0.5rem 0.85rem;
+            border-radius: 9999px;
+            transition: all 0.2s ease;
+        }
+        .site-nav-links a.nav-link-item:hover {
+            color: #f48c06;
+            background: rgba(244, 140, 6, 0.08);
+        }
+        .site-nav-dashboard {
+            background: #ffffff !important;
+            color: #2F327D !important;
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+            padding: 0.55rem 1.25rem !important;
+            border-radius: 9999px !important;
+            border: 1px solid rgba(47, 50, 125, 0.12);
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+        .site-nav-dashboard:hover {
+            border-color: #f48c06;
+            color: #f48c06 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        .nav-notif-bell {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.65rem;
+            height: 2.65rem;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #2F327D;
+            border: 1px solid rgba(47, 50, 125, 0.12);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .nav-notif-bell:hover {
+            background: #ffffff;
+            color: #f48c06;
+            border-color: #f48c06;
+            transform: translateY(-1px);
+        }
+        .nav-notif-bell svg {
+            width: 21px;
+            height: 21px;
+        }
+        .nav-notif-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            line-height: 1.2rem;
+            border-radius: 9999px;
+            text-align: center;
+            padding: 0 0.2rem;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.35);
+        }
+        .nav-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: #ffffff;
+            border: 1px solid rgba(47, 50, 125, 0.12);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #2F327D;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+        .nav-user-chip:hover {
+            border-color: #f48c06;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        .nav-role-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .nav-role-badge.mentor {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+        .nav-role-badge.student {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .nav-role-badge.instructor {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .nav-role-badge.admin {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .site-nav-logout-btn {
+            background: #f48c06 !important;
+            color: #ffffff !important;
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+            padding: 0.55rem 1.35rem !important;
+            border-radius: 9999px !important;
+            border: none !important;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(244, 140, 6, 0.35);
+            transition: all 0.2s ease;
+        }
+        .site-nav-logout-btn:hover {
+            background: #d97706 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(244, 140, 6, 0.45);
+        }
+        @media (max-width: 900px) {
+            .site-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .site-nav-links {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="site-body">
 <nav class="site-nav">
     <a class="site-brand" href="{% url 'home' %}">
         <span class="site-brand-mark" aria-hidden="true"></span>
         <span>SkillForge</span>
     </a>
     <div class="site-nav-links">
-<<<<<<< Updated upstream
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'users:courses' %}">Cours</a>
-        <a href="{% url 'users:mentors' %}">Mentors</a>
-        <a href="{% url 'users:quiz' %}">Quiz</a>
-=======
         <a class="nav-link-item" href="{% url 'home' %}">Home</a>
         <a class="nav-link-item" href="{% url 'users:courses' %}">Cours</a>
         <a class="nav-link-item" href="{% url 'learning_paths:list' %}">Parcours</a>
@@ -31,23 +213,72 @@
         {% endif %}
         <a class="nav-link-item" href="{% url 'users:mentors' %}">Mentors</a>
         <a class="nav-link-item" href="{% url 'users:quiz' %}">Quiz</a>
-
->>>>>>> Stashed changes
         {% if request.session.user_id %}
-            <a class="site-nav-dashboard" href="{% url 'users:backoffice' %}">Dashboard</a>
-            <a class="site-nav-profile" href="{% url 'users:profile' %}">Mon profil</a>
-            <form method="post" action="{% url 'users:logout' %}" class="inline-form">
-                {% csrf_token %}<button type="submit" class="site-nav-logout">Logout</button>
+            <a class="nav-link-item" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="nav-notif-badge" style="position:static; margin-left:0.35rem; display:inline-block; vertical-align:middle;">{{ support_unread_notifications }}</span>{% endif %}</a>
+            <!-- Role-specific Navigation for Mentors -->
+            {% if is_mentor or current_user.role == "mentor" %}
+                <a class="nav-link-item" href="{% url 'users:mentor_sessions_list' %}">Sessions</a>
+                <a class="nav-link-item" href="{% url 'users:mentor_availability_list' %}">Availability</a>
+            {% endif %}
+
+            <!-- Backoffice Dashboard Link -->
+            {% if is_mentor or is_instructor or is_admin or current_user.role == "mentor" or current_user.role == "instructor" or current_user.role == "admin" %}
+                <a class="site-nav-dashboard" href="{% url 'users:backoffice' %}">Dashboard</a>
+            {% endif %}
+
+            <!-- Notification Bell Icon (Enlarged & Sharp) -->
+            <a href="{% url 'users:notifications_list' %}" class="nav-notif-bell" title="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                {% if unread_notifications_count > 0 %}
+                    <span class="nav-notif-badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+
+            <!-- User Info & Role Badge -->
+            <a href="{% url 'users:profile' %}" class="nav-user-chip" title="View Profile">
+                <span>{{ current_user.first_name|default:"User" }}</span>
+                <span class="nav-role-badge {{ current_user.role|default:'student' }}">
+                    {{ current_user.role|default:"student" }}
+                </span>
+            </a>
+
+            <!-- Prominent & Clearly Visible Logout Button -->
+            <form method="post" action="{% url 'users:logout' %}" class="inline-form" style="display: inline; margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="site-nav-logout-btn">
+                    Logout
+                </button>
             </form>
         {% else %}
             <a class="site-nav-login" href="{% url 'users:login' %}">Login</a>
-            <a class="site-nav-signup" href="{% url 'users:register' %}">Sign Up</a>
+            <a class="site-nav-register" href="{% url 'users:register' %}">Sign Up</a>
         {% endif %}
     </div>
 </nav>
+
 <main class="container {% block main_class %}{% endblock %}">
-    {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+    {% for message in messages %}
+        <div class="message {{ message.tags }}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}" aria-live="polite">
+            {{ message }}
+        </div>
+    {% endfor %}
     {% block content %}{% endblock %}
 </main>
+<footer class="mt-32" style="background-color: rgba(37, 38, 65, 1); margin-top: 5rem;">
+    <div style="max-width: 32rem; margin: 0 auto;">
+        <div style="display: flex; padding: 3rem 0; justify-content: center; color: white; align-items: center;">
+            <div style="position: relative;">
+                <h1 style="font-weight: 700; font-size: 1.25rem; padding-right: 1.25rem; position: relative; z-index: 50; margin: 0; color: #fff;">SkillForge</h1>
+            </div>
+            <span style="border-left: 1px solid #6b7280; font-size: 0.875rem; padding-left: 1.25rem; padding-top: 0.5rem; padding-bottom: 0.5rem; font-weight: 600; color: #9ca3af;">Plateforme d'apprentissage</span>
+        </div>
+    </div>
+    <div style="text-align: center; color: white; padding-bottom: 2rem;">
+        <p style="margin: 0.75rem 0; color: #9ca3af; font-size: 0.875rem;">&copy; 2026 SkillForge &middot; E-learning &amp; Mentorship</p>
+    </div>
+</footer>
 </body>
 </html>

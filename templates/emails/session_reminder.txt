@@ -1,0 +1,16 @@
+Reminder: Upcoming Mentorship Session
+
+Hello {{ recipient_name }},
+
+This is a friendly reminder that you have an upcoming mentorship session scheduled with {{ other_party_name }}.
+
+Topic: {{ topic }}
+Date: {{ date }}
+Time: {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)
+Format: {{ session_type|title }}
+{% if meeting_link %}Meeting URL: {{ meeting_link }}{% elif location %}Location: {{ location }}{% endif %}
+
+View details:
+{{ action_url }}
+
+SkillForge Platform

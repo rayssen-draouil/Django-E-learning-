@@ -1,0 +1,428 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Update Your Verified Review{% else %}Evaluate Your Mentorship Session{% endif %} | SkillForge{% endblock %}
+
+{% block extra_head %}
+<style>
+    .review-wrapper {
+        max-width: 720px;
+        margin: 2rem auto 4rem;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1.15rem;
+        padding: 2.5rem;
+        box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
+    }
+    .review-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .verified-badge-top {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.25rem 0.7rem;
+        border-radius: 9999px;
+        margin-bottom: 0.65rem;
+    }
+    .review-header h1 {
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.35rem;
+    }
+    .review-header p {
+        font-size: 0.92rem;
+        color: #64748b;
+        margin: 0;
+    }
+    .session-recap {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #2563eb;
+        border-radius: 0.65rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.75rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        justify-content: space-between;
+    }
+    .session-recap p {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #334155;
+    }
+
+    .dimensions-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.15rem;
+        margin-bottom: 1.75rem;
+    }
+    @media (max-width: 640px) {
+        .dimensions-grid { grid-template-columns: 1fr; }
+        .review-wrapper { padding: 1.5rem; }
+    }
+    .dimension-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.85rem;
+        padding: 1.1rem 1.25rem;
+        transition: border-color 0.15s ease;
+    }
+    .dimension-card.primary-dim {
+        grid-column: 1 / -1;
+        background: #fffbeb;
+        border-color: #fde68a;
+    }
+    .dimension-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.2rem;
+    }
+    .dimension-desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin: 0 0 0.65rem;
+    }
+    .star-picker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .star-btn {
+        background: none;
+        border: none;
+        padding: 0.15rem;
+        cursor: pointer;
+        color: #cbd5e1;
+        transition: transform 0.12s ease, color 0.12s ease;
+        line-height: 1;
+    }
+    .star-btn:hover,
+    .star-btn.active {
+        color: #f59e0b;
+        transform: scale(1.1);
+    }
+    .star-label-text {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #92400e;
+        margin-left: 0.5rem;
+    }
+
+    .outcome-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    .outcome-option-label {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.75rem 0.95rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.65rem;
+        background: #ffffff;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #334155;
+        transition: all 0.15s ease;
+    }
+    .outcome-option-label:hover {
+        border-color: #2563eb;
+        background: #f8fafc;
+    }
+    .outcome-option-label input[type="radio"] {
+        accent-color: #2563eb;
+    }
+
+    .tags-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .tag-check-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.85rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 9999px;
+        background: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.15s ease;
+    }
+    .tag-check-pill:hover {
+        border-color: #2563eb;
+        background: #eff6ff;
+    }
+    .tag-check-pill input[type="checkbox"] {
+        accent-color: #2563eb;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label.section-label {
+        display: block;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+    }
+    .availability-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.55rem;
+        font-family: inherit;
+        font-size: 0.92rem;
+        color: #0f172a;
+        background: #fff;
+    }
+    .availability-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .char-counter {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-align: right;
+        margin-top: 0.25rem;
+    }
+    .btn-submit-review {
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.85rem 1.75rem;
+        border-radius: 9999px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+    .btn-submit-review:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-wrapper">
+    <header class="review-header">
+        <span class="verified-badge-top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Verified Completed Session
+        </span>
+        <h1>{% if is_edit %}Update Your Session Evaluation{% else %}Evaluate Your Mentorship Session{% endif %}</h1>
+        <p>Share honest, multi-dimensional feedback to help {{ booking.mentor_name }} and guide future learners.</p>
+    </header>
+
+    <div class="session-recap">
+        <p><strong>Mentor:</strong> {{ booking.mentor_name }}</p>
+        <p><strong>Topic:</strong> {{ booking.topic }}</p>
+        <p><strong>Completed Session:</strong> {{ booking.date }} ({{ booking.start_time }} &ndash; {{ booking.end_time }})</p>
+    </div>
+
+    <form method="post" novalidate id="reviewEvaluationForm">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 0.85rem; border-radius: 0.4rem; color: #991b1b; margin-bottom: 1.25rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- Multi-Dimensional Star Ratings -->
+        <div class="dimensions-grid">
+            <!-- 1. Overall Rating -->
+            <div class="dimension-card primary-dim" data-rating-field="id_rating">
+                <div class="dimension-title">1. Overall Experience *</div>
+                <div class="dimension-desc">How would you rate this mentoring session overall?</div>
+                <div style="display: none;">{{ form.rating }}</div>
+                <div class="star-picker" role="radiogroup" aria-label="Overall Experience Rating">
+                    {% for s in "12345" %}
+                    <button type="button" class="star-btn" data-value="{{ forloop.counter }}" aria-label="{{ forloop.counter }} Stars">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
+                    {% endfor %}
+                    <span class="star-label-text" id="label_id_rating">5 / 5</span>
+                </div>
+                {% if form.rating.errors %}
+                    <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.rating.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- 2. Helpfulness -->
+            <div class="dimension-card" data-rating-field="id_helpfulness_rating">
+                <div class="dimension-title">2. Helpfulness &amp; Actionability</div>
+                <div class="dimension-desc">How practical and useful was the mentor's guidance?</div>
+                <div style="display: none;">{{ form.helpfulness_rating }}</div>
+                <div class="star-picker" role="radiogroup" aria-label="Helpfulness Rating">
+                    {% for s in "12345" %}
+                    <button type="button" class="star-btn" data-value="{{ forloop.counter }}" aria-label="{{ forloop.counter }} Stars">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
+                    {% endfor %}
+                    <span class="star-label-text" id="label_id_helpfulness_rating">5 / 5</span>
+                </div>
+            </div>
+
+            <!-- 3. Clarity -->
+            <div class="dimension-card" data-rating-field="id_clarity_rating">
+                <div class="dimension-title">3. Clarity of Explanations</div>
+                <div class="dimension-desc">How clearly did the mentor explain concepts and code?</div>
+                <div style="display: none;">{{ form.clarity_rating }}</div>
+                <div class="star-picker" role="radiogroup" aria-label="Clarity Rating">
+                    {% for s in "12345" %}
+                    <button type="button" class="star-btn" data-value="{{ forloop.counter }}" aria-label="{{ forloop.counter }} Stars">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
+                    {% endfor %}
+                    <span class="star-label-text" id="label_id_clarity_rating">5 / 5</span>
+                </div>
+            </div>
+
+            <!-- 4. Communication -->
+            <div class="dimension-card" data-rating-field="id_communication_rating" style="grid-column: 1 / -1;">
+                <div class="dimension-title">4. Listening &amp; Communication</div>
+                <div class="dimension-desc">How well did the mentor listen, adapt to your pace, and answer questions?</div>
+                <div style="display: none;">{{ form.communication_rating }}</div>
+                <div class="star-picker" role="radiogroup" aria-label="Communication Rating">
+                    {% for s in "12345" %}
+                    <button type="button" class="star-btn" data-value="{{ forloop.counter }}" aria-label="{{ forloop.counter }} Stars">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
+                    {% endfor %}
+                    <span class="star-label-text" id="label_id_communication_rating">5 / 5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Learning Outcome -->
+        <div class="form-group">
+            <label class="section-label">5. Learning Outcome</label>
+            <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 0.5rem;">Did this session help you progress toward your learning goal?</p>
+            <div class="outcome-options">
+                {% for radio in form.learning_outcome %}
+                    <label class="outcome-option-label">
+                        {{ radio.tag }}
+                        <span>{{ radio.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 6. Strength Highlights -->
+        <div class="form-group">
+            <label class="section-label">6. Mentor Strengths (Optional)</label>
+            <div class="tags-wrap">
+                {% for checkbox in form.strength_tags %}
+                    <label class="tag-check-pill">
+                        {{ checkbox.tag }}
+                        <span>{{ checkbox.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 7. Optional Written Review -->
+        <div class="form-group">
+            <label class="section-label" for="{{ form.review_text.id_for_label }}">7. Written Review <span style="font-weight: 500; color: #64748b;">(Optional)</span></label>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 0.4rem;">
+                You can submit star ratings right away, or write a short note (10–1000 characters) about your experience. For privacy, please do not include personal emails or phone numbers.
+            </p>
+            {{ form.review_text }}
+            <div id="review-counter" class="char-counter">0 / 1000</div>
+            {% if form.review_text.errors %}
+                <div style="color: #ef4444; font-size: 0.82rem; margin-top: 0.25rem;">{{ form.review_text.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group" style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: 0.55rem; border: 1px solid #e2e8f0;">
+            <label style="display: flex; align-items: center; gap: 0.55rem; font-size: 0.86rem; font-weight: 600; color: #334155; cursor: pointer;">
+                {{ form.matched_goal }}
+                <span>This mentor was a good match for my learning goal and expectations</span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn-submit-review">
+            {% if is_edit %}Save Updated Evaluation{% else %}Publish Verified Evaluation{% endif %}
+        </button>
+        <p style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'users:profile' %}" style="color: #64748b; font-size: 0.88rem; text-decoration: none;">Cancel &amp; Return to Profile</a>
+        </p>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.querySelector("[data-char-counter='review-counter']");
+        const counter = document.getElementById("review-counter");
+        if (input && counter) {
+            function updateCounter() {
+                counter.textContent = `${input.value.length} / 1000`;
+            }
+            input.addEventListener("input", updateCounter);
+            updateCounter();
+        }
+
+        // Interactive star-picker binding
+        const cards = document.querySelectorAll(".dimension-card[data-rating-field]");
+        cards.forEach(function (card) {
+            const selectId = card.getAttribute("data-rating-field");
+            const selectEl = document.getElementById(selectId);
+            const labelEl = document.getElementById("label_" + selectId);
+            const starBtns = card.querySelectorAll(".star-btn");
+            if (!selectEl) return;
+
+            function syncStars(val) {
+                const num = parseInt(val || "5", 10);
+                starBtns.forEach(function (btn) {
+                    const bVal = parseInt(btn.getAttribute("data-value"), 10);
+                    if (bVal <= num) {
+                        btn.classList.add("active");
+                    } else {
+                        btn.classList.remove("active");
+                    }
+                });
+                if (labelEl) {
+                    labelEl.textContent = num + " / 5";
+                }
+            }
+
+            syncStars(selectEl.value || "5");
+
+            starBtns.forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    const val = btn.getAttribute("data-value");
+                    selectEl.value = val;
+                    syncStars(val);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% load static %}<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Comptes utilisateurs | SkillForge</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=9"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="users" role_label="ESPACE ADMINISTRATEUR" %}
+    <main class="dashboard-main admin-users">
+        {% for message in messages %}
+            <div class="support-msg support-msg--{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">BACK OFFICE &#183; COMPTES</p>
+                <h1>Utilisateurs <span aria-hidden="true">&#128101;</span></h1>
+                <p class="header-subtitle">Recherchez, créez des comptes, ajustez les rôles, désactivez, envoyez un lien de réinitialisation.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'support:dashboard' %}" class="outline-button">Support</a>
+                <a href="{% url 'users:profile' %}" class="profile-chip">
+                    <span>{{ user.first_name|default:"S"|first|upper }}</span>
+                    {{ user.first_name|default:"Mon profil" }}
+                </a>
+            </div>
+        </header>
+
+        <section class="stats-grid" aria-label="Statistiques des comptes">
+            <article class="stat-card bar-grey"><div class="stat-icon">&#128100;</div><div><p>Total (filtré)</p><strong>{{ total }}</strong></div></article>
+            <article class="stat-card bar-blue"><div class="stat-icon">&#127891;</div><div><p>Étudiants</p><strong>{{ etudiants }}</strong></div></article>
+            <article class="stat-card bar-orange"><div class="stat-icon">&#128640;</div><div><p>Instructeurs</p><strong>{{ instructeurs }}</strong></div></article>
+            <article class="stat-card bar-green"><div class="stat-icon">&#9989;</div><div><p>Comptes actifs</p><strong>{{ actifs }}</strong></div></article>
+        </section>
+
+        <section class="panel" aria-label="Filtres">
+            <form method="get" class="dashboard-filter-form">
+                <div class="filter-field">
+                    <label for="q">Recherche</label>
+                    <input id="q" name="q" type="search" value="{{ filters.q }}" placeholder="Nom ou e-mail...">
+                </div>
+                <div class="filter-field">
+                    <label for="role">Rôle</label>
+                    <select id="role" name="role">
+                        <option value="">Tous les rôles</option>
+                        <option value="student" {% if filters.role == 'student' %}selected{% endif %}>Étudiants</option>
+                        <option value="instructor" {% if filters.role == 'instructor' %}selected{% endif %}>Instructeurs</option>
+                        <option value="admin" {% if filters.role == 'admin' %}selected{% endif %}>Administrateurs</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="active">Statut</label>
+                    <select id="active" name="active">
+                        <option value="">Tous</option>
+                        <option value="yes" {% if filters.active == 'yes' %}selected{% endif %}>Actifs</option>
+                        <option value="no" {% if filters.active == 'no' %}selected{% endif %}>Désactivés</option>
+                    </select>
+                </div>
+                <div class="support-form-actions">
+                    <button class="primary-button" type="submit">Filtrer</button>
+                    <a class="outline-button" href="{% url 'users:admin_users' %}">Réinitialiser</a>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel" aria-label="Créer un compte">
+            <div class="panel-heading">
+                <div><h2>Créer un compte</h2><p>Le mot de passe temporaire doit faire au moins 8 caractères (une majuscule et un chiffre recommandés). Le titulaire pourra le changer via &#171;&#160;Mot de passe oublié&#160;&#187;.</p></div>
+            </div>
+            <form method="post" class="support-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="support-fields">
+                    <div><label for="c-prenom">Prénom</label><input id="c-prenom" name="first_name" required></div>
+                    <div><label for="c-nom">Nom</label><input id="c-nom" name="last_name" required></div>
+                    <div><label for="c-email">Adresse e-mail</label><input id="c-email" name="email" type="email" required></div>
+                    <div><label for="c-role">Rôle</label>
+                        <select id="c-role" name="role">
+                            <option value="student">Étudiant</option>
+                            <option value="instructor" selected>Instructeur</option>
+                        </select>
+                    </div>
+                    <div><label for="c-pass">Mot de passe temporaire</label><input id="c-pass" name="password" type="text" minlength="8" required></div>
+                </div>
+                <div class="support-form-actions"><button class="primary-button" type="submit">Créer le compte</button></div>
+            </form>
+        </section>
+
+        <section class="panel" aria-label="Comptes">
+            <div class="panel-heading">
+                <div><h2>Comptes ({{ total }})</h2><p>Les plus récents d'abord. Les actions s'appliquent immédiatement.</p></div>
+            </div>
+            <div class="course-list">
+                {% for compte in comptes %}
+                <article class="course-row">
+                    <div class="course-info">
+                        <h3>{{ compte.first_name }} {{ compte.last_name }}</h3>
+                        <div class="support-ref">Inscrit {{ compte.created_at|date:"d/m/Y H:i" }}</div>
+                        <div class="course-meta">
+                            <span>{{ compte.email }}</span>
+                            {% if compte.role == 'admin' %}<span class="support-chip support-chip--urgent">{{ role_status.admin }}</span>
+                            {% elif compte.role == 'instructor' %}<span class="support-chip support-chip--medium">{{ role_status.instructor }}</span>
+                            {% else %}<span class="support-chip support-chip--low">{{ role_status.student }}</span>{% endif %}
+                            {% if compte.is_active %}<span class="support-chip support-chip--resolved">Actif</span>
+                            {% else %}<span class="support-chip support-chip--open">Désactivé</span>{% endif %}
+                            {% if compte.id == self_id %}<span class="support-chip">Vous</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="course-actions">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="change_role">
+                            <input type="hidden" name="user_id" value="{{ compte.id }}">
+                            <select name="new_role" onchange="this.form.submit()">
+                                <option value="student" {% if compte.role == 'student' %}selected{% endif %}>Étudiant</option>
+                                <option value="instructor" {% if compte.role == 'instructor' %}selected{% endif %}>Instructeur</option>
+                                <option value="admin" {% if compte.role == 'admin' %}selected{% endif %}>Administrateur</option>
+                            </select>
+                        </form>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_active">
+                            <input type="hidden" name="user_id" value="{{ compte.id }}">
+                            <input type="hidden" name="become_active" value="{% if compte.is_active %}0{% else %}1{% endif %}">
+                            <button class="{% if compte.is_active %}outline-button{% else %}primary-button{% endif %}" type="submit">{% if compte.is_active %}Désactiver{% else %}Activer{% endif %}</button>
+                        </form>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="send_reset">
+                            <input type="hidden" name="user_id" value="{{ compte.id }}">
+                            <button class="outline-button" type="submit" title="Envoyer à cette adresse un lien de choix de mot de passe valable 30 minutes">Lien par e-mail</button>
+                        </form>
+                    </div>
+                </article>
+                {% empty %}
+                    <p>Aucun compte ne correspond à ces filtres.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div></body></html>

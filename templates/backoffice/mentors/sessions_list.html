@@ -1,0 +1,769 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}?v=4">
+    <style>
+        .session-tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+        .session-tab-btn {
+            background: none;
+            border: none;
+            padding: 0.85rem 1.35rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .session-tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .session-tab-btn .tab-count-badge {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+        .session-tab-btn.active .tab-count-badge {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .session-tab-content {
+            display: none;
+        }
+        .session-tab-content.active {
+            display: block;
+        }
+        .session-item-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.6rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1.5rem;
+            align-items: flex-start;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .session-item-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+        }
+        .session-student-row {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-bottom: 0.65rem;
+        }
+        .student-avatar-small {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+        .student-name-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+        .request-details-box {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 0.75rem;
+            padding: 1rem 1.15rem;
+            margin: 0.85rem 0;
+            font-size: 0.88rem;
+        }
+        .request-details-box strong {
+            color: #334155;
+            display: block;
+            margin-bottom: 0.2rem;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .actions-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            min-width: 190px;
+        }
+        .btn-session-action {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.6rem 0.9rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            transition: all 0.15s ease;
+        }
+        .btn-session-action:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+        .btn-accept { background: #10b981; color: #ffffff; }
+        .btn-reject { background: #fee2e2; color: #b91c1c; }
+        .btn-reject:hover { background: #fecaca; }
+        .btn-reschedule { background: #fef3c7; color: #92400e; }
+        .btn-complete { background: #2563eb; color: #ffffff; }
+        .btn-noshow { background: #f1f5f9; color: #475569; }
+        .btn-noshow:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-card {
+            background: #ffffff;
+            border-radius: 1.15rem;
+            max-width: 500px;
+            width: 92%;
+            padding: 2.25rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25);
+        }
+        .btn-cancel-availability {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.65rem 1.35rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 9999px;
+            background: #ffffff;
+            color: #475569;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.18s ease;
+        }
+        .btn-cancel-availability:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+        .btn-save-availability {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.35rem;
+            border: 0;
+            border-radius: 9999px;
+            background: #f97316;
+            color: #ffffff;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.18s ease, transform 0.18s ease;
+        }
+        .btn-save-availability:hover {
+            background: #ea580c;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+        {% include "backoffice/partials/sidebar.html" with section="sessions" role_label="MENTOR SPACE" %}
+
+        <main class="dashboard-main">
+            <!-- Header -->
+            <header class="dashboard-header availability-header">
+                <div>
+                    <nav class="availability-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'users:backoffice' %}">Backoffice</a>
+                        <span>/</span>
+                        <span>Mentorship</span>
+                        <span>/</span>
+                        <span aria-current="page">Sessions</span>
+                    </nav>
+                    <h1 class="availability-title">Mentorship Sessions</h1>
+                    <p class="availability-subtitle">Manage coaching requests, upcoming video calls, and completed sessions.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'users:mentor_availability_list' %}" class="outline-button" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span>Availability Slots</span>
+                    </a>
+                    <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Create Availability</span>
+                    </a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
+                </div>
+            </header>
+
+            <!-- Notifications / Messages -->
+            {% if messages %}
+                <div class="availability-toast-stack" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        {% if message and message|stringformat:"s"|striptags|cut:" "|length > 0 %}
+                            <div class="availability-alert availability-alert-{{ message.tags|default:'info' }}">
+                                <span class="alert-icon" aria-hidden="true">
+                                    {% if 'error' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    {% elif 'success' in message.tags %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                                    {% else %}
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    {% endif %}
+                                </span>
+                                <div class="alert-content">{{ message }}</div>
+                                <button type="button" class="alert-dismiss" data-dismiss-alert aria-label="Dismiss notification">&times;</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Summary Statistics Cards -->
+            <section class="availability-stats" aria-label="Session statistics">
+                <article class="stat-card stat-card-light-orange">
+                    <span class="stat-label">Pending Requests</span>
+                    <span class="stat-value">{{ session_stats.pending_count|default:"0" }}</span>
+                </article>
+                <article class="stat-card stat-card-light-green">
+                    <span class="stat-label">Upcoming Confirmed</span>
+                    <span class="stat-value">{{ session_stats.upcoming_count|default:"0" }}</span>
+                </article>
+                <article class="stat-card stat-card-light-blue">
+                    <span class="stat-label">Sessions Completed</span>
+                    <span class="stat-value">{{ session_stats.completed_count|default:"0" }}</span>
+                </article>
+                <article class="stat-card stat-card-light-purple">
+                    <span class="stat-label">Cancellations / No-Shows</span>
+                    <span class="stat-value">{{ session_stats.cancellations_count|default:"0" }}</span>
+                </article>
+            </section>
+
+            <!-- Navigation Tabs -->
+            <nav class="session-tabs-header">
+                <button type="button" class="session-tab-btn active" data-tab="tab-mentor-pending">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Pending Requests</span>
+                    <span class="tab-count-badge">{{ pending_sessions|length }}</span>
+                </button>
+                <button type="button" class="session-tab-btn" data-tab="tab-mentor-upcoming">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span>Upcoming Confirmed</span>
+                    <span class="tab-count-badge">{{ upcoming_sessions|length }}</span>
+                </button>
+                <button type="button" class="session-tab-btn" data-tab="tab-mentor-completed">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>Completed</span>
+                    <span class="tab-count-badge">{{ completed_sessions|length }}</span>
+                </button>
+                <button type="button" class="session-tab-btn" data-tab="tab-mentor-cancelled">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <span>Declined &amp; Cancelled</span>
+                    <span class="tab-count-badge">{{ cancelled_sessions|length }}</span>
+                </button>
+            </nav>
+
+            <!-- 1. Pending Requests Tab -->
+            <div id="tab-mentor-pending" class="session-tab-content active">
+                {% for session in pending_sessions %}
+                    <article class="session-item-card">
+                        <div>
+                            <div class="session-student-row">
+                                <div class="student-avatar-small">{{ session.student_name|first|upper }}</div>
+                                <div>
+                                    <h3 class="student-name-title">{{ session.student_name }}</h3>
+                                    <span style="font-size: 0.8rem; color: #64748b;">{{ session.student_email }}</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #1e293b; margin: 0.5rem 0; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <strong>{{ session.date }}</strong></span>
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ session.start_time }} &ndash; {{ session.end_time }} ({{ session.duration_minutes }} min)</span>
+                                <span>Topic: <strong>{{ session.topic }}</strong></span>
+                                <span class="status-pill {{ session.status }}">{{ session.status_label }}</span>
+                            </div>
+
+                            <div class="request-details-box">
+                                <div style="margin-bottom: 0.4rem;">
+                                    <strong>Learning Objective:</strong>
+                                    <p style="margin: 0.2rem 0; color: #334155;">{{ session.learning_objective }}</p>
+                                </div>
+                                <div>
+                                    <strong>Challenge / Question Description:</strong>
+                                    <p style="margin: 0.2rem 0; color: #334155;">{{ session.problem_description }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="actions-panel">
+                            <!-- Accept Form Trigger -->
+                            <button type="button" class="btn-session-action btn-accept" onclick="openAcceptModal('{{ session.id }}', '{{ session.student_name }}', '{{ session.session_type }}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Accept Request</span>
+                            </button>
+
+                            <!-- Reject Form Trigger -->
+                            <button type="button" class="btn-session-action btn-reject" onclick="openRejectModal('{{ session.id }}', '{{ session.student_name }}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <span>Decline Request</span>
+                            </button>
+
+                            <!-- Reschedule Proposal Trigger -->
+                            <button type="button" class="btn-session-action btn-reschedule" onclick="openRescheduleModal('{{ session.id }}', '{{ session.date }}', '{{ session.start_time }}', '{{ session.end_time }}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <span>Propose New Time</span>
+                            </button>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div style="text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 0.85rem; border: 1px dashed #cbd5e1;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <p style="margin: 0; font-size: 1rem; color: #64748b; font-weight: 600;">No pending booking requests right now.</p>
+                        <p style="margin: 0.35rem 0 0; font-size: 0.85rem; color: #94a3b8;">When learners request time from your availability slots, they will appear here.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- 2. Upcoming Confirmed Sessions Tab -->
+            <div id="tab-mentor-upcoming" class="session-tab-content">
+                {% for session in upcoming_sessions %}
+                    <article class="session-item-card">
+                        <div>
+                            <div class="session-student-row">
+                                <div class="student-avatar-small">{{ session.student_name|first|upper }}</div>
+                                <div>
+                                    <h3 class="student-name-title">{{ session.student_name }}</h3>
+                                    <span style="font-size: 0.8rem; color: #64748b;">{{ session.student_email }}</span>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.9rem; color: #1e293b; margin: 0.5rem 0; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <strong>{{ session.date }}</strong></span>
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ session.start_time }} &ndash; {{ session.end_time }}</span>
+                                <span>Topic: <strong>{{ session.topic }}</strong></span>
+                                <span>Format: <strong>{{ session.session_type|title }}</strong></span>
+                            </div>
+
+                            {% if session.session_type == "online" %}
+                                <div style="margin: 0.75rem 0; font-size: 0.88rem; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.8rem 1rem; border-radius: 0.6rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.65rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                        <div>
+                                            <strong style="color: #312e81;">SkillForge LiveKit Virtual Classroom</strong>
+                                            {% if session.livekit_room_name %}
+                                                <span style="font-size: 0.76rem; color: #6366f1; margin-left: 0.35rem;">({{ session.livekit_room_name }})</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.45rem;">
+                                        {% if session.invitation_status == "failed" %}
+                                            <span style="background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                                                Email Invite Failed
+                                            </span>
+                                        {% elif session.invitation_status == "sent" %}
+                                            <span style="background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px;">
+                                                Invitation Email Sent
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p style="font-size: 0.88rem; color: #475569;"><strong>Location:</strong> {{ session.location|default:"In-person venue" }}</p>
+                            {% endif %}
+
+                            <div style="font-size: 0.82rem; color: #64748b;">
+                                <strong>Goal:</strong> {{ session.learning_objective|truncatechars:120 }}
+                            </div>
+                        </div>
+
+                        <div class="actions-panel">
+                            {% if session.session_type == "online" %}
+                                <a href="{% url 'users:mentorship_classroom' session.id %}" class="btn-session-action" style="background: linear-gradient(135deg, #4f46e5, #0ea5e9); color: #ffffff;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                    <span>Launch Classroom</span>
+                                </a>
+
+                                <form method="post" action="{% url 'users:mentor_resend_invitation' session.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-session-action" style="background: #e0f2fe; color: #0369a1;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                        <span>Resend Email Invite</span>
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <!-- Mark as completed -->
+                            <form method="post" action="{% url 'users:mentor_complete_session' session.id %}" onsubmit="return confirm('Mark this coaching session as completed? The student will be invited to leave a verified review.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-session-action btn-complete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                    <span>Mark Completed</span>
+                                </button>
+                            </form>
+
+                            <!-- Mark no-show -->
+                            <form method="post" action="{% url 'users:mentor_mark_no_show' session.id %}" onsubmit="return confirm('Record this session as a no-show?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-session-action btn-noshow">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>Mark No-Show</span>
+                                </button>
+                            </form>
+
+                            <!-- Cancel session -->
+                            <form method="post" action="{% url 'users:mentor_cancel_booking' session.id %}" onsubmit="return confirm('Cancel this confirmed session? The time slot will be made available again.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="cancellation_reason" value="Cancelled by mentor">
+                                <button type="submit" class="btn-session-action btn-reject">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    <span>Cancel Session</span>
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div style="text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 0.85rem; border: 1px dashed #cbd5e1;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <p style="margin: 0; font-size: 1rem; color: #64748b; font-weight: 600;">No upcoming confirmed sessions.</p>
+                        <p style="margin: 0.35rem 0 0; font-size: 0.85rem; color: #94a3b8;">When you accept booking requests, they will appear here with student and meeting details.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- 3. Completed Sessions Tab -->
+            <div id="tab-mentor-completed" class="session-tab-content">
+                {% for session in completed_sessions %}
+                    <article class="session-item-card">
+                        <div>
+                            <h3 class="student-name-title">{{ session.student_name }} &bull; {{ session.topic }}</h3>
+                            <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.35rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Date: {{ session.date }}</span>
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Time: {{ session.start_time }} &ndash; {{ session.end_time }}</span>
+                                <span class="status-pill completed">Completed</span>
+                            </div>
+
+                            {% if session.review %}
+                                <div style="margin-top: 0.85rem; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #f59e0b; padding: 0.85rem 1rem; border-radius: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                        <span style="color: #d97706; font-weight: 700; font-size: 0.88rem;">&#9733; {{ session.review.rating }}/5 Verified Feedback</span>
+                                        <span style="font-size: 0.76rem; color: #64748b;">(Helpfulness {{ session.review.helpfulness_rating }}/5 &bull; Clarity {{ session.review.clarity_rating }}/5 &bull; Comm. {{ session.review.communication_rating }}/5)</span>
+                                        {% if session.review.learning_outcome_label %}
+                                            <span style="font-size: 0.72rem; background: #dcfce7; color: #166534; padding: 0.12rem 0.45rem; border-radius: 0.35rem; font-weight: 600;">{{ session.review.learning_outcome_label }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if session.review.review_text %}
+                                        <p style="margin: 0.25rem 0 0.5rem; font-size: 0.88rem; color: #334155;">"{{ session.review.review_text }}"</p>
+                                    {% else %}
+                                        <p style="margin: 0.25rem 0 0.5rem; font-size: 0.82rem; color: #64748b; font-style: italic;">Student submitted a rating-only evaluation.</p>
+                                    {% endif %}
+
+                                    {% if session.review.mentor_response %}
+                                        <div style="background: #eff6ff; border-left: 3px solid #2563eb; padding: 0.5rem 0.75rem; border-radius: 0.35rem; font-size: 0.82rem; color: #1e3a8a;">
+                                            <strong>Your Public Reply:</strong> {{ session.review.mentor_response }}
+                                        </div>
+                                    {% else %}
+                                        <form method="post" action="{% url 'users:mentor_reply_review' session.review.id %}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            {% csrf_token %}
+                                            <input type="text" name="mentor_response" class="availability-input" placeholder="Write a professional public reply to thank the student..." required style="flex: 1; min-width: 220px; padding: 0.45rem 0.7rem; font-size: 0.82rem;">
+                                            <button type="submit" class="btn-save-availability" style="padding: 0.45rem 1rem; font-size: 0.8rem;">Post Reply</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #94a3b8; font-style: italic;">Awaiting student feedback.</p>
+                            {% endif %}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem; color: #10b981; font-weight: 600; font-size: 0.88rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            <span>Finished</span>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div style="text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 0.85rem; border: 1px dashed #cbd5e1;">
+                        <p style="margin: 0; font-size: 1rem; color: #64748b;">No completed sessions recorded yet.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- 4. Declined & Cancelled Tab -->
+            <div id="tab-mentor-cancelled" class="session-tab-content">
+                {% for session in cancelled_sessions %}
+                    <article class="session-item-card">
+                        <div>
+                            <h3 class="student-name-title">{{ session.student_name }} &bull; {{ session.topic }}</h3>
+                            <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.35rem; display: flex; gap: 0.75rem; align-items: center;">
+                                <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Date: {{ session.date }}</span>
+                                <span class="status-pill {{ session.status }}">{{ session.status_label }}</span>
+                            </div>
+                            {% if session.rejection_reason %}
+                                <p style="font-size: 0.82rem; color: #b91c1c; margin: 0.4rem 0 0;">Decline Reason: {{ session.rejection_reason }}</p>
+                            {% elif session.cancellation_reason %}
+                                <p style="font-size: 0.82rem; color: #64748b; margin: 0.4rem 0 0;">Cancellation ({{ session.cancelled_by }}): {{ session.cancellation_reason }}</p>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% empty %}
+                    <div style="text-align: center; padding: 3rem 1rem; background: #fff; border-radius: 0.85rem; border: 1px dashed #cbd5e1;">
+                        <p style="margin: 0; font-size: 1rem; color: #64748b;">No cancelled or declined sessions.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Accept Request with Optional Meeting Link -->
+    <div id="acceptModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="margin: 0 0 0.5rem; font-size: 1.3rem; color: #0f172a;">Accept Booking Request</h2>
+            <p id="acceptModalSubtitle" style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;"></p>
+            <form method="post" id="acceptForm">
+                {% csrf_token %}
+                <div id="meetingLinkInputGroup" style="margin-bottom: 1.25rem;">
+                    <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 0.65rem; padding: 0.85rem 1rem; margin-bottom: 0.85rem; font-size: 0.84rem; color: #312e81;">
+                        <strong>Automatic Virtual Classroom Provisioning:</strong>
+                        Accepting this online request automatically creates a secure <strong>SkillForge LiveKit Classroom</strong> and emails the student their private classroom invitation link.
+                    </div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                        Optional Custom / Backup Link (Leave blank to use SkillForge Classroom)
+                    </label>
+                    <input type="url" name="meeting_link" class="availability-input" placeholder="Leave blank for built-in SkillForge Virtual Classroom" style="width: 100%;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn-cancel-availability" onclick="closeModal('acceptModal')">Cancel</button>
+                    <button type="submit" class="btn-save-availability" style="background: #10b981;">Confirm &amp; Accept</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Reject Request with Optional Reason -->
+    <div id="rejectModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="margin: 0 0 0.5rem; font-size: 1.3rem; color: #0f172a;">Decline Booking Request</h2>
+            <p id="rejectModalSubtitle" style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;"></p>
+            <form method="post" id="rejectForm">
+                {% csrf_token %}
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">
+                        Reason for Declining (Optional)
+                    </label>
+                    <textarea name="rejection_reason" class="availability-input" rows="3" placeholder="Let the student know why you cannot make this time..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn-cancel-availability" onclick="closeModal('rejectModal')">Cancel</button>
+                    <button type="submit" class="btn-danger-confirm">Decline Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Propose Reschedule -->
+    <div id="rescheduleModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="margin: 0 0 0.5rem; font-size: 1.3rem; color: #0f172a;">Propose New Session Time</h2>
+            <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;">Send an alternate date &amp; time proposal for the student to review.</p>
+            <form method="post" id="rescheduleForm">
+                {% csrf_token %}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem;">Proposed Date *</label>
+                    <input type="date" name="proposed_date" id="rescheduleDate" class="availability-input" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem;">Start Time *</label>
+                        <input type="time" name="proposed_start_time" id="rescheduleStart" class="availability-input" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem;">End Time *</label>
+                        <input type="time" name="proposed_end_time" id="rescheduleEnd" class="availability-input" required>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem;">Note to Student (Optional)</label>
+                    <textarea name="reschedule_note" class="availability-input" rows="2" placeholder="e.g., I have a conflicting meeting, would this alternative work for you?"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn-cancel-availability" onclick="closeModal('rescheduleModal')">Cancel</button>
+                    <button type="submit" class="btn-save-availability">Send Proposal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Update Meeting Link -->
+    <div id="meetingLinkModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="margin: 0 0 0.5rem; font-size: 1.3rem; color: #0f172a;">Meeting Link</h2>
+            <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;">Provide or update the meeting link for your online coaching session.</p>
+            <form method="post" id="meetingLinkForm">
+                {% csrf_token %}
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">URL *</label>
+                    <input type="url" name="meeting_link" id="currentMeetingLink" class="availability-input" placeholder="https://meet.google.com/..." required style="width: 100%;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn-cancel-availability" onclick="closeModal('meetingLinkModal')">Cancel</button>
+                    <button type="submit" class="btn-save-availability">Save Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const tabs = document.querySelectorAll(".session-tab-btn");
+            const contents = document.querySelectorAll(".session-tab-content");
+
+            tabs.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const target = btn.getAttribute("data-tab");
+                    tabs.forEach(t => t.classList.remove("active"));
+                    contents.forEach(c => c.classList.remove("active"));
+                    btn.classList.add("active");
+                    const targetEl = document.getElementById(target);
+                    if (targetEl) targetEl.classList.add("active");
+                });
+            });
+        });
+
+        function openModal(id) {
+            document.getElementById(id).classList.add("open");
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove("open");
+        }
+
+        function openAcceptModal(sessionId, studentName, sessionType) {
+            const form = document.getElementById("acceptForm");
+            form.action = `/users/backoffice/mentors/sessions/${sessionId}/accept/`;
+            document.getElementById("acceptModalSubtitle").textContent = `Confirm session with ${studentName}.`;
+            const group = document.getElementById("meetingLinkInputGroup");
+            group.style.display = (sessionType === "online") ? "block" : "none";
+            openModal("acceptModal");
+        }
+
+        function openRejectModal(sessionId, studentName) {
+            const form = document.getElementById("rejectForm");
+            form.action = `/users/backoffice/mentors/sessions/${sessionId}/reject/`;
+            document.getElementById("rejectModalSubtitle").textContent = `Decline session request from ${studentName}.`;
+            openModal("rejectModal");
+        }
+
+        function openRescheduleModal(sessionId, currDate, currStart, currEnd) {
+            const form = document.getElementById("rescheduleForm");
+            form.action = `/users/backoffice/mentors/sessions/${sessionId}/reschedule/`;
+            const dateInput = document.getElementById("rescheduleDate");
+            const todayStr = new Date().toISOString().split("T")[0];
+
+            // The mentor must choose a date in the future and NOT before the date already in the modal field (currDate)
+            const minAllowedDate = (currDate && currDate > todayStr) ? currDate : todayStr;
+            dateInput.min = minAllowedDate;
+            dateInput.value = currDate || todayStr;
+            dateInput.dataset.originalDate = currDate || todayStr;
+
+            document.getElementById("rescheduleStart").value = currStart;
+            document.getElementById("rescheduleEnd").value = currEnd;
+            openModal("rescheduleModal");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const dateInput = document.getElementById("rescheduleDate");
+            const startInput = document.getElementById("rescheduleStart");
+            const endInput = document.getElementById("rescheduleEnd");
+
+            function validateRescheduleInputs() {
+                const todayStr = new Date().toISOString().split("T")[0];
+                const originalDate = (dateInput && dateInput.dataset.originalDate) || todayStr;
+
+                if (dateInput && dateInput.value) {
+                    if (dateInput.value < todayStr) {
+                        dateInput.setCustomValidity("Proposed date cannot be in the past. Please select today or a future date.");
+                    } else if (originalDate && dateInput.value < originalDate) {
+                        dateInput.setCustomValidity(`Proposed date cannot be before the original scheduled date (${originalDate}).`);
+                    } else {
+                        dateInput.setCustomValidity("");
+                    }
+                } else if (dateInput) {
+                    dateInput.setCustomValidity("");
+                }
+
+                if (startInput && endInput && startInput.value && endInput.value && endInput.value <= startInput.value) {
+                    endInput.setCustomValidity("End time must be later than start time.");
+                } else if (endInput) {
+                    endInput.setCustomValidity("");
+                }
+            }
+
+            if (dateInput) {
+                dateInput.addEventListener("input", validateRescheduleInputs);
+                dateInput.addEventListener("change", validateRescheduleInputs);
+            }
+            if (startInput) {
+                startInput.addEventListener("input", validateRescheduleInputs);
+                startInput.addEventListener("change", validateRescheduleInputs);
+            }
+            if (endInput) {
+                endInput.addEventListener("input", validateRescheduleInputs);
+                endInput.addEventListener("change", validateRescheduleInputs);
+            }
+        });
+
+        function openMeetingLinkModal(sessionId, existingLink) {
+            const form = document.getElementById("meetingLinkForm");
+            form.action = `/users/backoffice/mentors/sessions/${sessionId}/meeting-link/`;
+            document.getElementById("currentMeetingLink").value = existingLink || "";
+            openModal("meetingLinkModal");
+        }
+    </script>
+</body>
+</html>

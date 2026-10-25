@@ -1,0 +1,28 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h2 class="email-heading">New Mentorship Request from {{ student_name }}</h2>
+<p>Hello {{ mentor_name }},</p>
+<p>You have received a new coaching request. Please review the details below:</p>
+
+<div class="info-card">
+    <div class="info-row"><span class="info-label">Student:</span> {{ student_name }}</div>
+    <div class="info-row"><span class="info-label">Topic:</span> {{ topic }}</div>
+    <div class="info-row"><span class="info-label">Date:</span> {{ date }}</div>
+    <div class="info-row"><span class="info-label">Time:</span> {{ start_time }} - {{ end_time }} ({{ duration_minutes }} min)</div>
+    <div class="info-row"><span class="info-label">Format:</span> {{ session_type|title }}</div>
+</div>
+
+<p><strong>Learning Objective:</strong></p>
+<blockquote style="background: #f1f5f9; padding: 12px; border-radius: 6px; font-style: italic; margin: 8px 0 16px;">
+    {{ learning_objective }}
+</blockquote>
+
+<p><strong>Challenge / Question:</strong></p>
+<blockquote style="background: #f1f5f9; padding: 12px; border-radius: 6px; font-style: italic; margin: 8px 0 16px;">
+    {{ problem_description }}
+</blockquote>
+
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="btn-action">Review Request on Dashboard</a>
+</p>
+{% endblock %}

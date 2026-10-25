@@ -8,7 +8,8 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
 </head>
 <body class="dashboard-body">
     <div class="dashboard-shell">
@@ -18,15 +19,16 @@
             <header class="dashboard-header">
                 <div>
                     <p class="eyebrow">VOTRE ESPACE SKILLFORGE · {{ role_label }}</p>
-                    <h1>Bonjour {{ user.first_name|default:"apprenant" }} <span aria-hidden="true">👋</span></h1>
-                    <p class="header-subtitle">Voici un aperçu de votre progression.</p>
+                    <h1>Bonjour {{ user.first_name|default:"apprenant" }}</h1>
+                    <p class="header-subtitle">{% if is_mentor %}Create and manage your coaching time slots.{% else %}Voici un aperçu de votre progression.{% endif %}</p>
                 </div>
                 <div class="header-actions">
+                    {% if is_mentor %}
+                        <a href="{% url 'users:mentor_sessions_list' %}" class="outline-button">Coaching Sessions</a>
+                        <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability">+ Create Availability</a>
+                    {% endif %}
                     <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
-                    <a href="{% url 'users:profile' %}" class="profile-chip">
-                        <span>{{ user.first_name|default:"S"|first|upper }}</span>
-                        {{ user.first_name|default:"Mon profil" }}
-                    </a>
+                    {% include "backoffice/partials/user_role_chip.html" %}
                 </div>
             </header>
 
@@ -42,27 +44,59 @@
                 {% endfor %}
             </section>
 
+            {% if is_mentor %}
+            <section class="panel courses-panel" id="availability-management">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Availability Management</h2>
+                        <p>Create and manage your coaching time slots.</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="{% url 'users:mentor_availability_create' %}" class="text-link">+ Create Availability</a>
+                        <a href="{% url 'users:mentor_availability_list' %}" class="text-link">Open My Availability →</a>
+                    </div>
+                </div>
+                <div class="course-list">
+                    {% for slot in mentor_slots %}
+                        <article class="course-row">
+                            <div class="course-info">
+                                <h3>{{ slot.display_topic }}</h3>
+                                <div class="course-meta">
+                                    <span>{{ slot.date }} · {{ slot.start_time }} – {{ slot.end_time }} ({{ slot.duration_badge }})</span>
+                                    <span>{{ slot.session_type_label }} · {{ slot.status_label }}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'users:mentor_availability_edit' slot_id=slot.id %}" class="continue-button">Edit</a>
+                        </article>
+                    {% empty %}
+                        <p>No availability scheduled yet. Create your first time slot and make it easier for students to book a coaching session.</p>
+                    {% endfor %}
+                </div>
+                <a class="primary-button" href="{% url 'users:mentor_availability_list' %}">Manage My Availability</a>
+            </section>
+            {% endif %}
+
             {% if quiz_storage_error %}<div class="panel">Les données Quiz sont temporairement indisponibles.</div>{% endif %}
             <section class="panel courses-panel" id="quiz-dashboard">
                 <div class="panel-heading">
                     <div><h2>{% if is_quiz_manager %}Gestion des quiz{% else %}Quiz et évaluations{% endif %}</h2>
                         <p>{% if is_quiz_manager %}Vos quiz, leur statut et les actions de gestion.{% else %}Répondez aux quiz publiés et consultez vos résultats.{% endif %}</p></div>
-                    {% if is_quiz_manager %}<div class="header-actions"><a href="{% url 'users:quiz' %}" class="text-link">Voir les quiz côté apprenant</a><a href="{% url 'users:quiz_manage_list' %}" class="text-link">Ouvrir la gestion →</a></div>
+                    {% if is_quiz_manager %}<div class="header-actions"><a href="{% url 'users:quiz' %}" class="text-link">Voir la page apprenant</a><a href="{% url 'users:quiz_manage_list' %}" class="text-link">Ouvrir la gestion →</a></div>
                     {% else %}<a href="{% url 'users:quiz' %}" class="text-link">Tous les quiz →</a>{% endif %}
                 </div>
                 <div class="course-list">
                     {% for item in dashboard_quizzes %}
                         <article class="course-row">
                             <div class="course-info"><h3>{{ item.title }}</h3>
-                                <div class="course-meta"><span>{{ item.question_count }} question(s)</span><span>{% if is_quiz_manager %}{{ item.status }}{% else %}Publié{% endif %}</span></div>
+                                <div class="course-meta"><span>{{ item.question_count }} question(s)</span><span>{% if is_quiz_manager %}{% if item.status == "draft" %}Brouillon{% elif item.status == "published" %}Publié{% else %}Archivé{% endif %}{% else %}Publié{% endif %}</span></div>
                                 {% if item.description %}<p>{{ item.description }}</p>{% endif %}
                             </div>
-                            {% if is_quiz_manager %}<a href="{% url 'users:quiz_manage_detail' quiz_id=item.id %}" class="continue-button">Gérer</a>
-                            {% else %}<a href="{% url 'users:quiz_take' quiz_id=item.id %}" class="continue-button">Répondre</a>{% endif %}
+                            {% if is_quiz_manager %}<div class="quiz-row-actions"><a href="{% url 'users:quiz_manage_detail' quiz_id=item.id %}" class="continue-button">Détails</a><a href="{% url 'users:quiz_manage_delete' quiz_id=item.id %}" class="quiz-row-delete">Supprimer</a></div>
+                            {% else %}<a href="{% url 'users:quiz_take' quiz_id=item.id %}" class="continue-button">Répondre au quiz</a>{% endif %}
                         </article>
-                    {% empty %}<p>{% if is_quiz_manager %}Aucun quiz créé. Créez ou importez votre premier quiz.{% else %}Aucun quiz publié pour le moment.{% endif %}</p>{% endfor %}
+                    {% empty %}<p>{% if is_quiz_manager %}Aucun quiz pour le moment. Créez ou importez votre premier quiz.{% else %}Aucun quiz publié pour le moment.{% endif %}</p>{% endfor %}
                 </div>
-                {% if is_quiz_manager %}<a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Créer ou importer un quiz</a>{% endif %}
+                {% if is_quiz_manager %}<div class="header-actions"><button class="outline-button" type="button" data-quiz-ai-open>Generate with AI</button><a class="primary-button" href="{% url 'users:quiz_manage_create' %}">Créer ou importer un quiz</a></div>{% endif %}
             </section>
 
             <section class="panel courses-panel">
@@ -139,7 +173,45 @@
                     {% endfor %}
                 </div>
             </section>
+
+            <!-- Support & Assistance Panel -->
+            <section class="panel courses-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Support &amp; assistance</h2>
+                        <p>Vos demandes d'aide, leur avancement et les réponses de l'équipe.</p>
+                    </div>
+                    <span class="trend">{{ support_stats.ticket_count }} demande{{ support_stats.ticket_count|pluralize }}</span>
+                </div>
+                <div class="course-list support-grid">
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>{% if user.role == 'admin' %}Console du support{% else %}Mon tableau de bord support{% endif %}</h3>
+                            <p>{% if user.role == 'admin' %}Traitez la file complète : {{ support_stats.open }} ouverte{{ support_stats.open|pluralize }} · {{ support_stats.in_progress }} en cours · {{ support_stats.resolved }} résolue{{ support_stats.resolved|pluralize }}{% else %}Ouvertes : {{ support_stats.open }} · En cours : {{ support_stats.in_progress }} · Résolues : {{ support_stats.resolved }}{% if support_stats.unread %} · {{ support_stats.unread }} notification{{ support_stats.unread|pluralize }} non lue{{ support_stats.unread|pluralize }}{% endif %}{% endif %}</p>
+                        </div>
+                        <a class="continue-button" href="{% if user.role == 'admin' %}{% url 'support:list' %}{% else %}{% url 'support:board' %}{% endif %}">{% if user.role == 'admin' %}Ouvrir la console{% else %}Consulter{% endif %}</a>
+                    </article>
+                    {% if user.role == 'admin' %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Solutions &amp; FAQ</h3>
+                            <p>Gérez la base de connaissances visible par les apprenants.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:faq' %}">Gérer</a>
+                    </article>
+                    {% else %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Nouvelle demande d'aide</h3>
+                            <p>Un souci sur un cours, un quiz ou la plateforme ? Décrivez-le en deux minutes.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:list' %}#nouvelle-demande">Ouvrir</a>
+                    </article>
+                    {% endif %}
+                </div>
+            </section>
         </main>
+        {% if is_quiz_manager %}{% include "backoffice/quizzes/ai_generator_modal.html" %}{% endif %}
     </div>
 </body>
 </html>
