@@ -358,7 +358,7 @@ def manage_learning_path_generate(request):
             "description": proposal["description"],
             "theme": proposal["theme"],
             "level": proposal["level"],
-            "status": proposal["status"],
+            "status": "published",
         }
         initial.update({
             f"course_{position}": course_id

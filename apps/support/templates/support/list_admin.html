@@ -8,9 +8,10 @@
                 <p class="header-subtitle">Review and assign requests, and move each one toward resolution.</p>
             </div>
             <div class="header-actions">
+                <a href="#new-request" class="primary-button">? New request</a>
                 <a href="{% url 'support:notifications' %}" class="outline-button">Notifications{% if unread_count %} ({{ unread_count }}){% endif %}</a>
                 <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
-                <a href="{% url 'support:dashboard' %}" class="primary-button">Dashboard</a>
+                <a href="{% url 'support:dashboard' %}" class="outline-button">Dashboard</a>
             </div>
         </header>
 
@@ -20,6 +21,28 @@
             <a href="{% url 'support:notifications' %}">View notifications →</a>
         </aside>
         {% endif %}
+
+        <section class="panel" id="new-request" aria-label="Submit a request">
+            <div class="panel-heading">
+                <div><h2>Submit a new request</h2><p>Describe your issue to submit a support request.</p></div>
+            </div>
+            <form class="support-form" method="post" novalidate>
+                {% csrf_token %}
+                <div class="support-form-grid">
+                    {% for field in creation_form %}
+                    <div class="filter-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="form-hint" style="color:var(--muted);font-size:0.75rem;">{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="support-form-actions" style="margin-top: 1rem;">
+                    <button class="primary-button" type="submit">Submit request</button>
+                </div>
+            </form>
+        </section>
 
         <section class="panel" aria-label="Queue filters">
             <form class="support-form" method="get">

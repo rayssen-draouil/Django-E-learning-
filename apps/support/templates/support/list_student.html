@@ -78,7 +78,7 @@
                     </div>
                 {% endfor %}
                 <div class="text-center mb-4">
-                    <button type="button" id="ai-btn-new" class="px-6 py-2.5 text-sm text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyze my issue with AI</button>
+                    <button type="button" id="ai-btn-new" data-url="{% url 'support:ai_suggestion' %}" class="px-6 py-2.5 text-sm text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyze my issue with AI</button>
                     <p class="mt-2 text-xs text-gray-400">AI will classify your issue, suggest a priority, and show knowledge base solutions. You stay in control of the form.</p>
                 </div>
                 <div id="ai-new-out" class="hidden rounded-2xl border-t-4 border-blue-400 bg-blue-50 p-5 mb-5 text-left">

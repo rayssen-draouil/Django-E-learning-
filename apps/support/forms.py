@@ -16,7 +16,11 @@ class TicketForm(forms.Form):
 
 class ReplyForm(forms.Form):
     body = forms.CharField(label="Your message", max_length=5000, widget=forms.Textarea(attrs={"rows": 4}))
-    attachment = forms.FileField(label="Attachment (optional)", required=False)
+    attachment = forms.FileField(
+        label="Attachment (optional)",
+        required=False,
+        widget=forms.FileInput(attrs={"class": "support-file-input", "accept": ".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt"}),
+    )
 
     def clean_attachment(self):
         upload = self.cleaned_data.get("attachment")

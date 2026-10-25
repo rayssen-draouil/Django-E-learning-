@@ -29,7 +29,9 @@ class LearningPathForm(forms.Form):
     level = forms.ChoiceField(label="Niveau", choices=LEVEL_CHOICES)
     status = forms.ChoiceField(
         label="Statut",
-        choices=(("draft", "Brouillon"), ("published", "Publié")),
+        choices=(("published", "Publié"), ("draft", "Brouillon")),
+        initial="published",
+        help_text="Les parcours publiés sont visibles par les étudiants dans le catalogue.",
     )
 
     def __init__(self, *args, **kwargs):
