@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -7,55 +8,124 @@ from django.conf import settings
 from apps.courses.catalog import COURSES
 from .options import LEVEL_CHOICES, THEME_CHOICES
 
+logger = logging.getLogger(__name__)
+
 
 class LearningPathAIError(Exception):
     pass
 
 
-def _request_ollama_json(
+def _request_groq_json(
     *,
     messages: list[dict],
-    num_predict: int,
-    response_format: str | dict = "json",
+    temperature: float = 0.1,
+    **_kwargs,
 ) -> dict:
-    payload = json.dumps({
-        "model": settings.OLLAMA_MODEL,
-        "messages": messages,
-        "format": response_format,
-        "stream": False,
-        "keep_alive": "10m",
-        "options": {
-            "temperature": 0,
-            "num_ctx": 1024,
-            "num_predict": num_predict,
-        },
-    }).encode("utf-8")
-    request = Request(
-        f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/chat",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    api_key = getattr(settings, "GROQ_API_KEY", "")
+    if not api_key:
+        raise LearningPathAIError(
+            "La clé d'API Groq est manquante. "
+            "Vérifiez la variable GROQ_API_KEY dans votre fichier .env."
+        )
 
-    try:
-        with urlopen(request, timeout=settings.OLLAMA_TIMEOUT_SECONDS) as response:
-            return json.loads(response.read())
-    except HTTPError as error:
-        if error.code == 404:
+    base_url = getattr(settings, "GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
+    timeout = getattr(settings, "GROQ_TIMEOUT", 25)
+    candidates = [
+        getattr(settings, "GROQ_MODEL", "openai/gpt-oss-120b"),
+        getattr(settings, "GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b"),
+    ]
+    models = []
+    for model in candidates:
+        if model and model not in models:
+            models.append(model)
+
+    last_error: Exception | None = None
+    for model in models:
+        payload = json.dumps({
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "response_format": {"type": "json_object"},
+        }).encode("utf-8")
+        request = Request(
+            f"{base_url}/chat/completions",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "SkillForge/1.0 (+Django)",
+            },
+            method="POST",
+        )
+
+        try:
+            with urlopen(request, timeout=timeout) as response:
+                raw_bytes = response.read()
+                raw_text = raw_bytes.decode("utf-8") if isinstance(raw_bytes, bytes) else str(raw_bytes)
+                raw_data = json.loads(raw_text)
+
+            if isinstance(raw_data, dict):
+                if "choices" in raw_data and raw_data["choices"]:
+                    first_choice = raw_data["choices"][0]
+                    if isinstance(first_choice, dict) and "message" in first_choice:
+                        content = first_choice["message"].get("content", "")
+                    else:
+                        content = str(first_choice)
+                elif "message" in raw_data and isinstance(raw_data["message"], dict):
+                    content = raw_data["message"].get("content", "")
+                elif "content" in raw_data:
+                    content = raw_data.get("content", "")
+                else:
+                    content = json.dumps(raw_data)
+            else:
+                content = str(raw_data)
+
+            if isinstance(content, str):
+                content = content.strip()
+                if content.startswith("```json"):
+                    content = content[7:]
+                elif content.startswith("```"):
+                    content = content[3:]
+                if content.endswith("```"):
+                    content = content[:-3]
+                content = content.strip()
+
+            return {"message": {"content": content}}
+
+        except HTTPError as error:
+            last_error = error
+            logger.warning("Groq HTTP error (%s) with model %s: %s", error.code, model, error)
+            continue
+        except (URLError, TimeoutError) as error:
+            last_error = error
+            logger.warning("Groq connection/timeout error with model %s: %s", model, error)
+            continue
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            last_error = error
+            logger.warning("Groq response JSON decoding error with model %s: %s", model, error)
+            continue
+
+    if isinstance(last_error, HTTPError):
+        if last_error.code == 401:
+            raise LearningPathAIError("Clé d'API Groq invalide ou expirée.") from last_error
+        if last_error.code == 429:
             raise LearningPathAIError(
-                f"Ollama ne trouve pas le modèle « {settings.OLLAMA_MODEL} ». "
-                f"Téléchargez-le avec `ollama pull {settings.OLLAMA_MODEL}`."
-            ) from error
+                "Le quota de requêtes Groq a été dépassé. Veuillez patienter un instant."
+            ) from last_error
         raise LearningPathAIError(
-            f"Ollama a refusé la génération (HTTP {error.code})."
-        ) from error
-    except (URLError, TimeoutError) as error:
+            f"L'assistant IA a refusé la requête (HTTP {last_error.code})."
+        ) from last_error
+    if isinstance(last_error, (URLError, TimeoutError)):
         raise LearningPathAIError(
-            "Ollama est inaccessible. Vérifiez qu'il est démarré et que "
-            "OLLAMA_BASE_URL est correct."
-        ) from error
-    except (json.JSONDecodeError, UnicodeDecodeError) as error:
-        raise LearningPathAIError("Ollama a renvoyé une réponse JSON invalide.") from error
+            "L'assistant IA est inaccessible. Vérifiez votre connexion internet et votre clé d'API Groq."
+        ) from last_error
+    if isinstance(last_error, (json.JSONDecodeError, UnicodeDecodeError)):
+        raise LearningPathAIError("L'assistant IA a renvoyé une réponse JSON invalide.") from last_error
+
+    raise LearningPathAIError("L'assistant IA est temporairement indisponible.")
+
+
+_request_ollama_json = _request_groq_json
 
 
 def generate_learning_path_proposal(
@@ -81,7 +151,7 @@ def generate_learning_path_proposal(
         f"theme autorisé: {theme_values}. level autorisé: {level_values}. "
         f"Cours: {json.dumps(courses, ensure_ascii=False, separators=(',', ':'))}"
     )
-    result = _request_ollama_json(
+    result = _request_groq_json(
         messages=[
             {
                 "role": "system",
@@ -96,7 +166,7 @@ def generate_learning_path_proposal(
         proposal = json.loads(result["message"]["content"])
     except (KeyError, TypeError, json.JSONDecodeError) as error:
         raise LearningPathAIError(
-            "La réponse d'Ollama ne contient pas de proposition exploitable."
+            "La réponse de l'assistant IA ne contient pas de proposition exploitable."
         ) from error
 
     if not isinstance(proposal, dict):
@@ -163,7 +233,7 @@ def generate_learning_path_statistics_insights(*, statistics: dict) -> dict:
         "et recommendations (2 ou 3 actions, chacune de 240 caractères maximum). "
         f"Statistiques: {json.dumps(aggregate_data, ensure_ascii=False, separators=(',', ':'))}"
     )
-    result = _request_ollama_json(
+    result = _request_groq_json(
         messages=[
             {
                 "role": "system",
@@ -192,7 +262,7 @@ def generate_learning_path_statistics_insights(*, statistics: dict) -> dict:
         insights = json.loads(result["message"]["content"])
     except (KeyError, TypeError, json.JSONDecodeError) as error:
         raise LearningPathAIError(
-            "La réponse d'Ollama ne contient pas d'analyse exploitable."
+            "La réponse de l'assistant IA ne contient pas d'analyse exploitable."
         ) from error
 
     summary = insights.get("summary") if isinstance(insights, dict) else None
@@ -247,7 +317,7 @@ def answer_learning_path_question(*, question: str, learning_path: dict) -> dict
         f"Ressources: {json.dumps(courses, ensure_ascii=False, separators=(',', ':'))}. "
         f"Question: {question}"
     )
-    result = _request_ollama_json(
+    result = _request_groq_json(
         messages=[
             {
                 "role": "system",

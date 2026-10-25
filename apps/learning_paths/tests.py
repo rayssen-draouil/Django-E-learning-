@@ -85,11 +85,11 @@ class LearningPathProposalTests(SimpleTestCase):
         self.assertEqual(proposal["course_ids"], generated["course_ids"])
         self.assertEqual(proposal["status"], "draft")
         request = urlopen.call_args.args[0]
-        self.assertEqual(request.full_url, "http://localhost:11434/api/chat")
+        self.assertEqual(request.full_url, f"{settings.GROQ_BASE_URL.rstrip('/')}/chat/completions")
+        self.assertEqual(request.headers.get("Authorization"), f"Bearer {settings.GROQ_API_KEY}")
         payload = json.loads(request.data)
-        self.assertEqual(payload["keep_alive"], "10m")
-        self.assertEqual(payload["options"]["num_predict"], 96)
-        self.assertEqual(payload["options"]["num_ctx"], 1024)
+        self.assertEqual(payload["model"], settings.GROQ_MODEL)
+        self.assertEqual(payload["response_format"]["type"], "json_object")
 
     @patch("apps.learning_paths.ai.urlopen")
     def test_generator_rejects_courses_outside_the_catalog(self, urlopen):
@@ -143,12 +143,9 @@ class LearningPathProposalTests(SimpleTestCase):
 
         self.assertEqual(insights, generated)
         request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, f"{settings.GROQ_BASE_URL.rstrip('/')}/chat/completions")
         payload = json.loads(request.data)
-        self.assertEqual(payload["format"]["type"], "object")
-        self.assertEqual(
-            payload["format"]["properties"]["recommendations"]["items"]["type"],
-            "string",
-        )
+        self.assertEqual(payload["response_format"]["type"], "json_object")
         prompt = payload["messages"][1]["content"]
         self.assertIn('"total_enrollments":8', prompt)
         self.assertNotIn("email", prompt)
