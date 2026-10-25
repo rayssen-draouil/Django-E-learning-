@@ -1,0 +1,207 @@
+{% load static support_tags %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% if is_admin %}Support queue{% else %}My requests{% endif %} | SkillForge</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
+    <link rel="stylesheet" href="{% static 'support/css/support_front.css' %}?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div x-data="{ open: false }" class="home-navbar w-full text-gray-700 bg-cream">
+        <div class="flex flex-col max-w-screen-xl px-8 mx-auto md:items-center md:justify-between md:flex-row">
+            <div class="flex flex-row items-center justify-between py-6">
+                <div class="relative md:mt-8">
+                    <a href="{% url 'home' %}" class="home-brand text-lg relative z-50 font-bold tracking-widest text-gray-900 rounded-lg focus:outline-none focus:shadow-outline">SkillForge</a>
+                    <svg class="h-11 z-40 absolute -top-2 -left-3" viewBox="0 0 79 79" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M35.2574 2.24264C37.6005 -0.100501 41.3995 -0.100505 43.7426 2.24264L76.7574 35.2574C79.1005 37.6005 79.1005 43.7426L43.7426 76.7574C41.3995 79.1005 37.6005 79.1005 35.2574 76.7574L2.24264 43.7426C-0.100501 41.3995 -0.100505 37.6005 2.24264 35.2574L35.2574 2.24264Z" fill="#65DAFF"/>
+                    </svg>
+                </div>
+                <button class="rounded-lg md:hidden focus:outline-none focus:shadow-outline" @click="open = !open" aria-label="Open menu">
+                    <svg fill="currentColor" viewBox="0 0 20 20" class="w-6 h-6" aria-hidden="true">
+                        <path x-show="!open" fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM9 15a1 1 0 011 1h6a1 1 0 110 2h-6a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                        <path x-show="open" fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293 4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 11-1.414-1.414L10 11.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <nav :class="{ 'transform md:transform-none': !open, 'h-full': open }" class="h-0 md:h-auto flex flex-col flex-grow md:items-center pb-4 md:pb-0 md:flex md:justify-end md:flex-row origin-top duration-300 scale-y-0">
+                <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'home' %}">Home</a>
+                <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'users:courses' %}">Courses</a>
+                <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'users:mentors' %}">Mentors</a>
+                <a class="px-4 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'users:quiz' %}">Quiz</a>
+                {% if request.session.user_id %}
+                    <a class="px-4 py-2 mt-2 text-sm text-darken font-semibold bg-transparent rounded-lg md:mt-8 md:ml-4 hover:text-gray-900 focus:outline-none focus:shadow-outline" href="{% url 'support:list' %}">Support</a>
+                    <a class="px-8 py-3 mt-2 text-sm text-center bg-white text-gray-800 rounded-full md:mt-8 md:ml-4" href="{% url 'users:backoffice' %}">Dashboard</a>
+                    <form method="post" action="{% url 'users:logout' %}" class="home-logout-form">
+                        {% csrf_token %}
+                        <button class="px-8 py-3 mt-2 text-sm text-center bg-yellow-500 text-white rounded-full md:mt-8 md:ml-4" type="submit">Logout</button>
+                    </form>
+                {% else %}
+                    <a class="px-10 py-3 mt-2 text-sm text-center bg-white text-gray-800 rounded-full md:mt-8 md:ml-4" href="{% url 'users:login' %}">Login</a>
+                    <a class="px-10 py-3 mt-2 text-sm text-center bg-yellow-500 text-white rounded-full md:mt-8 md:ml-4" href="{% url 'users:register' %}">Sign Up</a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+
+    <main class="max-w-screen-xl mx-auto px-8 py-16">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Help Center</p>
+            <h1 class="text-4xl sm:text-5xl font-bold text-darken mt-3">My requests</h1>
+            <p class="text-gray-500 text-lg mt-5">Track your support requests, check their progress, and follow your conversations with the team.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
+            <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="sx-badge">{{ unread_count }}</span>{% endif %}</a>
+            <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ New request</a>
+        </div>
+
+        <section id="nouvelle-demande" class="bg-white rounded-2xl shadow-lg border-t-4 border-yellow-500 p-7 md:p-10 mb-12 max-w-3xl mx-auto">
+            <div class="text-center mb-8">
+                <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Support form</p>
+                <h2 class="text-2xl sm:text-3xl font-bold text-darken mt-2">Submit a new request</h2>
+                <p class="text-gray-500 mt-3">Describe the issue as clearly as possible. A screenshot and the page name can help us resolve it faster.</p>
+            </div>
+            <form method="post" class="support-filters max-w-xl mx-auto" novalidate>
+                {% csrf_token %}
+                {% for field in creation_form %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-600 mb-1.5" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small class="block mt-1 text-xs text-gray-400">{{ field.help_text }}</small>{% endif %}
+                        {% for error in field.errors %}<small class="block mt-1 text-xs font-semibold text-red-600">{{ error }}</small>{% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="text-center mb-4">
+                    <button type="button" id="ai-btn-new" class="px-6 py-2.5 text-sm text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyze my issue with AI</button>
+                    <p class="mt-2 text-xs text-gray-400">AI will classify your issue, suggest a priority, and show knowledge base solutions. You stay in control of the form.</p>
+                </div>
+                <div id="ai-new-out" class="hidden rounded-2xl border-t-4 border-blue-400 bg-blue-50 p-5 mb-5 text-left">
+                    <div class="flex flex-wrap items-center gap-2 mb-3" id="ai-new-chips"></div>
+                    <p class="text-sm text-gray-600 mb-3" id="ai-new-why"></p>
+                    <div class="space-y-3" id="ai-new-list"></div>
+                </div>
+                <div class="text-center mt-6">
+                    <button class="px-10 py-3 text-sm text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-400 focus:outline-none focus:shadow-outline" type="submit">Submit request →</button>
+                </div>
+            </form>
+        </section>
+
+        {% for message in messages %}
+            <div class="sx-alert {% if message.tags == 'error' %}sx-alert--warn{% endif %} mb-6">{{ message }}</div>
+        {% endfor %}
+
+        {% if unread_count %}
+            <div class="sx-alert mb-6">
+                <span>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.</span>
+                <a href="{% url 'support:notifications' %}">View notifications →</a>
+            </div>
+        {% endif %}
+
+        <div class="grid gap-6 md:grid-cols-3">
+            {% for ticket in tickets %}
+                <a class="sx-card bg-white rounded-2xl shadow-lg border-t-4 border-yellow-500 p-7 flex flex-col focus:outline-none" href="{% url 'support:detail' ticket_id=ticket.id %}">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl mb-5 flex-shrink-0">{{ forloop.counter }}</div>
+                        <span class="sx-chip sx-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-darken">{{ ticket.title }}</h2>
+                    <p class="text-gray-500 mt-3 leading-relaxed">{{ ticket.description|truncatechars:120 }}</p>
+                    <div class="mt-6 flex flex-wrap items-center gap-2">
+                        <span class="sx-meta">{{ categories|get_item:ticket.category }}</span>
+                        <span class="sx-priority sx-priority--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
+                    </div>
+                    <div class="mt-4 text-gray-400 text-xs">{{ ticket.updated_at|date:"M j, Y, H:i" }} · #{{ ticket.id }}</div>
+                    <span class="mt-3 text-darken font-semibold hover:text-yellow-500">Open ticket →</span>
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if queue.pages > 1 %}
+        <nav class="sx-pager">
+            {% if queue.page > 1 %}<a href="?{{ request.GET.urlencode }}&page={{ queue.page|add:"-1" }}">‹ Previous</a>{% else %}<span class="is-disabled">‹ Previous</span>{% endif %}
+            <span>Page {{ queue.page }} of {{ queue.pages }}</span>
+            {% if queue.page < queue.pages %}<a href="?{{ request.GET.urlencode }}&page={{ queue.page|add:"1" }}">Next ›</a>{% else %}<span class="is-disabled">Next ›</span>{% endif %}
+        </nav>
+        {% endif %}
+    </main>
+    {{ categories|json_script:"labels-categories" }}
+    {{ priorities|json_script:"labels-priorities" }}
+    <script>
+    (function () {
+        var bouton = document.getElementById("ai-btn-new");
+        if (!bouton) return;
+        var cookie = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        var jeton = cookie ? decodeURIComponent(cookie[1]) : "";
+        var etiquettesCategorie = JSON.parse(document.getElementById("labels-categories").textContent),
+            etiquettesPriorite = JSON.parse(document.getElementById("labels-priorities").textContent);
+        var texteBouton = bouton.textContent;
+
+        bouton.addEventListener("click", function () {
+            var titre = (document.getElementById("id_title") || {}).value || "",
+                description = (document.getElementById("id_description") || {}).value || "";
+            if (!titre && !description) {
+                alert("Describe your issue in the title or description, then run the AI analysis.");
+                return;
+            }
+            bouton.disabled = true;
+            bouton.textContent = "Analyzing…";
+            fetch(bouton.dataset.url, {
+                method: "POST",
+                headers: { "X-CSRFToken": jeton, "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({ title: titre, description: description })
+            }).then(function (reponse) { return reponse.json(); }).then(function (data) {
+                var sortie = document.getElementById("ai-new-out"),
+                    chips = document.getElementById("ai-new-chips"),
+                    pourquoi = document.getElementById("ai-new-why"),
+                    liste = document.getElementById("ai-new-list");
+                chips.innerHTML = "";
+                liste.innerHTML = "";
+                if (!data.ok) {
+                    pourquoi.textContent = data.error || "The AI assistant could not analyze your description. You can still submit the form as usual.";
+                    sortie.hidden = false; sortie.classList.remove("hidden");
+                } else {
+                    var classe = data.classification || {};
+                    var categorie = document.getElementById("id_category"),
+                        priorite = document.getElementById("id_priority");
+                    if (categorie) categorie.value = classe.category;
+                    if (priorite) priorite.value = classe.priority;
+                    [["Category", etiquettesCategorie[classe.category] || ""],
+                     ["Priority", etiquettesPriorite[classe.priority] || ""]].forEach(function (paire) {
+                        var badge = document.createElement("span");
+                        badge.className = "px-4 py-1.5 text-xs font-semibold rounded-full bg-white text-gray-700 shadow";
+                        badge.textContent = paire[0] + " : " + paire[1];
+                        chips.appendChild(badge);
+                    });
+                    var source = document.createElement("span");
+                    source.className = "px-4 py-1.5 text-xs font-semibold rounded-full " +
+                        (data.source === "groq" ? "bg-blue-600 text-white" : "bg-gray-500 text-white");
+                    source.textContent = data.source === "groq" ? "Groq AI" : "local assistant";
+                    chips.appendChild(source);
+                    pourquoi.textContent = classe.explanation || "";
+                    (data.solutions || []).forEach(function (solution) {
+                        var bloc = document.createElement("div");
+                        var t = document.createElement("strong"); t.className = "block text-darken text-sm"; t.textContent = solution.question;
+                        var p = document.createElement("p"); p.className = "text-gray-600 text-sm mt-1"; p.textContent = solution.answer;
+                        bloc.appendChild(t); bloc.appendChild(p);
+                        liste.appendChild(bloc);
+                    });
+                    sortie.hidden = false; sortie.classList.remove("hidden");
+                }
+            }).catch(function () {
+                alert("The AI assistant could not be reached. You can still submit your request as usual.");
+            }).then(function () {
+                bouton.disabled = false;
+                bouton.textContent = texteBouton;
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

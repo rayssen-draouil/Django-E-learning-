@@ -1,0 +1,178 @@
+﻿{% load static support_tags %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ ticket.title }} | Support</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" role_label="SUPPORT TEAM" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">SUPPORT · TICKET # {{ ticket.id }}</p>
+                <h1>{{ ticket.title }}</h1>
+                <p class="header-subtitle">Opened on {{ ticket.created_at|date:"M j, Y, H:i" }} · {{ categories|get_item:ticket.category }} · {{ ticket.student_name }} · {{ ticket.student_email }}</p>
+            </div>
+            <div class="header-actions">
+                <span class="support-chip support-chip--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
+                <span class="support-chip support-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span>
+                <a href="{% url 'support:list' %}" class="outline-button">← Support queue</a>
+            </div>
+        </header>
+
+        <section class="panel-duo" aria-label="Ticket details">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Request description</h2><p>{{ categories|get_item:ticket.category }}</p></div>
+                </div>
+                <p class="support-prose">{{ ticket.description }}</p>
+
+                <div class="panel-heading support-thread-title">
+                    <div><h2>Conversation</h2><p>{{ ticket_messages|length }} message{{ ticket_messages|length|pluralize }}</p></div>
+                </div>
+                <div class="support-thread">
+                    {% for item in ticket_messages %}
+                    <article class="support-msg {% if item.sender_role == 'admin' %}support-msg--staff{% endif %}">
+                        <div class="support-msg-head"><strong>{{ item.sender_name }}</strong>{% if item.sender_role == 'admin' %}<span class="support-msg-badge">Support</span>{% endif %}<time>{{ item.created_at|date:"M j, Y, H:i" }}</time></div>
+                        <p class="support-msg-body">{{ item.body }}</p>
+                        {% if item.attachment %}<a class="outline-button" href="{% url 'support:attachment' ticket_id=ticket.id message_id=item.id %}">📎 {{ item.attachment.name }}</a>{% endif %}
+                    </article>
+                    {% empty %}<p>No conversation yet. Take ownership of this request below.</p>{% endfor %}
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="support-fields support-reply" novalidate>
+                    {% csrf_token %}<input type="hidden" name="action" value="reply">
+                    {% for field in reply_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                    <div class="support-form-actions"><button class="primary-button" type="submit">Send reply</button></div>
+                </form>
+            </article>
+
+            <div class="support-rail">
+                <article class="panel">
+                    <form method="post" class="support-fields" novalidate>
+                        {% csrf_token %}<input type="hidden" name="action" value="admin_update">
+                        <div class="panel-heading"><div><h2>Ticket management</h2><p>Status, priority and assignment.</p></div></div>
+                        {% for field in admin_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                        <div class="support-form-actions"><button class="primary-button" type="submit">Save</button></div>
+                    </form>
+                </article>
+
+                <article class="panel" id="ai-panel" data-ticket="{{ ticket.id }}">
+                    <div class="panel-heading"><div><h2>AI assistance</h2><p>Groq analysis &middot; human validation mandatory.</p></div><span class="trend" id="ai-source">local assistant</span></div>
+
+                    <div class="panel-heading support-thread-title"><div><h2>Automatic summary</h2><p>Main issue and actions already taken.</p></div></div>
+                    <p class="support-prose" id="ai-summary-text">{{ smart.summary }}</p>
+                    <ul class="support-timeline" id="ai-actions" hidden></ul>
+                    <div class="support-form-actions">
+                        <button class="primary-button" type="button" id="ai-btn-summary" data-url="{% url 'support:ai_summary' ticket_id=ticket.id %}">&#129302; Summarize with AI</button>
+                    </div>
+
+                    <div class="panel-heading support-thread-title"><div><h2>Suggested reply</h2><p>Generated by AI, review before sending.</p></div></div>
+                    <blockquote class="support-quote" id="ai-draft-text">{{ smart.reply }}</blockquote>
+                    <div class="support-form-actions">
+                        <button class="outline-button" type="button" id="ai-btn-draft" data-url="{% url 'support:ai_draft' ticket_id=ticket.id %}">&#9997; Generate a reply (AI)</button>
+                        <button class="outline-button" type="button" id="ai-btn-use">Use in reply form</button>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-heading"><div><h2>Internal notes</h2><p>Visible only to the support team.</p></div><span class="trend">{{ internal_notes|length }}</span></div>
+                    <div class="support-thread">
+                        {% for note in internal_notes %}
+                        <article class="support-msg">
+                            <div class="support-msg-head"><strong>{{ note.author_name }}</strong><time>{{ note.created_at|date:"M j, Y, H:i" }}</time></div>
+                            <p class="support-msg-body">{{ note.body }}</p>
+                            {% if note.can_delete %}<form method="post" action="{% url 'support:note_delete' ticket_id=ticket.id note_id=note.id %}">{% csrf_token %}<button class="support-danger-link" type="submit">Delete note</button></form>{% endif %}
+                        </article>
+                        {% empty %}<p>No internal notes for this ticket.</p>{% endfor %}
+                    </div>
+                    <form method="post" class="support-fields support-reply" novalidate>
+                        {% csrf_token %}<input type="hidden" name="action" value="note">
+                        {% for field in note_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+                        <div class="support-form-actions"><button class="outline-button" type="submit">＋ Add note</button></div>
+                    </form>
+                </article>
+
+                {% if ticket.history %}
+                <article class="panel">
+                    <div class="panel-heading"><div><h2>Status history</h2><p>Request activity.</p></div></div>
+                    <ul class="support-timeline">
+                        {% for event in ticket.history reversed %}<li>
+                            <span class="support-chip support-chip--{{ event.status }}">{{ statuses|get_item:event.status }}</span>
+                            <div class="support-timeline-text"><strong>{{ event.note }}</strong>{% if event.previous_status %} · · from {{ statuses|get_item:event.previous_status }}{% endif %} · {{ event.by }}<time>{{ event.at|date:"M j, Y, H:i" }}</time></div>
+                        </li>{% endfor %}
+                    </ul>
+                </article>{% endif %}
+
+                {% if can_edit %}
+                <details class="panel">
+                    <summary class="panel h2-support">Edit request</summary>
+                    <form method="post" class="support-fields support-reply" novalidate>
+                        {% csrf_token %}<input type="hidden" name="action" value="edit">
+                        {% for field in edit_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>{% endfor %}
+                        <div class="support-form-actions"><button class="primary-button" type="submit">Save</button></div>
+                    </form>
+                </details>{% endif %}
+
+                {% if can_delete %}
+                <form method="post" action="{% url 'support:delete' ticket_id=ticket.id %}">{% csrf_token %}<button class="support-danger-link" type="submit">Delete ticket</button></form>{% endif %}
+            </div>
+        </section>
+    </main>
+    <script>
+    (function () {
+        var panel = document.getElementById("ai-panel");
+        if (!panel) return;
+        var cookie = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        var token = cookie ? decodeURIComponent(cookie[1]) : "";
+        var zoneSource = document.getElementById("ai-source"),
+            zoneSummary = document.getElementById("ai-summary-text"),
+            zoneActions = document.getElementById("ai-actions"),
+            zoneDraft = document.getElementById("ai-draft-text");
+
+        function globalValue(name) { return document.getElementById("ai-btn-" + name).dataset.url; }
+
+        function call(name, render) {
+            var button = document.getElementById("ai-btn-" + name);
+            button.disabled = true;
+            fetch(button.dataset.url, {
+                method: "POST",
+                headers: { "X-CSRFToken": token, "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: "{}"
+            }).then(function (response) { return response.json(); }).then(function (data) {
+                if (!data.ok) {
+                    zoneSource.textContent = data.error || "AI unavailable";
+                } else {
+                    zoneSource.textContent = data.source === "groq" ? ("AI · " + data.model) : "local assistant";
+                    render(data);
+                }
+            }).catch(function () {
+                zoneSource.textContent = "AI unreachable";
+            }).then(function () { button.disabled = false; });
+        }
+
+        document.getElementById("ai-btn-summary").addEventListener("click", function () {
+            call("summary", function (data) {
+                zoneSummary.textContent = data.summary || "";
+                zoneActions.innerHTML = "";
+                if (data.problem) {
+                    var line = document.createElement("li");
+                    line.innerHTML = "<strong>Main problem:</strong> " ;
+                    var body = document.createElement("span"); body.textContent = data.problem;
+                    line.appendChild(body); zoneActions.appendChild(line);
+                }
+                (data.actions_done || []).forEach(function (action) {
+                    var item = document.createElement("li"); item.textContent = action; zoneActions.appendChild(item);
+                });
+                zoneActions.hidden = !((data.problem) || (data.actions_done || []).length);
+            });
+        });
+
+        document.getElementById("ai-btn-draft").addEventListener("click", function () {
+            call("draft", function (data) {
+                zoneDraft.textContent = data.reply || "";
+            });
+        });
+
+        document.getElementById("ai-btn-use").addEventListener("click", function () {
+            var body = document.getElementById("id_body");
+            if (body) { body.value = zoneDraft.textContent; body.focus(); }
+        });
+    })();
+    </script>
+</div></body></html>

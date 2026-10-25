@@ -21,4 +21,5 @@ from .views import home
 urlpatterns = [
     path('', home, name='home'),
     path('users/', include('apps.users.urls')),
+    path('support/', include('apps.support.urls')),
 ]

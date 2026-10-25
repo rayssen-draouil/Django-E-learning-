@@ -100,3 +100,8 @@ Pour les contrôles de déploiement, configurer les variables de production puis
 ## Crédits des thèmes
 
 La landing page utilise le thème Skilline de [ThemeWagon](https://themewagon.com/themes/skilline/), conçu par [Irvan Moses et mhaecal](https://github.com/mhaecal/) sous licence MIT. Les sources et attributions du thème de back-office sont conservées dans `backoffice/`.
+
+## Génération de quiz avec Gemini
+
+Définir GEMINI_API_KEY dans le fichier `.env` ou dans l'environnement du processus à partir d'une clé Google AI Studio. Le SDK Python google-genai est installé par requirements.txt. GEMINI_MODEL sélectionne le modèle compatible avec la sortie JSON structurée (valeur par défaut : gemini-3.8-flash) ; GEMINI_TIMEOUT_SECONDS règle le délai d'attente. La limite est de cinq générations par utilisateur et par heure par défaut (QUIZ_AI_GENERATION_LIMIT et QUIZ_AI_GENERATION_WINDOW_SECONDS). La clé reste côté serveur. La prévisualisation n'écrit rien dans MongoDB avant confirmation.
+

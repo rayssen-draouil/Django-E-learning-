@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}SkillForge{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'users/css/users.css' %}?v=6">
+    {% block extra_head %}{% endblock %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -141,6 +142,7 @@
         .nav-user-chip:hover {
             border-color: #f48c06;
             transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
         }
         .nav-role-badge {
             font-size: 0.68rem;
@@ -148,38 +150,55 @@
             padding: 0.15rem 0.5rem;
             border-radius: 9999px;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
         }
-        .nav-role-badge.student { background: #e0f2fe; color: #0369a1; }
-        .nav-role-badge.mentor { background: #f3e8ff; color: #7e22ce; }
-        .nav-role-badge.instructor { background: #dcfce7; color: #15803d; }
-        .nav-role-badge.admin { background: #fee2e2; color: #b91c1c; }
-        
+        .nav-role-badge.mentor {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+        .nav-role-badge.student {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .nav-role-badge.instructor {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .nav-role-badge.admin {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
         .site-nav-logout-btn {
             background: #f48c06 !important;
             color: #ffffff !important;
             font-size: 0.88rem !important;
             font-weight: 600 !important;
-            padding: 0.55rem 1.4rem !important;
+            padding: 0.55rem 1.35rem !important;
             border-radius: 9999px !important;
             border: none !important;
-            cursor: pointer !important;
-            box-shadow: 0 2px 6px rgba(244, 140, 6, 0.3);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(244, 140, 6, 0.35);
             transition: all 0.2s ease;
-            text-decoration: none;
         }
         .site-nav-logout-btn:hover {
             background: #d97706 !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+            box-shadow: 0 4px 12px rgba(244, 140, 6, 0.45);
+        }
+        @media (max-width: 900px) {
+            .site-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            .site-nav-links {
+                justify-content: center;
+                width: 100%;
+            }
         }
     </style>
-    {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="site-body">
 <nav class="site-nav">
     <a class="site-brand" href="{% url 'home' %}">
         <span class="site-brand-mark" aria-hidden="true"></span>
@@ -190,8 +209,8 @@
         <a class="nav-link-item" href="{% url 'users:courses' %}">Cours</a>
         <a class="nav-link-item" href="{% url 'users:mentors' %}">Mentors</a>
         <a class="nav-link-item" href="{% url 'users:quiz' %}">Quiz</a>
-
         {% if request.session.user_id %}
+            <a class="nav-link-item" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="nav-notif-badge" style="position:static; margin-left:0.35rem; display:inline-block; vertical-align:middle;">{{ support_unread_notifications }}</span>{% endif %}</a>
             <!-- Role-specific Navigation for Mentors -->
             {% if is_mentor or current_user.role == "mentor" %}
                 <a class="nav-link-item" href="{% url 'users:mentor_sessions_list' %}">Sessions</a>
@@ -231,18 +250,31 @@
             </form>
         {% else %}
             <a class="site-nav-login" href="{% url 'users:login' %}">Login</a>
-            <a class="site-nav-signup" href="{% url 'users:register' %}">Sign Up</a>
+            <a class="site-nav-register" href="{% url 'users:register' %}">Sign Up</a>
         {% endif %}
     </div>
 </nav>
 
 <main class="container {% block main_class %}{% endblock %}">
     {% for message in messages %}
-        <div class="message {{ message.tags }}" style="margin: 1rem 0; padding: 0.85rem 1.15rem; border-radius: 0.5rem; background: {% if 'error' in message.tags %}#fee2e2; color: #991b1b; border-left: 4px solid #ef4444;{% elif 'success' in message.tags %}#dcfce7; color: #166534; border-left: 4px solid #10b981;{% else %}#eff6ff; color: #1e40af; border-left: 4px solid #3b82f6;{% endif %}">
+        <div class="message {{ message.tags }}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}" aria-live="polite">
             {{ message }}
         </div>
     {% endfor %}
     {% block content %}{% endblock %}
 </main>
+<footer class="mt-32" style="background-color: rgba(37, 38, 65, 1); margin-top: 5rem;">
+    <div style="max-width: 32rem; margin: 0 auto;">
+        <div style="display: flex; padding: 3rem 0; justify-content: center; color: white; align-items: center;">
+            <div style="position: relative;">
+                <h1 style="font-weight: 700; font-size: 1.25rem; padding-right: 1.25rem; position: relative; z-index: 50; margin: 0; color: #fff;">SkillForge</h1>
+            </div>
+            <span style="border-left: 1px solid #6b7280; font-size: 0.875rem; padding-left: 1.25rem; padding-top: 0.5rem; padding-bottom: 0.5rem; font-weight: 600; color: #9ca3af;">Plateforme d'apprentissage</span>
+        </div>
+    </div>
+    <div style="text-align: center; color: white; padding-bottom: 2rem;">
+        <p style="margin: 0.75rem 0; color: #9ca3af; font-size: 0.875rem;">&copy; 2026 SkillForge &middot; E-learning &amp; Mentorship</p>
+    </div>
+</footer>
 </body>
 </html>
