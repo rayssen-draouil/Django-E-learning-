@@ -1,0 +1,91 @@
+{% extends "users/base.html" %}
+{% load static support_tags %}
+{% block title %}{% if is_admin %}Support queue{% else %}My requests{% endif %} | SkillForge{% endblock %}
+{% block body_class %}sf-support {% if is_admin %}sf-back{% else %}sf-front{% endif %}{% endblock %}
+{% block main_class %}sf-shell{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'support/css/support.css' %}?v=10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{% if is_admin %}<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% else %}<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">{% endif %}
+{% endblock %}
+{% block content %}
+<section class="sf-page">
+    <header class="sf-masthead sf-masthead--tickets sf-reveal">
+        <div>
+            <p class="sf-masthead__eyebrow">Help Center</p>
+            <h1 class="sf-masthead__title">{% if is_admin %}Support queue{% else %}My requests{% endif %}</h1>
+            <p class="sf-masthead__lead">{% if is_admin %}Review and assign requests, and move each one toward resolution.{% else %}Track your support requests, check their progress, and follow your conversations with the team.{% endif %}</p>
+        </div>
+        <div class="sf-masthead__actions">
+            {% if not is_admin %}<a class="sf-btn sf-btn--ghost" href="#nouvelle-demande">New request</a>{% endif %}
+            <a class="sf-btn sf-btn--ghost" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="site-nav-badge">{{ unread_count }}</span>{% endif %}</a>
+            {% if is_admin %}<a class="sf-btn sf-btn--ghost" href="{% url 'support:faq' %}">Knowledge Base</a><a class="sf-btn sf-btn--accent" href="{% url 'support:dashboard' %}">Dashboard</a>{% endif %}
+            {% if not is_admin %}<a class="sf-btn sf-btn--primary" href="{% url 'support:create' %}">＋ New request</a>{% endif %}
+        </div>
+    </header>
+
+    {% if unread_count %}<div class="sf-alert"><span>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.</span><a href="{% url 'support:notifications' %}">View notifications →</a></div>{% endif %}
+
+    {% if is_admin %}
+        <form class="sf-console" method="get">
+            {% for field in filter_form %}<div class="sf-field"><label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+            <div class="sf-console__actions"><button class="sf-btn sf-btn--accent" type="submit">Filter</button><a class="sf-btn sf-btn--ghost" href="{% url 'support:list' %}">Reset</a></div>
+        </form>
+        <p class="sf-result-line"><span><strong>{{ queue.total }}</strong> ticket{{ queue.total|pluralize }} in the queue</span><span>Sort by: {% if filters.sort == "priority" %}priority{% elif filters.sort == "oldest" %}oldest first{% else %}recent activity{% endif %}</span></p>
+
+        <div class="sf-table-wrap">
+            <table class="sf-table">
+                <thead><tr><th>Request</th><th>Student</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned to</th><th>Activity</th></tr></thead>
+                <tbody>
+                {% for ticket in tickets %}<tr>
+                    <td><a class="sf-table__title" href="{% url 'support:detail' ticket_id=ticket.id %}">{{ ticket.title }}</a><span class="sf-table__ref">#{{ ticket.id }}</span></td>
+                    <td><span class="sf-table__who">{{ ticket.student_name }}</span><span class="sf-table__ref">{{ ticket.student_email }}</span></td>
+                    <td>{{ categories|get_item:ticket.category }}</td>
+                    <td><span class="sf-chip sf-chip--{{ ticket.priority }}"><i class="sf-chip__dot"></i>{{ priorities|get_item:ticket.priority }}</span></td>
+                    <td><span class="sf-chip sf-chip--{{ ticket.status }}"><i class="sf-chip__dot"></i>{{ statuses|get_item:ticket.status }}</span></td>
+                    <td>{{ ticket.assignee_name|default:"—" }}</td>
+                    <td class="sf-table__when">{{ ticket.updated_at|date:"M j, Y, H:i" }}</td>
+                </tr>
+                {% empty %}<tr><td colspan="7" class="sf-empty">No tickets match these filters.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <form class="sf-filters" method="get">
+            <div class="sf-filters__search"><div class="sf-field"><label class="sf-field__label" for="{{ filter_form.q.id_for_label }}">Search</label>{{ filter_form.q }}</div></div>
+            <div class="sf-field"><label class="sf-field__label" for="{{ filter_form.status.id_for_label }}">Status</label>{{ filter_form.status }}</div>
+            <div class="sf-field"><label class="sf-field__label" for="{{ filter_form.category.id_for_label }}">Category</label>{{ filter_form.category }}</div>
+            <div class="sf-filters__actions"><button class="sf-btn sf-btn--primary" type="submit">Filter</button></div>
+        </form>
+
+        <p class="sf-result-line"><span><strong>{{ queue.total }}</strong> request{{ queue.total|pluralize }}</span></p>
+
+        <ul class="sf-tickets sf-reveal">
+            {% for ticket in tickets %}<li>
+                <a class="sf-ticket" data-status="{{ ticket.status }}" href="{% url 'support:detail' ticket_id=ticket.id %}">
+                    <div class="sf-ticket__top">
+                        <h2 class="sf-ticket__title">{{ ticket.title }}</h2>
+                        <span class="sf-chip sf-chip--{{ ticket.status }}"><i class="sf-chip__dot"></i>{{ statuses|get_item:ticket.status }}</span>
+                    </div>
+                    <p class="sf-ticket__desc">{{ ticket.description|truncatechars:150 }}</p>
+                    <div class="sf-ticket__foot">
+                        <span class="sf-ref">#{{ ticket.id }}</span>
+                        <span>{{ categories|get_item:ticket.category }}</span>
+                        <span>{{ priorities|get_item:ticket.priority }}</span>
+                        <span>{{ ticket.updated_at|date:"M j, Y, H:i" }}</span>
+                    </div>
+                </a>
+            </li>
+            {% empty %}<li><div class="sf-card sf-empty">You have not submitted any requests yet.<br><a href="{% url 'support:create' %}">Submit your first request →</a></div></li>{% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if queue.pages > 1 %}<nav class="sf-pager">
+        {% if queue.page > 1 %}<a href="?{{ request.GET.urlencode }}&page={{ queue.page|add:"-1" }}">‹ Previous</a>{% else %}<span class="is-disabled">‹ Previous</span>{% endif %}
+        <span>Page {{ queue.page }} of {{ queue.pages }}</span>
+        {% if queue.page < queue.pages %}<a href="?{{ request.GET.urlencode }}&page={{ queue.page|add:"1" }}">Next ›</a>{% else %}<span class="is-disabled">Next ›</span>{% endif %}
+    </nav>{% endif %}
+</section>
+{% endblock %}

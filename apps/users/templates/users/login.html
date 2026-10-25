@@ -16,6 +16,7 @@
         {% endfor %}
         <button class="auth-button" type="submit">Se connecter</button>
     </form>
+    <p class="auth-switch"><a href="{% url 'users:forgot_password' %}">Mot de passe oublié ?</a></p>
     <p class="auth-switch">Pas encore de compte ? <a href="{% url 'users:register' %}">Créer un compte</a></p>
 </section>
 {% endblock %}

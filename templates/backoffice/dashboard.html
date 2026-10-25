@@ -8,7 +8,7 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6">
     <link rel="stylesheet" href="{% static 'backoffice/mentor-availability.css' %}">
 </head>
 <body class="dashboard-body">
@@ -171,6 +171,43 @@
                             <a href="{% url 'users:courses' %}" class="continue-button">Continuer</a>
                         </div>
                     {% endfor %}
+                </div>
+            </section>
+
+            <!-- Support & Assistance Panel -->
+            <section class="panel courses-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Support &amp; assistance</h2>
+                        <p>Vos demandes d'aide, leur avancement et les réponses de l'équipe.</p>
+                    </div>
+                    <span class="trend">{{ support_stats.ticket_count }} demande{{ support_stats.ticket_count|pluralize }}</span>
+                </div>
+                <div class="course-list support-grid">
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>{% if user.role == 'admin' %}Console du support{% else %}Mon tableau de bord support{% endif %}</h3>
+                            <p>{% if user.role == 'admin' %}Traitez la file complète : {{ support_stats.open }} ouverte{{ support_stats.open|pluralize }} · {{ support_stats.in_progress }} en cours · {{ support_stats.resolved }} résolue{{ support_stats.resolved|pluralize }}{% else %}Ouvertes : {{ support_stats.open }} · En cours : {{ support_stats.in_progress }} · Résolues : {{ support_stats.resolved }}{% if support_stats.unread %} · {{ support_stats.unread }} notification{{ support_stats.unread|pluralize }} non lue{{ support_stats.unread|pluralize }}{% endif %}{% endif %}</p>
+                        </div>
+                        <a class="continue-button" href="{% if user.role == 'admin' %}{% url 'support:list' %}{% else %}{% url 'support:board' %}{% endif %}">{% if user.role == 'admin' %}Ouvrir la console{% else %}Consulter{% endif %}</a>
+                    </article>
+                    {% if user.role == 'admin' %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Solutions &amp; FAQ</h3>
+                            <p>Gérez la base de connaissances visible par les apprenants.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:faq' %}">Gérer</a>
+                    </article>
+                    {% else %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>Nouvelle demande d'aide</h3>
+                            <p>Un souci sur un cours, un quiz ou la plateforme ? Décrivez-le en deux minutes.</p>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:list' %}#nouvelle-demande">Ouvrir</a>
+                    </article>
+                    {% endif %}
                 </div>
             </section>
         </main>

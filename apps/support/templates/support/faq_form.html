@@ -1,0 +1,40 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% block title %}{{ heading }} | Support{% endblock %}
+{% block body_class %}sf-support sf-back{% endblock %}
+{% block main_class %}sf-shell{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'support/css/support.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<section class="sf-page sf-page--narrow">
+    <a class="sf-backlink" href="{% url 'support:faq' %}">← Back to the knowledge base</a>
+
+    <header class="sf-masthead sf-reveal">
+        <div>
+            <p class="sf-masthead__eyebrow">Support Admin</p>
+            <h1 class="sf-masthead__title">{{ heading }}</h1>
+            <p class="sf-masthead__lead">Clear questions and relevant keywords make solutions easier for students to find.</p>
+        </div>
+    </header>
+
+    <form method="post" class="sf-card sf-reveal">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="sf-field">
+                <label class="sf-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<small class="sf-field__hint">{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<small class="sf-field__error">{{ error }}</small>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="sf-actions">
+            <button class="sf-btn sf-btn--accent" type="submit">Save</button>
+            <a class="sf-btn sf-btn--ghost" href="{% url 'support:faq' %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

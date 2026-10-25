@@ -1,0 +1,51 @@
+{% load static support_tags %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Notifications | SkillForge</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" role_label=role_label %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">CENTRE D’ASSISTANCE</p>
+                <h1>Notifications <span aria-hidden="true">🔔</span></h1>
+                <p class="header-subtitle">Support replies, status changes, and tickets assigned to you.</p>
+            </div>
+            <div class="header-actions">
+                <form method="post">{% csrf_token %}<button class="outline-button" type="submit">Mark all as read</button></form>
+            </div>
+        </header>
+
+        {% if unread_count %}
+        <aside class="support-banner">
+            <span>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.</span>
+            <span>Unread items are marked below.</span>
+        </aside>
+        {% endif %}
+
+        <p class="support-result"><span><strong>{{ notifications|length }}</strong> notification{{ notifications|length|pluralize }}</span><span>{% if unread_count %}{{ unread_count }} unread{% else %}All caught up ✓{% endif %}</span></p>
+
+        <section class="panel" aria-label="Liste des notifications">
+            <div class="panel-heading">
+                <div><h2>Notification history</h2><p>Newest first.</p></div>
+            </div>
+            <div class="course-list">
+                {% for item in notifications %}
+                <article class="course-row">
+                    <div class="course-info">
+                        <h3><a class="support-ticket-link" href="{% url 'support:detail' ticket_id=item.ticket_id %}">{{ item.title }}</a></h3>
+                        <p class="course-meta" style="display:block;margin-top:0.35rem;">{{ item.body }}</p>
+                        <div class="course-meta">
+                            <span>{{ kinds|get_item:item.kind }}</span>
+                            <span>{{ item.created_at|date:"M j, Y, H:i" }}</span>
+                        </div>
+                        <div class="support-chips">
+                            {% if item.read_at %}<span class="support-chip support-chip--done">Read</span>
+                            {% else %}<span class="support-chip support-chip--waiting">Unread</span>{% endif %}
+                        </div>
+                    </div>
+                    <a class="continue-button" href="{% url 'support:detail' ticket_id=item.ticket_id %}">Open ticket</a>
+                </article>
+                {% empty %}
+                    <p>No notifications yet. Replies from the support team will appear here.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div></body></html>

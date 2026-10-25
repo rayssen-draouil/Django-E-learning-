@@ -1,0 +1,49 @@
+{% extends "users/base.html" %}
+{% load static support_tags %}
+{% block title %}Knowledge Base | SkillForge{% endblock %}
+{% block body_class %}sf-support sf-back{% endblock %}
+{% block main_class %}sf-shell{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'support/css/support.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<section class="sf-page">
+    <header class="sf-masthead sf-reveal">
+        <div>
+            <p class="sf-masthead__eyebrow">Support Admin</p>
+            <h1 class="sf-masthead__title">Knowledge Base</h1>
+            <p class="sf-masthead__lead">Published solutions appear in student search and power automatic ticket suggestions.</p>
+        </div>
+        <div class="sf-masthead__actions">
+            <a class="sf-btn sf-btn--ghost" href="{% url 'support:dashboard' %}">Dashboard</a>
+            <a class="sf-btn sf-btn--accent" href="{% url 'support:faq_create' %}">＋ New solution</a>
+        </div>
+    </header>
+
+    <p class="sf-result-line"><span><strong>{{ published_count }}</strong> published{{ published_count|pluralize }} out of {{ entries|length }}</span><span>categories: courses · quizzes · mentoring · account · other</span></p>
+
+    <div class="sf-table-wrap sf-reveal">
+        <table class="sf-table">
+            <thead><tr><th>Question</th><th>Category</th><th>Keywords</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for entry in entries %}<tr>
+                <td><span class="sf-table__title">{{ entry.question }}</span><span class="sf-table__ref">{{ entry.answer|truncatechars:96 }}</span></td>
+                <td>{{ categories|get_item:entry.category }}</td>
+                <td class="sf-table__when">{{ entry.keywords|join:", " }}</td>
+                <td>{% if entry.is_published %}<span class="sf-chip sf-chip--resolved"><i class="sf-chip__dot"></i>Published</span>{% else %}<span class="sf-chip sf-chip--neutral"><i class="sf-chip__dot"></i>Draft</span>{% endif %}</td>
+                <td>
+                    <div class="sf-console__actions">
+                        <a class="sf-btn sf-btn--ghost sf-btn--sm" href="{% url 'support:faq_edit' entry_id=entry.id %}">Edit</a>
+                        <form method="post" action="{% url 'support:faq_delete' entry_id=entry.id %}">{% csrf_token %}<button class="sf-btn sf-btn--danger sf-btn--sm" type="submit">Delete</button></form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}<tr><td colspan="5" class="sf-empty">No solutions have been added yet.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

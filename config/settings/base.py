@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'apps.courses.apps.CoursesConfig',
     'apps.mentors.apps.MentorsConfig',
     'apps.quizzes.apps.QuizzesConfig',
+    'apps.support.apps.SupportConfig',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.messages.context_processors.messages',
                 'apps.users.context_processors.auth_user_context',
+                'apps.support.context_processors.support_notifications',
             ],
         },
     },
@@ -144,6 +146,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -190,17 +194,22 @@ _sender_email = (
     os.environ.get("EMAIL_FROM")
     or os.environ.get("BREVO_SENDER_EMAIL")
     or os.environ.get("DEFAULT_FROM_EMAIL")
+    or os.environ.get("EMAIL_SENDER")
     or "miladiadem58@gmail.com"
 )
 DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else _sender_email
+EMAIL_SENDER = DEFAULT_FROM_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
-# Groq AI Configuration (Mentor Recommendations & Goal Understanding)
+# Groq AI Configuration (Mentor Recommendations, Study Assistant & Support AI)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_FALLBACK_MODEL = os.environ.get("GROQ_FALLBACK_MODEL", "openai/gpt-oss-20b")
 GROQ_BASE_URL = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 GROQ_TIMEOUT_SECONDS = float(os.environ.get("GROQ_TIMEOUT_SECONDS", "6.0"))
+GROQ_TIMEOUT = int(os.environ.get("GROQ_TIMEOUT", "25"))
+GROQ_MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "900"))
 
 # LiveKit Real-Time Classroom Configuration
 LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "").strip()

@@ -40,6 +40,14 @@
                 <span style="background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 9999px; margin-left: 0.4rem;">{{ unread_notifications_count }}</span>
             {% endif %}
         </a>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'users:admin_users' %}" class="{% if section == 'users' %}active{% endif %}">
+            <span class="nav-icon">👥</span> Utilisateurs
+        </a>
+        {% endif %}
+        <a href="{% if user.role == 'admin' %}{% url 'support:dashboard' %}{% else %}{% url 'support:board' %}{% endif %}" class="{% if section == 'support' %}active{% endif %}">
+            <span class="nav-icon">✉</span> Support
+        </a>
     </nav>
     <div class="sidebar-promo">
         <img src="{% static 'backoffice/images/rocket.png' %}" alt="">

@@ -1,0 +1,75 @@
+﻿{% load static support_tags %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Support queue | SkillForge</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" role_label="SUPPORT TEAM" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">SUPPORT ADMIN</p>
+                <h1>Support queue <span aria-hidden="true">✉</span></h1>
+                <p class="header-subtitle">Review and assign requests, and move each one toward resolution.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'support:notifications' %}" class="outline-button">Notifications{% if unread_count %} ({{ unread_count }}){% endif %}</a>
+                <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
+                <a href="{% url 'support:dashboard' %}" class="primary-button">Dashboard</a>
+            </div>
+        </header>
+
+        {% if unread_count %}
+        <aside class="support-banner">
+            <span>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.</span>
+            <a href="{% url 'support:notifications' %}">View notifications →</a>
+        </aside>
+        {% endif %}
+
+        <section class="panel" aria-label="Queue filters">
+            <form class="support-form" method="get">
+                <div class="support-form-grid">
+                    {% for field in filter_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+                </div>
+                <div class="support-form-actions">
+                    <button class="primary-button" type="submit">Filter</button>
+                    <a class="outline-button" href="{% url 'support:list' %}">Reset</a>
+                </div>
+            </form>
+        </section>
+
+        <p class="support-result"><span><strong>{{ queue.total }}</strong> ticket{{ queue.total|pluralize }} in the queue</span><span>Tri&nbsp;: {% if filters.sort == "priority" %}priority{% elif filters.sort == "oldest" %}oldest first{% else %}recent activity{% endif %}</span></p>
+
+        <section class="panel" aria-label="Requests">
+            <div class="panel-heading">
+                <div><h2>Requests</h2><p>Filtered list, most recent first by default.</p></div>
+            </div>
+            <div class="course-list">
+                {% for ticket in tickets %}
+                <article class="course-row">
+                    <div class="course-info">
+                        <h3><a class="support-ticket-link" href="{% url 'support:detail' ticket_id=ticket.id %}">{{ ticket.title }}</a></h3>
+                        <div class="support-ref">#{{ ticket.id }}</div>
+                        <div class="course-meta">
+                            <span>{{ ticket.student_name }} · {{ ticket.student_email }}</span>
+                            <span>{{ categories|get_item:ticket.category }}</span>
+                            <span>Assigned: {{ ticket.assignee_name|default:"—" }}</span>
+                            <span>{{ ticket.updated_at|date:"M j, Y, H:i" }}</span>
+                        </div>
+                        <div class="support-chips">
+                            <span class="support-chip support-chip--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
+                            <span class="support-chip support-chip--{{ ticket.status }}">{{ statuses|get_item:ticket.status }}</span>
+                        </div>
+                    </div>
+                    <a class="continue-button" href="{% url 'support:detail' ticket_id=ticket.id %}">Details</a>
+                </article>
+                {% empty %}
+                    <p>No tickets match these filters.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if queue.pages > 1 %}
+        <nav class="support-pager" aria-label="Pagination">
+            {% if queue.page > 1 %}<a class="outline-button" href="?{{ request.GET.urlencode }}&amp;page={{ queue.page|add:"-1" }}">‹ Previous</a>{% else %}<span class="outline-button is-disabled">‹ Previous</span>{% endif %}
+            <span>Page {{ queue.page }} of {{ queue.pages }}</span>
+            {% if queue.page < queue.pages %}<a class="outline-button" href="?{{ request.GET.urlencode }}&amp;page={{ queue.page|add:"1" }}">Next ›</a>{% else %}<span class="outline-button is-disabled">Next ›</span>{% endif %}
+        </nav>
+        {% endif %}
+    </main>
+</div></body></html>

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import hashlib
+import secrets
+from datetime import datetime, timedelta, timezone
 from hmac import compare_digest
 from typing import Any
 
@@ -32,6 +34,10 @@ class UserStorageError(UserServiceError):
     """Raised when MongoDB cannot complete an operation."""
 
 
+class PasswordChangeError(UserServiceError):
+    """Raised when the current password is not confirmed."""
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -41,6 +47,8 @@ def ensure_users_indexes(collection: Collection[dict[str, Any]] = USERS_COLLECTI
         repositories.create_email_index() if collection is USERS_COLLECTION else collection.create_index(
             "email", unique=True, name="users_email_unique"
         )
+        if collection is USERS_COLLECTION:
+            repositories.create_reset_index()
     except PyMongoError as error:
         raise UserStorageError("Impossible de préparer le stockage des utilisateurs.") from error
 
@@ -170,6 +178,158 @@ def get_active_user(
     return _public_user(document)
 
 
+PASSWORD_RESET_TTL = timedelta(minutes=30)
+
+
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_password_reset(
+    email: str,
+    collection: Collection[dict[str, Any]] = USERS_COLLECTION,
+) -> str | None:
+    """Crée un jeton de réinitialisation à usage unique si le compte existe."""
+    normalized_email = email.strip().lower()
+    try:
+        document = repositories.find_active_user(normalized_email) if collection is USERS_COLLECTION else collection.find_one(
+            {"email": normalized_email, "is_active": True}, {"_id": 1}
+        )
+    except PyMongoError as error:
+        raise UserStorageError("Le service utilisateurs est indisponible.") from error
+    if not document:
+        return None
+    token = secrets.token_urlsafe(32)
+    created_at = _now()
+    reset_document = {
+        "_id": ObjectId(),
+        "user_id": document["_id"],
+        "token_hash": _token_hash(token),
+        "created_at": created_at,
+        "expires_at": created_at + PASSWORD_RESET_TTL,
+        "used": False,
+    }
+    try:
+        repositories.invalidate_password_resets(document["_id"])
+        repositories.insert_password_reset(reset_document)
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de préparer la réinitialisation.") from error
+    return token
+
+
+def is_password_reset_valid(token: str) -> bool:
+    try:
+        return repositories.find_password_reset(_token_hash(token)) is not None
+    except PyMongoError as error:
+        raise UserStorageError("Le service utilisateurs est indisponible.") from error
+
+
+def consume_password_reset(
+    token: str,
+    password: str,
+    collection: Collection[dict[str, Any]] = USERS_COLLECTION,
+) -> bool:
+    """Valide le jeton, change le mot de passe et rend le jeton inutilisable."""
+    token_hash = _token_hash(token)
+    try:
+        consumed = repositories.consume_password_reset_token(token_hash)
+        if consumed is None:
+            return False
+        if collection is USERS_COLLECTION:
+            repositories.update_password(consumed["user_id"], make_password(password), _now())
+        else:
+            collection.update_one(
+                {"_id": consumed["user_id"], "is_active": True},
+                {"$set": {"password": make_password(password), "updated_at": _now()}},
+            )
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de changer le mot de passe.") from error
+    return True
+
+
+ADMIN_ROLE_LABELS = {
+    "admin": "Administrateur",
+    "instructor": "Instructeur",
+    "mentor": "Mentor",
+    "student": "Étudiant",
+}
+
+
+class AdminActionError(UserServiceError):
+    """Raised when an administrator tries to break the account rules."""
+
+
+def admin_list_users(*, search: str = "", role: str = "", active: str = "") -> list[dict[str, Any]]:
+    """Liste de gestion (sans mot de passe), la plus récente d'abord."""
+    try:
+        return repositories.list_users_for_admin(search=search, role=role, active=active)
+    except PyMongoError as error:
+        raise UserStorageError("Service utilisateurs indisponible.") from error
+
+
+def admin_change_role(user_id: str, role: str, acting_user: dict[str, Any]) -> None:
+    if role not in ALLOWED_ROLES:
+        raise AdminActionError("Rôle inconnu.")
+    if str(acting_user["_id"]) == str(user_id) and role != "admin":
+        raise AdminActionError("Vous ne pouvez pas retirer votre propre rôle administrateur.")
+    try:
+        matched = repositories.set_user_role(ObjectId(user_id), role, _now())
+    except (TypeError, ValueError):
+        raise UserNotFoundError from None
+    except PyMongoError as error:
+        raise UserStorageError("Changement de rôle impossible pour le moment.") from error
+    if not matched:
+        raise UserNotFoundError
+
+
+def admin_set_active(user_id: str, is_active: bool, acting_user: dict[str, Any]) -> None:
+    if str(acting_user["_id"]) == str(user_id) and not is_active:
+        raise AdminActionError("Vous ne pouvez pas désactiver votre propre compte.")
+    try:
+        matched = repositories.set_user_active(ObjectId(user_id), is_active, _now())
+    except (TypeError, ValueError):
+        raise UserNotFoundError from None
+    except PyMongoError as error:
+        raise UserStorageError("Changement de statut impossible pour le moment.") from error
+    if not matched:
+        raise UserNotFoundError
+
+
+def admin_create_account(
+    *,
+    first_name: str,
+    last_name: str,
+    email: str,
+    password: str,
+    role: str = "instructor",
+) -> dict[str, Any]:
+    """Création de compte depuis la console admin (rôle maîtrisé, e-mail unique)."""
+    if role not in ALLOWED_ROLES:
+        raise AdminActionError("Rôle inconnu.")
+    if len(password) < 8:
+        raise AdminActionError("Le mot de passe temporaire doit faire au moins 8 caractères.")
+    normalized_email = email.strip().lower()
+    timestamp = _now()
+    document = {
+        "_id": ObjectId(),
+        "first_name": first_name.strip(),
+        "last_name": last_name.strip(),
+        "email": normalized_email,
+        "password": make_password(password),
+        "role": role,
+        "is_active": True,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    try:
+        repositories.insert_user(document)
+    except DuplicateKeyError as error:
+        raise DuplicateEmailError from error
+    except PyMongoError as error:
+        raise UserStorageError("Impossible d'enregistrer le compte.") from error
+    return _public_user(document)
+
+
 def update_user_profile(
     user_id: str,
     *,
@@ -202,3 +362,109 @@ def update_user_profile(
     if not document:
         raise UserNotFoundError
     return _public_user(document)
+
+
+def change_email(
+    user_id: str,
+    *,
+    current_password: str,
+    new_email: str,
+    collection: Collection[dict[str, Any]] = USERS_COLLECTION,
+) -> dict[str, Any]:
+    """Change the login email after confirming the account password."""
+    normalized_email = new_email.strip().lower()
+    try:
+        oid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+    except (TypeError, ValueError):
+        raise UserNotFoundError from None
+
+    try:
+        if collection is USERS_COLLECTION:
+            user_doc = repositories.find_user(oid)
+            if user_doc and "password" in user_doc:
+                document = user_doc
+            elif user_doc is None:
+                document = None
+            else:
+                document = repositories.find_user_for_password_check(oid)
+        else:
+            document = collection.find_one({"_id": oid, "is_active": True})
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de modifier l'adresse e-mail.") from error
+    if not document:
+        raise UserNotFoundError
+    if not check_password(current_password, document.get("password", "")):
+        raise PasswordChangeError("Le mot de passe actuel est incorrect.")
+
+    try:
+        if collection is USERS_COLLECTION:
+            matched = repositories.update_email(ObjectId(user_id), normalized_email, _now())
+            updated = repositories.find_user(ObjectId(user_id)) if matched else None
+        else:
+            result = collection.update_one(
+                {"_id": ObjectId(user_id), "is_active": True},
+                {"$set": {"email": normalized_email, "updated_at": _now()}},
+            )
+            matched = result.matched_count == 1
+            updated = collection.find_one({"_id": ObjectId(user_id), "is_active": True}) if matched else None
+    except DuplicateKeyError as error:
+        raise DuplicateEmailError from error
+    except (TypeError, ValueError):
+        raise UserNotFoundError from None
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de modifier l'adresse e-mail.") from error
+    if not matched or not updated:
+        raise UserNotFoundError
+    return _public_user(updated)
+
+
+def change_password(
+    user_id: str,
+    *,
+    current_password: str,
+    new_password: str,
+    collection: Collection[dict[str, Any]] = USERS_COLLECTION,
+) -> None:
+    """Change le mot de passe d'un compte : l'actuel doit être confirmé."""
+    try:
+        oid = ObjectId(user_id) if not isinstance(user_id, ObjectId) else user_id
+    except (TypeError, ValueError):
+        raise UserNotFoundError from None
+
+    try:
+        if collection is USERS_COLLECTION:
+            user_doc = repositories.find_user(oid)
+            if user_doc and "password" in user_doc:
+                document = user_doc
+            elif user_doc is None:
+                document = None
+            else:
+                document = repositories.find_user_for_password_check(oid)
+        else:
+            document = collection.find_one({"_id": oid})
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de modifier le mot de passe.") from error
+
+    if not document:
+        raise UserNotFoundError
+    if not check_password(current_password, document.get("password", "")):
+        raise PasswordChangeError("Le mot de passe actuel est incorrect.")
+    try:
+        if collection is USERS_COLLECTION:
+            matched = repositories.update_password(
+                oid, make_password(new_password), _now()
+            )
+        else:
+            matched = collection.update_one(
+                {"_id": oid},
+                {"$set": {"password": make_password(new_password), "updated_at": _now()}},
+            ).matched_count == 1
+        if not matched:
+            raise UserNotFoundError
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de modifier le mot de passe.") from error
+    # On coupe d'éventuelles demandes de réinitialisation en attente.
+    try:
+        repositories.invalidate_password_resets(oid)
+    except PyMongoError as error:
+        raise UserStorageError("Impossible de couvrir les demandes de reset.") from error

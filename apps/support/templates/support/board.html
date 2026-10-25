@@ -1,0 +1,41 @@
+﻿{% load static %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Support | SkillForge</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=6"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">YOUR SKILLFORGE SPACE · SUPPORT</p>
+                <h1>Support</h1>
+                <p class="header-subtitle">Track your requests and read replies from the support team.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'support:notifications' %}" class="outline-button">Notifications{% if unread_count %} ({{ unread_count }}){% endif %}</a>
+                <a href="{% url 'support:list' %}#new-request" class="primary-button">＋ New request</a>
+            </div>
+        </header>
+
+        <section class="stats-grid" aria-label="Support statistics">
+            <article class="stat-card light-blue"><div class="stat-icon">✉</div><div><p>Total requests</p><strong>{{ tickets_count }}</strong></div></article>
+            <article class="stat-card light-orange"><div class="stat-icon">◔</div><div><p>Open</p><strong>{{ counts.open }}</strong></div></article>
+            <article class="stat-card light-purple"><div class="stat-icon">⧗</div><div><p>In progress</p><strong>{{ counts.in_progress }}</strong></div></article>
+            <article class="stat-card light-green"><div class="stat-icon">✓</div><div><p>Resolved</p><strong>{{ counts.resolved }}</strong></div></article>
+        </section>
+
+        <section class="panel courses-panel">
+            <div class="panel-heading">
+                <div><h2>My requests</h2><p>Your personal queue, most recent first.</p></div>
+            </div>
+            <div class="course-list">
+                {% for t in tickets %}
+                    <article class="course-row">
+                        <div class="course-info"><h3>{{ t.title }}</h3>
+                            <div class="course-meta"><span>{{ t.updated_at|date:"M j, Y, H:i" }}</span><span>{{ t.status_label }}</span><span>Priority: {{ t.priority_label }}</span></div>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:detail' t.id %}">Details</a>
+                    </article>
+                {% empty %}
+                    <p>No requests yet. Use "＋ New request" to open the first one.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div></body></html>

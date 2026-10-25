@@ -30,3 +30,6 @@ Thumbs.db
 # Front-end dependencies and generated output
 node_modules/
 backoffice/dist/
+
+.coverage
+.coverage.*

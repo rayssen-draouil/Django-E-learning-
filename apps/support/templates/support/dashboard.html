@@ -1,0 +1,91 @@
+{% load static support_tags %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Support Dashboard | SkillForge</title><link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}?v=2"></head><body class="dashboard-body"><div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="support" role_label="SUPPORT TEAM" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">SUPPORT ADMIN</p>
+                <h1>Support Dashboard <span aria-hidden="true">📊</span></h1>
+                <p class="header-subtitle">Volume processed, resolution times and recurring problems.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
+                <a href="{% url 'support:list' %}" class="primary-button">Open queue</a>
+            </div>
+        </header>
+
+        <section class="stats-grid" aria-label="Support statistics">
+            <article class="stat-card light-blue"><div class="stat-icon">✉</div><div><p>Open tickets</p><strong>{{ stats.open_count }}</strong></div></article>
+            <article class="stat-card light-green"><div class="stat-icon">✓</div><div><p>Resolved tickets</p><strong>{{ stats.resolved_count }}</strong></div></article>
+            <article class="stat-card light-purple"><div class="stat-icon">⧗</div><div><p>In progress</p><strong>{{ stats.in_progress_count }}</strong></div></article>
+            <article class="stat-card light-orange"><div class="stat-icon">◔</div><div><p>Waiting</p><strong>{{ stats.waiting_count }}</strong></div></article>
+            <article class="stat-card light-orange"><div class="stat-icon">⊘</div><div><p>Unassigned</p><strong>{{ stats.unassigned_count }}</strong></div></article>
+            <article class="stat-card light-blue"><div class="stat-icon">⏱</div><div><p>Average resolution time</p><strong>{% if stats.avg_resolution_hours != None %}{{ stats.avg_resolution_hours }} h{% else %}—{% endif %}</strong></div></article>
+            <article class="stat-card light-purple"><div class="stat-icon">⏱</div><div><p>Median resolution time</p><strong>{% if stats.median_resolution_hours != None %}{{ stats.median_resolution_hours }} h{% else %}—{% endif %}</strong></div></article>
+            <article class="stat-card light-green"><div class="stat-icon">Σ</div><div><p>Total handled</p><strong>{{ stats.total_count }}</strong></div></article>
+        </section>
+
+        <section class="panel-duo" aria-label="Breakdowns">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Breakdown by category</h2><p>Where requests are coming from.</p></div>
+                </div>
+                <div class="course-list">
+                    {% for category,count in stats.categories %}<div class="course-row">
+                        <div class="course-info">
+                            <h3>{{ categories|get_item:category }}</h3>
+                            <div class="bar"><i style="width: {% widthratio count categories_max 100 %}%"></i></div>
+                        </div>
+                        <span class="trend">{{ count }}</span>
+                    </div>{% empty %}<p>No tickets have been recorded.</p>{% endfor %}
+                </div>
+            </article>
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Breakdown by priority</h2><p>Queue urgency.</p></div>
+                </div>
+                <div class="course-list">
+                    {% for priority,count in stats.priorities %}<div class="course-row">
+                        <div class="course-info">
+                            <h3>{{ priorities|get_item:priority }}</h3>
+                            <div class="bar"><i class="{% if priority == 'urgent' %}bar-red{% elif priority == 'high' %}bar-orange{% else %}bar-blue{% endif %}" style="width: {% widthratio count priorities_max 100 %}%"></i></div>
+                        </div>
+                        <span class="trend">{{ count }}</span>
+                    </div>{% empty %}<p>No tickets have been recorded.</p>{% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="panel-duo" aria-label="Statuses and recurrence">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Breakdown by status</h2><p>Progress across the queue.</p></div>
+                </div>
+                <div class="course-list">
+                    {% for status,count in stats.statuses %}<div class="course-row">
+                        <div class="course-info">
+                            <h3>{{ statuses|get_item:status }}</h3>
+                            <div class="bar"><i class="{% if status == 'resolved' %}bar-green{% elif status == 'in_progress' %}bar-orange{% elif status == 'waiting' %}bar-grey{% else %}bar-blue{% endif %}" style="width: {% widthratio count statuses_max 100 %}%"></i></div>
+                        </div>
+                        <span class="trend">{{ count }}</span>
+                    </div>{% empty %}<p>No tickets have been recorded.</p>{% endfor %}
+                </div>
+            </article>
+            <article class="panel">
+                <div class="panel-heading">
+                    <div><h2>Recurring issues</h2><p>Patterns found across multiple tickets.</p></div>
+                    <span class="trend">{{ stats.recurring_count }} sujet{{ stats.recurring_count|pluralize }}</span>
+                </div>
+                <div class="course-list">
+                    {% for item in recurring %}<article class="course-row">
+                        <div class="course-info">
+                            <h3>{{ item.label }}</h3>
+                            <div class="course-meta"><span>{{ categories|get_item:item.category }}</span><span>{{ item.count }} report{{ item.count|pluralize }}</span><span>{{ item.student_count }} student{{ item.student_count|pluralize }}</span></div>
+                        </div>
+                        <a class="continue-button" href="{% url 'support:detail' item.ticket_ids.0 %}">Details</a>
+                    </article>{% empty %}<p>No recurring issues detected yet.</p>{% endfor %}
+                </div>
+                <p class="support-recurrence-note">{{ stats.recurring_ticket_count }} ticket{{ stats.recurring_ticket_count|pluralize }} affected — {{ stats.recurring_rate }} % of all handled requests.</p>
+            </article>
+        </section>
+    </main>
+</div></body></html>
