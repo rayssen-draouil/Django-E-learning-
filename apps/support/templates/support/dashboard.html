@@ -8,11 +8,9 @@
                 <p class="header-subtitle">Volume processed, resolution times and recurring problems.</p>
             </div>
             <div class="header-actions">
-                <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
-                <a href="{% url 'support:list' %}?view=admin" class="primary-button">Open queue</a>
+                                <a href="{% url 'support:list' %}?view=admin" class="primary-button">Open queue</a>
             </div>
         </header>
-
         <section class="stats-grid" aria-label="Support statistics">
             <article class="stat-card light-blue"><div class="stat-icon">✉</div><div><p>Open tickets</p><strong>{{ stats.open_count }}</strong></div></article>
             <article class="stat-card light-green"><div class="stat-icon">✓</div><div><p>Resolved tickets</p><strong>{{ stats.resolved_count }}</strong></div></article>
@@ -23,7 +21,6 @@
             <article class="stat-card light-purple"><div class="stat-icon">⏱</div><div><p>Median resolution time</p><strong>{% if stats.median_resolution_hours != None %}{{ stats.median_resolution_hours }} h{% else %}—{% endif %}</strong></div></article>
             <article class="stat-card light-green"><div class="stat-icon">Σ</div><div><p>Total handled</p><strong>{{ stats.total_count }}</strong></div></article>
         </section>
-
         <section class="panel-duo" aria-label="Breakdowns">
             <article class="panel">
                 <div class="panel-heading">
@@ -54,7 +51,6 @@
                 </div>
             </article>
         </section>
-
         <section class="panel-duo" aria-label="Statuses and recurrence">
             <article class="panel">
                 <div class="panel-heading">

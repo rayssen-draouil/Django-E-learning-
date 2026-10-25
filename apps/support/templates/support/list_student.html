@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% if is_admin %}Support queue{% else %}My requests{% endif %} | SkillForge</title>
+    <title>Centre d'aide &amp; Support | SkillForge</title>
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
     <link rel="stylesheet" href="{% static 'support/css/support_front.css' %}?v=1">
@@ -13,85 +13,26 @@
     <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
 </head>
 <body class="bg-gray-50 text-gray-800">
-    <!-- navbar -->
-    <div x-data="{ open: false }" class="home-navbar w-full text-gray-700 bg-cream">
-        <div class="flex flex-col max-w-screen-xl px-8 mx-auto md:items-center md:justify-between md:flex-row">
-            <div class="flex flex-row items-center justify-between py-6">
-                <div class="relative md:mt-8">
-                    <a href="{% url 'home' %}" class="home-brand text-lg relative z-50 font-bold tracking-widest text-gray-900 rounded-lg focus:outline-none focus:shadow-outline">SkillForge</a>
-                    <svg class="h-11 z-40 absolute -top-2 -left-3" viewBox="0 0 79 79" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M35.2574 2.24264C37.6005 -0.100501 41.3995 -0.100505 43.7426 2.24264L76.7574 35.2574C79.1005 37.6005 79.1005 43.7426L43.7426 76.7574C41.3995 79.1005 37.6005 79.1005 35.2574 76.7574L2.24264 43.7426C-0.100501 41.3995 -0.100505 37.6005 2.24264 35.2574L35.2574 2.24264Z" fill="#65DAFF"/>
-                    </svg>
-                </div>
-                <button class="rounded-lg md:hidden focus:outline-none focus:shadow-outline" @click="open = !open" aria-label="Open menu">
-                    <svg fill="currentColor" viewBox="0 0 20 20" class="w-6 h-6" aria-hidden="true">
-                        <path x-show="!open" fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM9 15a1 1 0 011-1h6a1 1 0 110 2h-6a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                        <path x-show="open" fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
-            <nav :class="{ 'transform md:transform-none': !open, 'h-full': open }" class="h-0 md:h-auto flex flex-col flex-grow md:items-center pb-4 md:pb-0 md:flex md:justify-end md:flex-row origin-top duration-300 scale-y-0">
-                <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-3 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'home' %}">Home</a>
-                <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:courses' %}">Cours</a>
-                <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'learning_paths:list' %}">Parcours</a>
-                {% if request.session.user_id and current_user.role == "student" %}
-                    <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'learning_paths:student_list' %}">Mes parcours</a>
-                {% endif %}
-                <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:mentors' %}">Mentors</a>
-                <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:quiz' %}">Quiz</a>
-                <a class="px-3.5 py-2 mt-2 text-sm text-yellow-600 font-semibold bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 focus:outline-none" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="ml-1 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ support_unread_notifications }}</span>{% endif %}</a>
-                {% if request.session.user_id %}
-                    {% if is_mentor or current_user.role == "mentor" %}
-                        <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:mentor_sessions_list' %}">Sessions</a>
-                        <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:mentor_availability_list' %}">Availability</a>
-                    {% endif %}
-                    {% if current_user.role != "student" %}
-                    <a class="px-6 py-2.5 mt-2 text-sm font-semibold text-center bg-white text-gray-800 rounded-full md:mt-8 md:ml-3 border border-gray-200 shadow-sm hover:shadow hover:text-yellow-600 transition" href="{% url 'users:backoffice' %}">Dashboard</a>
-                    {% endif %}
-                    <a href="{% url 'users:notifications_list' %}" class="relative inline-flex items-center justify-center w-11 h-11 mt-2 bg-white rounded-full md:mt-8 md:ml-3 text-gray-700 hover:text-yellow-600 border border-gray-200 shadow-sm transition" title="Notifications">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        {% if unread_notifications_count > 0 %}
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center border-2 border-white shadow">{{ unread_notifications_count }}</span>
-                        {% endif %}
-                    </a>
-                    <a href="{% url 'users:profile' %}" class="inline-flex items-center gap-2 px-4 py-2 mt-2 bg-white rounded-full md:mt-8 md:ml-3 text-xs font-semibold text-gray-800 border border-gray-200 shadow-sm hover:shadow transition" title="View Profile">
-                        <span>{{ current_user.first_name|default:"User" }}</span>
-                        <span class="px-2 py-0.5 text-xs font-bold rounded-full uppercase {% if current_user.role == 'mentor' %}bg-purple-100 text-purple-700{% elif current_user.role == 'instructor' %}bg-green-100 text-green-700{% elif current_user.role == 'admin' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">{{ current_user.role|default:"student" }}</span>
-                    </a>
-
-                    <form method="post" action="{% url 'users:logout' %}" class="home-logout-form">
-                        {% csrf_token %}
-                        <button class="px-7 py-2.5 mt-2 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full md:mt-8 md:ml-3 shadow hover:bg-yellow-600 transition cursor-pointer" type="submit">Logout</button>
-                    </form>
-                {% else %}
-                    <a class="px-10 py-3 mt-2 text-sm text-center bg-white text-gray-800 font-semibold rounded-full md:mt-8 md:ml-4 shadow-sm" href="{% url 'users:login' %}">Login</a>
-                    <a class="px-10 py-3 mt-2 text-sm text-center bg-yellow-500 text-white font-semibold rounded-full md:mt-8 md:ml-4 shadow hover:bg-yellow-600 transition" href="{% url 'users:register' %}">Sign Up</a>
-                {% endif %}
-            </nav>
-        </div>
-    </div>
+    {% include "frontoffice/partials/navbar.html" %}
 
     <main class="max-w-screen-xl mx-auto px-8 py-16">
         <div class="text-center max-w-2xl mx-auto mb-10">
-            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Help Center</p>
-            <h1 class="text-4xl sm:text-5xl font-bold text-darken mt-3">My requests</h1>
-            <p class="text-gray-500 text-lg mt-5">Track your support requests, check their progress, and follow your conversations with the team.</p>
+            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Centre d'aide</p>
+            <h1 class="text-4xl sm:text-5xl font-bold text-darken mt-3">Assistance &amp; Support</h1>
+            <p class="text-gray-500 text-lg mt-5">Posez vos questions, suivez vos demandes et échangez avec l'équipe support.</p>
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
-            {% if is_admin %}<a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:list' %}?view=admin">⚙ Console Admin Support &rarr;</a>{% endif %}
-            <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="sx-badge">{{ unread_count }}</span>{% endif %}</a>
-            <a class="px-8 py-3 text-sm text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ New request</a>
+            {% if is_admin %}<a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:list' %}?view=admin">⚙ File d'attente Admin &rarr;</a>{% endif %}
+            <a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="sx-badge">{{ unread_count }}</span>{% endif %}</a>
+            <a class="px-8 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ Nouvelle demande</a>
         </div>
 
         <section id="nouvelle-demande" class="bg-white rounded-2xl shadow-lg border-t-4 border-yellow-500 p-7 md:p-10 mb-12 max-w-3xl mx-auto">
             <div class="text-center mb-8">
-                <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Support form</p>
-                <h2 class="text-2xl sm:text-3xl font-bold text-darken mt-2">Submit a new request</h2>
-                <p class="text-gray-500 mt-3">Describe the issue as clearly as possible. A screenshot and the page name can help us resolve it faster.</p>
+                <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Formulaire de support</p>
+                <h2 class="text-2xl sm:text-3xl font-bold text-darken mt-2">Soumettre une nouvelle demande</h2>
+                <p class="text-gray-500 mt-3">Décrivez votre problème le plus précisément possible afin que notre équipe puisse vous aider rapidement.</p>
             </div>
             <form method="post" class="support-filters max-w-xl mx-auto" novalidate>
                 {% csrf_token %}
@@ -104,8 +45,8 @@
                     </div>
                 {% endfor %}
                 <div class="text-center mb-4">
-                    <button type="button" id="ai-btn-new" data-url="{% url 'support:ai_suggestion' %}" class="px-6 py-2.5 text-sm text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyze my issue with AI</button>
-                    <p class="mt-2 text-xs text-gray-400">AI will classify your issue, suggest a priority, and show knowledge base solutions. You stay in control of the form.</p>
+                    <button type="button" id="ai-btn-new" data-url="{% url 'support:ai_suggestion' %}" class="px-6 py-2.5 text-sm font-semibold text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyser ma demande avec l'IA</button>
+                    <p class="mt-2 text-xs text-gray-400">L'assistant IA catégorise votre problème et suggère une priorité. Vous gardez la main sur le formulaire.</p>
                 </div>
                 <div id="ai-new-out" class="hidden rounded-2xl border-t-4 border-blue-400 bg-blue-50 p-5 mb-5 text-left">
                     <div class="flex flex-wrap items-center gap-2 mb-3" id="ai-new-chips"></div>
@@ -113,7 +54,7 @@
                     <div class="space-y-3" id="ai-new-list"></div>
                 </div>
                 <div class="text-center mt-6">
-                    <button class="px-10 py-3 text-sm text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-400 focus:outline-none focus:shadow-outline" type="submit">Submit request →</button>
+                    <button class="px-10 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline cursor-pointer" type="submit">Envoyer la demande →</button>
                 </div>
             </form>
         </section>
@@ -143,7 +84,7 @@
                         <span class="sx-priority sx-priority--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
                     </div>
                     <div class="mt-4 text-gray-400 text-xs">{{ ticket.updated_at|date:"M j, Y, H:i" }} · #{{ ticket.id }}</div>
-                    <span class="mt-3 text-darken font-semibold hover:text-yellow-500">Open ticket →</span>
+                    <span class="mt-3 text-darken font-semibold hover:text-yellow-500">Consulter le ticket →</span>
                 </a>
             {% endfor %}
         </div>
@@ -211,13 +152,7 @@
                     source.textContent = data.source === "groq" ? "Groq AI" : "local assistant";
                     chips.appendChild(source);
                     pourquoi.textContent = classe.explanation || "";
-                    (data.solutions || []).forEach(function (solution) {
-                        var bloc = document.createElement("div");
-                        var t = document.createElement("strong"); t.className = "block text-darken text-sm"; t.textContent = solution.question;
-                        var p = document.createElement("p"); p.className = "text-gray-600 text-sm mt-1"; p.textContent = solution.answer;
-                        bloc.appendChild(t); bloc.appendChild(p);
-                        liste.appendChild(bloc);
-                    });
+
                     sortie.hidden = false; sortie.classList.remove("hidden");
                 }
             }).catch(function () {

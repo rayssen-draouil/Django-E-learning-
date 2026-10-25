@@ -23,7 +23,7 @@
             {% endif %}
             <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:mentors' %}">Mentors</a>
             <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:quiz' %}">Quiz</a>
-            <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="ml-1 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ support_unread_notifications }}</span>{% endif %}</a>
+            <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 {% if request.resolver_match.app_name == 'support' %}text-yellow-600 font-semibold{% else %}font-medium text-gray-800{% endif %} focus:outline-none" href="{% url 'support:list' %}">Support{% if support_unread_notifications %}<span class="ml-1 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ support_unread_notifications }}</span>{% endif %}</a>
             {% if request.session.user_id %}
                 {% if is_mentor or current_user.role == "mentor" %}
                     <a class="px-3.5 py-2 mt-2 text-sm bg-transparent rounded-lg md:mt-8 md:ml-2 hover:text-yellow-600 font-medium text-gray-800 focus:outline-none" href="{% url 'users:mentor_sessions_list' %}">Sessions</a>
