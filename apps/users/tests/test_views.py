@@ -46,6 +46,12 @@ class UsersViewsTests(SimpleTestCase):
     def test_home_is_public_without_a_session(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="/parcours/"')
+
+    def test_account_pages_include_the_learning_path_navigation_link(self):
+        response = self.client.get("/users/register/")
+
+        self.assertContains(response, 'href="/parcours/"')
 
     def test_home_remains_public_for_authenticated_users(self):
         session = self.client.session
@@ -139,6 +145,12 @@ class UsersViewsTests(SimpleTestCase):
             for path in paths:
                 with self.subTest(path=path):
                     self.assertEqual(self.client.get(path).status_code, 200)
+
+    def test_instructor_backoffice_sidebar_links_to_learning_path_management(self):
+        with self._session_for("instructor"):
+            response = self.client.get("/users/backoffice/cours/")
+
+        self.assertContains(response, 'href="/parcours/manage/"')
 
     def test_visitor_is_redirected_from_learner_dashboards(self):
         paths = ("/users/backoffice/", "/users/backoffice/cours/",

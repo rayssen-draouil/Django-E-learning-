@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supprimer un parcours | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="learning_paths" role_label="Espace instructeur" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                <h1>Supprimer un parcours</h1>
+                <p class="header-subtitle">Confirmez la suppression du parcours sélectionné.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'learning_paths:manage_list' %}" class="outline-button">Mes parcours</a>
+                {% include "backoffice/partials/user_role_chip.html" %}
+            </div>
+        </header>
+        <section class="panel learning-path-delete-panel">
+            <p class="eyebrow">CONFIRMATION</p>
+            <h2>Supprimer « {{ learning_path.title }} » ?</h2>
+            <p class="learning-path-delete-description">Cette action supprimera définitivement ce parcours.</p>
+            <form method="post" class="learning-path-form-actions">
+                {% csrf_token %}
+                <button class="primary-button" type="submit">Confirmer la suppression</button>
+                <a class="outline-button" href="{% url 'learning_paths:manage_list' %}">Annuler</a>
+            </form>
+        </section>
+    </main>
+</div>
+<style>
+    .learning-path-delete-panel { max-width: 760px; }
+    .learning-path-delete-panel h2 { margin: 0; font-size: 1rem; }
+    .learning-path-delete-description { color: var(--muted); font-size: .82rem; }
+    .learning-path-form-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .learning-path-form-actions .primary-button { margin-top: 0; border: 0; font: inherit; font-size: .72rem; cursor: pointer; }
+    .learning-path-form-actions .outline-button { display: inline-block; }
+</style>
+</body>
+</html>

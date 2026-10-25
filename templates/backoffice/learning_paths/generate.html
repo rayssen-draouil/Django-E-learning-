@@ -1,0 +1,77 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Générer un parcours | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="learning_paths" role_label="Espace instructeur" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                <h1>Générer une proposition de parcours</h1>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'learning_paths:manage_list' %}" class="outline-button">Mes parcours</a>
+                {% include "backoffice/partials/user_role_chip.html" %}
+            </div>
+        </header>
+        <section class="panel learning-path-proposal-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Votre besoin</h2>
+                    <p>Précisez un objectif, un métier visé et le niveau souhaité.</p>
+                </div>
+            </div>
+            <form method="post" class="learning-path-form" id="learning-path-proposal-form" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="quiz-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <p class="learning-path-form-hint">La proposition sera vérifiable et modifiable avant son enregistrement.</p>
+                <div class="learning-path-form-actions">
+                    <button class="primary-button" id="generate-proposal-button" type="submit">Générer la proposition</button>
+                    <a class="outline-button" href="{% url 'learning_paths:manage_list' %}">Annuler</a>
+                </div>
+                <p id="generation-status" class="generation-status" role="status" aria-live="polite" hidden>Ollama prépare votre proposition. La première génération peut prendre un peu plus de temps pendant le chargement du modèle.</p>
+            </form>
+        </section>
+    </main>
+</div>
+<style>
+    .learning-path-proposal-panel { max-width: 900px; }
+    .learning-path-form { margin-top: 1.5rem; }
+    .learning-path-form-hint { margin: 0 0 1rem; color: var(--muted); font-size: .78rem; }
+    .learning-path-form-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .learning-path-form-actions .primary-button { margin-top: 0; border: 0; font: inherit; font-size: .72rem; cursor: pointer; }
+    .learning-path-form-actions .outline-button { display: inline-block; }
+    .learning-path-form .errorlist { margin: 0; padding-left: 1rem; color: #b42332; font-size: .78rem; }
+    .learning-path-form .nonfield { color: #b42332; }
+    .generation-status { margin: .9rem 0 0; color: var(--muted); font-size: .82rem; }
+    .generation-status[hidden] { display: none; }
+    .learning-path-form-actions .primary-button:disabled { cursor: wait; opacity: .7; }
+</style>
+<script>
+    document.getElementById("learning-path-proposal-form").addEventListener("submit", function () {
+        const button = document.getElementById("generate-proposal-button");
+        button.disabled = true;
+        button.textContent = "Génération en cours…";
+        document.getElementById("generation-status").hidden = false;
+    });
+</script>
+</body>
+</html>

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.courses.apps.CoursesConfig',
     'apps.mentors.apps.MentorsConfig',
     'apps.quizzes.apps.QuizzesConfig',
+    'apps.learning_paths.apps.LearningPathsConfig',
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")
 MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "e_learning")
 MONGODB_SESSIONS_COLLECTION = os.environ.get("MONGODB_SESSIONS_COLLECTION", "django_sessions")
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "90"))
 SESSION_ENGINE = "apps.users.sessions"
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
@@ -128,3 +132,40 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 # Keep it outside source control in production.
 USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "")
 
+<<<<<<< Updated upstream
+=======
+# Email Configuration (Brevo / SMTP / Console)
+_smtp_host = os.environ.get("SMTP_HOST") or os.environ.get("EMAIL_HOST")
+_default_backend = (
+    "apps.mentors.email_backend.BrevoEmailBackend"
+    if _smtp_host
+    else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", _default_backend)
+EMAIL_HOST = _smtp_host or "smtp-relay.brevo.com"
+EMAIL_PORT = int(os.environ.get("SMTP_PORT") or os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
+EMAIL_HOST_USER = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = (
+    os.environ.get("SMTP_PASS")
+    or os.environ.get("EMAIL_HOST_PASSWORD")
+    or os.environ.get("brevo_smtp_key", "")
+)
+EMAIL_SSL_VERIFY = (
+    _env_bool("BREVO_SSL_VERIFY", True)
+    if "BREVO_SSL_VERIFY" in os.environ
+    else _env_bool("EMAIL_SSL_VERIFY", True)
+)
+
+_sender_name = os.environ.get("BREVO_SENDER_NAME", "").strip('"').strip("'") or "AquaSecure"
+_sender_email = (
+    os.environ.get("EMAIL_FROM")
+    or os.environ.get("BREVO_SENDER_EMAIL")
+    or os.environ.get("DEFAULT_FROM_EMAIL")
+    or "miladiadem58@gmail.com"
+)
+DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else _sender_email
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
+>>>>>>> Stashed changes

@@ -26,6 +26,13 @@ def find_user(user_id: Any) -> dict[str, Any] | None:
     return users_collection.find_one({"_id": user_id, "is_active": True}, {"password": 0})
 
 
+def find_active_users(user_ids: list[Any]) -> list[dict[str, Any]]:
+    return list(users_collection.find(
+        {"_id": {"$in": user_ids}, "is_active": True},
+        {"first_name": 1, "last_name": 1, "email": 1},
+    ))
+
+
 def update_user(user_id: Any, first_name: str, last_name: str, updated_at: datetime) -> bool:
     result = users_collection.update_one(
         {"_id": user_id, "is_active": True},

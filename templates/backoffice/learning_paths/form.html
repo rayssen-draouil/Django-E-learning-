@@ -1,0 +1,68 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page_title }} | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="learning_paths" role_label="Espace instructeur" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                <h1>{{ page_title }}</h1>
+                <p class="header-subtitle">Définissez les cours et leur ordre dans le parcours.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'learning_paths:manage_list' %}" class="outline-button">Mes parcours</a>
+                {% include "backoffice/partials/user_role_chip.html" %}
+            </div>
+        </header>
+        <section class="panel learning-path-form-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Informations du parcours</h2>
+                </div>
+            </div>
+            {% if proposal_generated %}
+                <p class="learning-path-proposal-note">Proposition générée. Vérifiez et modifiez les informations avant de l’enregistrer </p>
+            {% endif %}
+            <form method="post" action="{{ form_action }}" class="learning-path-form" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="quiz-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <p class="learning-path-form-hint">Choisissez au moins deux cours. L’étape 1 vient en premier ; laissez les étapes restantes vides si besoin.</p>
+                <div class="learning-path-form-actions">
+                    <button class="primary-button" type="submit">{{ submit_label }}</button>
+                    <a class="outline-button" href="{% url 'learning_paths:manage_list' %}">Annuler</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+<style>
+    .learning-path-form-panel { max-width: 900px; }
+    .learning-path-form { margin-top: 1.5rem; }
+    .learning-path-form-hint { margin: 0 0 1rem; color: var(--muted); font-size: .78rem; }
+    .learning-path-form-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+    .learning-path-form-actions .primary-button { margin-top: 0; border: 0; font: inherit; font-size: .72rem; cursor: pointer; }
+    .learning-path-form-actions .outline-button { display: inline-block; }
+    .learning-path-form .errorlist { margin: 0; padding-left: 1rem; color: #b42332; font-size: .78rem; }
+    .learning-path-proposal-note { margin: 1.25rem 0 0; padding: .85rem 1rem; border-radius: .7rem; background: #eef5ff; color: #244b7a; font-size: .82rem; }
+</style>
+</body>
+</html>

@@ -17,10 +17,22 @@
         <span>SkillForge</span>
     </a>
     <div class="site-nav-links">
+<<<<<<< Updated upstream
         <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'users:courses' %}">Cours</a>
         <a href="{% url 'users:mentors' %}">Mentors</a>
         <a href="{% url 'users:quiz' %}">Quiz</a>
+=======
+        <a class="nav-link-item" href="{% url 'home' %}">Home</a>
+        <a class="nav-link-item" href="{% url 'users:courses' %}">Cours</a>
+        <a class="nav-link-item" href="{% url 'learning_paths:list' %}">Parcours</a>
+        {% if is_student %}
+            <a class="nav-link-item" href="{% url 'learning_paths:student_list' %}">Mes parcours</a>
+        {% endif %}
+        <a class="nav-link-item" href="{% url 'users:mentors' %}">Mentors</a>
+        <a class="nav-link-item" href="{% url 'users:quiz' %}">Quiz</a>
+
+>>>>>>> Stashed changes
         {% if request.session.user_id %}
             <a class="site-nav-dashboard" href="{% url 'users:backoffice' %}">Dashboard</a>
             <a class="site-nav-profile" href="{% url 'users:profile' %}">Mon profil</a>

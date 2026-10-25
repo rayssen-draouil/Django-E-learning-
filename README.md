@@ -18,6 +18,8 @@ index.html, css/         Démonstration statique Skilline conservée séparémen
 
 Les routes publiques existantes sont conservées, y compris les noms `users:*` utilisés par les templates. Les cours et mentors affichent encore du contenu d'exemple en mémoire. Les quiz sont stockés dans MongoDB via PyMongo dans les collections `quizzes` et `quiz_attempts` ; les auteurs peuvent gérer leurs quiz et les étudiants répondre aux quiz publiés et consulter leurs résultats. Il n'y a pas encore d'application `enrollments` car aucun parcours d'inscription ou de progression persistant n'existe.
 
+Les parcours d'apprentissage sont enregistrés dans la collection MongoDB `learning_paths`. Les inscriptions et étapes terminées sont enregistrées dans `learning_path_enrollments` : les étudiants s'inscrivent aux parcours publiés, marquent leurs étapes comme terminées et consultent leur progression sur `/parcours/mes-parcours/`. Les formateurs voient le nombre d'inscrits depuis `/parcours/manage/` et le détail d'avancement de leurs parcours. Le tableau de bord `/parcours/manage/statistics/` présente les inscriptions, le taux de parcours terminés, la progression moyenne et les parcours les plus suivis ; les formateurs ne voient que leurs propres parcours et l'administrateur dispose de la vue globale. Le taux de complétion compte les inscriptions ayant terminé toutes les étapes ; la progression moyenne est une moyenne par inscription. Les visiteurs consultent, recherchent, filtrent par thème/niveau et trient les parcours publiés sur `/parcours/`; les formateurs gèrent les leurs et les administrateurs peuvent tous les gérer depuis `/parcours/manage/`, avec recherche, filtre par statut et tri. Un parcours contient au moins deux cours sélectionnés dans le catalogue de démonstration de l'application, dans l'ordre des étapes. Les parcours publiés peuvent être téléchargés en PDF depuis leur page publique ; les formateurs et administrateurs peuvent également exporter les parcours qu'ils sont autorisés à gérer, y compris les brouillons. Le PDF présente le titre, la description et les étapes ordonnées ; l'export privé de gestion inclut en plus les apprenants inscrits et leur progression, sans exposer ces données dans le téléchargement public. Les filtres de thème et niveau sont enregistrés sur chaque parcours. Depuis `/parcours/manage/`, les formateurs et administrateurs peuvent demander à Ollama une proposition de parcours fondée sur un objectif, un métier et un niveau ; les cours proposés sont limités au catalogue et le brouillon doit être vérifié puis enregistré par l'utilisateur. La progression des cours du catalogue de démonstration est déclarée manuellement par l'apprenant ; elle n'est pas déduite d'activités de cours persistées.
+
 Les templates globaux et les ressources du thème gardent leurs chemins actuels afin de préserver les liens existants. `backoffice/` et `index.html` sont des sources statiques autonomes, et ne sont pas les templates rendus par Django.
 
 ## Prérequis et démarrage
@@ -38,7 +40,15 @@ Les templates globaux et les ressources du thème gardent leurs chemins actuels 
    python manage.py create_user_indexes
    ```
 
-5. Lancer le serveur :
+5. Installer Ollama, démarrer son service et télécharger le modèle choisi (le défaut est `llama3.2`) :
+
+   ```powershell
+   ollama pull llama3.2
+   ```
+
+   Configurez `OLLAMA_BASE_URL`, `OLLAMA_MODEL` et `OLLAMA_TIMEOUT_SECONDS` dans `.env` si nécessaire.
+
+6. Lancer le serveur :
 
    ```powershell
    python manage.py runserver
@@ -56,6 +66,9 @@ Le module de paramètres par défaut est `config.settings` et charge les paramè
 | `MONGODB_URI` | URI MongoDB ; défaut local `mongodb://localhost:27017/`. |
 | `MONGODB_DATABASE` | Base MongoDB ; défaut `e_learning`. |
 | `MONGODB_SESSIONS_COLLECTION` | Collection des sessions ; défaut `django_sessions`. |
+| `OLLAMA_BASE_URL` | URL du service Ollama local ; défaut `http://localhost:11434`. |
+| `OLLAMA_MODEL` | Nom du modèle Ollama à utiliser ; défaut `llama3.2`. Le modèle doit être téléchargé localement. |
+| `OLLAMA_TIMEOUT_SECONDS` | Délai maximal de réponse Ollama en secondes ; défaut `90`. |
 | `USERS_ADMIN_BOOTSTRAP_TOKEN` | Jeton facultatif du service de provisionnement d'un compte avec rôle admin. |
 | `DJANGO_SECURE_SSL_REDIRECT` | Redirection HTTPS en production ; active par défaut. |
 | `DJANGO_SECURE_HSTS_SECONDS` | Durée HSTS ; défaut `31536000`. |
@@ -64,7 +77,7 @@ Le module de paramètres par défaut est `config.settings` et charge les paramè
 
 ## Données, sessions et rôles
 
-Les documents utilisateurs restent dans la collection `users`; les mots de passe sont hachés et l'adresse e-mail est protégée par un index unique. La commande `create_user_indexes` prépare cet index et l'index TTL de la collection de sessions. MongoDB supprime les sessions expirées via TTL ; le backend vérifie aussi l'expiration au chargement. Une indisponibilité MongoDB interrompt les opérations de session au lieu de simuler une session vide.
+Les documents utilisateurs restent dans la collection `users`; les mots de passe sont hachés et l'adresse e-mail est protégée par un index unique. La commande `create_user_indexes` prépare les index requis, notamment ceux des collections `learning_paths` et `learning_path_enrollments` et l'index TTL de la collection de sessions. MongoDB supprime les sessions expirées via TTL ; le backend vérifie aussi l'expiration au chargement. Une indisponibilité MongoDB interrompt les opérations de session au lieu de simuler une session vide.
 
 Les rôles applicatifs sont `student`, `instructor` et `admin`. Les tableaux de bord actuels sont réservés aux étudiants. L'administration Django native (`/admin/`) a été retirée avec les dépendances relationnelles ; aucune interface web d'administration MongoDB n'est fournie. Le provisionnement de comptes privilégiés doit être effectué par un outil d'administration contrôlé et non exposé publiquement.
 

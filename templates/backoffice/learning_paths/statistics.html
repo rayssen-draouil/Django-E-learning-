@@ -1,0 +1,146 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Statistiques des parcours | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="learning_paths" role_label="Espace instructeur" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                <h1>Statistiques des parcours</h1>
+                <p class="header-subtitle">Suivez les inscriptions et la progression des apprenants.</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'learning_paths:manage_list' %}" class="outline-button">Retour aux parcours</a>
+                {% include "backoffice/partials/user_role_chip.html" %}
+            </div>
+        </header>
+
+        <section class="statistics-grid" aria-label="Indicateurs des parcours">
+            <article class="panel statistic-card">
+                <span class="statistic-label">Inscriptions</span>
+                <strong class="statistic-value">{{ statistics.total_enrollments }}</strong>
+                <span class="statistic-detail">sur {{ statistics.total_paths }} parcours</span>
+            </article>
+            <article class="panel statistic-card">
+                <span class="statistic-label">Taux de complétion</span>
+                <strong class="statistic-value">{{ statistics.completion_rate }}%</strong>
+                <span class="statistic-detail">{{ statistics.completed_enrollments }} parcours terminés</span>
+            </article>
+            <article class="panel statistic-card">
+                <span class="statistic-label">Progression moyenne</span>
+                <strong class="statistic-value">{{ statistics.average_progress }}%</strong>
+                <span class="statistic-detail">moyenne des inscriptions</span>
+            </article>
+            <article class="panel statistic-card">
+                <span class="statistic-label">Parcours disponibles</span>
+                <strong class="statistic-value">{{ statistics.published_paths }}</strong>
+                <span class="statistic-detail">{{ statistics.draft_paths }} brouillon(s)</span>
+            </article>
+        </section>
+
+        <section class="panel ai-insights-panel" aria-labelledby="ai-insights-title">
+            <div class="ai-insights-heading">
+                <div>
+                    <p class="ai-insights-eyebrow">ASSISTANT IA</p>
+                    <h2 id="ai-insights-title">Des pistes pour améliorer vos parcours</h2>
+                    <p>Obtenez des recommandations à partir des statistiques globales, sans données personnelles.</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button class="primary-button" type="submit">Analyser avec l’IA</button>
+                </form>
+            </div>
+            {% if ai_error %}
+                <p class="ai-insights-error" role="alert">{{ ai_error }}</p>
+            {% endif %}
+            {% if ai_insights %}
+                <div class="ai-insights-result" aria-live="polite">
+                    <p class="ai-insights-summary">{{ ai_insights.summary }}</p>
+                    <ul>
+                        {% for recommendation in ai_insights.recommendations %}
+                            <li>{{ recommendation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="panel popular-paths-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Parcours les plus suivis</h2>
+                    <p>Classement par nombre d’inscriptions.</p>
+                </div>
+            </div>
+            <div class="popular-path-list">
+                {% for learning_path in statistics.popular_paths %}
+                    <article class="popular-path-row">
+                        <div class="popular-path-heading">
+                            <div>
+                                <h3>{{ forloop.counter }}. {{ learning_path.title }}</h3>
+                                <p>{{ learning_path.theme_label }} · {{ learning_path.level_label }} · {{ learning_path.courses|length }} cours</p>
+                            </div>
+                            <strong>{{ learning_path.enrollment_count }} inscription(s)</strong>
+                        </div>
+                        <div class="popular-path-track" role="progressbar" aria-label="Popularité de {{ learning_path.title }}" aria-valuenow="{{ learning_path.enrollment_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            <span style="width: {{ learning_path.enrollment_percentage }}%"></span>
+                        </div>
+                    </article>
+                {% empty %}
+                    <p class="statistics-empty">Aucune inscription enregistrée pour le moment. Les parcours suivis apparaîtront ici.</p>
+                {% endfor %}
+            </div>
+        </section>
+        <p class="statistics-note">Le taux de complétion correspond à la part des inscriptions ayant terminé toutes les étapes. La progression moyenne est calculée sur les inscriptions aux parcours.</p>
+    </main>
+</div>
+<style>
+    .statistics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+    .statistic-card { display: flex; flex-direction: column; gap: .45rem; padding: 1.25rem; }
+    .statistic-label { color: var(--muted); font-size: .76rem; font-weight: 600; }
+    .statistic-value { color: #29347d; font-size: 1.8rem; line-height: 1.2; }
+    .statistic-detail { color: var(--muted); font-size: .7rem; }
+    .ai-insights-panel { margin-bottom: 1.25rem; padding: 1.25rem; }
+    .ai-insights-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .ai-insights-heading h2 { margin: 0; color: #29347d; font-size: 1rem; }
+    .ai-insights-heading p { margin: .35rem 0 0; color: var(--muted); font-size: .76rem; }
+    .ai-insights-eyebrow { color: #f39200 !important; font-size: .68rem !important; font-weight: 700; letter-spacing: .08em; }
+    .ai-insights-heading .primary-button { margin: 0; border: 0; font: inherit; font-size: .72rem; cursor: pointer; white-space: nowrap; }
+    .ai-insights-result { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid #edf0f6; color: #454b62; font-size: .8rem; }
+    .ai-insights-summary { margin: 0; color: #29347d; font-weight: 600; }
+    .ai-insights-result ul { margin: .6rem 0 0; padding-left: 1.25rem; }
+    .ai-insights-result li + li { margin-top: .35rem; }
+    .ai-insights-error { margin: 1rem 0 0; color: #b42332; font-size: .8rem; }
+    .popular-paths-panel { margin-bottom: 1rem; }
+    .popular-paths-panel .panel-heading p { margin: .3rem 0 0; color: var(--muted); font-size: .76rem; }
+    .popular-path-list { display: flex; flex-direction: column; }
+    .popular-path-row { padding: 1rem 0; border-bottom: 1px solid #edf0f6; }
+    .popular-path-row:last-child { border-bottom: 0; }
+    .popular-path-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .75rem; }
+    .popular-path-heading h3 { margin: 0; color: #29347d; font-size: .88rem; }
+    .popular-path-heading p { margin: .3rem 0 0; color: var(--muted); font-size: .7rem; }
+    .popular-path-heading strong { color: #29347d; font-size: .75rem; white-space: nowrap; }
+    .popular-path-track { height: .45rem; overflow: hidden; border-radius: 999px; background: #edf0f6; }
+    .popular-path-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f39200, #ffc45c); }
+    .statistics-empty { margin: 0; color: var(--muted); font-size: .82rem; }
+    .statistics-note { margin: 0; color: var(--muted); font-size: .72rem; }
+    @media (max-width: 1000px) { .statistics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) {
+        .statistics-grid { grid-template-columns: 1fr; }
+        .popular-path-heading { align-items: flex-start; flex-direction: column; gap: .4rem; }
+        .ai-insights-heading { align-items: flex-start; flex-direction: column; }
+    }
+</style>
+</body>
+</html>
