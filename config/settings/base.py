@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'apps.courses.apps.CoursesConfig',
     'apps.mentors.apps.MentorsConfig',
     'apps.quizzes.apps.QuizzesConfig',
+    'apps.learning_paths.apps.LearningPathsConfig',
     'apps.support.apps.SupportConfig',
 ]
 
@@ -158,6 +159,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")
 MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "e_learning")
 MONGODB_SESSIONS_COLLECTION = os.environ.get("MONGODB_SESSIONS_COLLECTION", "django_sessions")
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "90"))
 SESSION_ENGINE = "apps.users.sessions"
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 

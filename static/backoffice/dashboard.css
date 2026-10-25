@@ -470,3 +470,84 @@ details.panel[open] summary::before { content: "▾ "; }
 /* --- Console utilisateurs : meta plus compacte et espacée --- */
 .dashboard-main.admin-users .course-meta { justify-content: flex-start; flex-wrap: wrap; gap: .35rem .9rem; margin-top: .2rem; }
 .dashboard-main.admin-users .course-meta .support-chip { margin: 0; }
+
+
+/* --- Support & Backoffice File Attachment Input Styling ("Choisir un fichier") --- */
+.support-fields input[type=file],
+.filter-field input[type=file],
+.support-form input[type=file],
+input[type=file].support-file-input {
+    display: block;
+    width: 100%;
+    padding: .55rem .75rem;
+    border: 1.5px dashed var(--line);
+    border-radius: .65rem;
+    background: #fbfcff;
+    color: var(--muted);
+    font: inherit;
+    font-size: .8rem;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color .2s ease, background-color .2s ease;
+}
+
+.support-fields input[type=file]:hover,
+.filter-field input[type=file]:hover,
+.support-form input[type=file]:hover,
+input[type=file].support-file-input:hover {
+    border-color: var(--orange);
+    background: #fff;
+}
+
+.support-fields input[type=file]::file-selector-button,
+.filter-field input[type=file]::file-selector-button,
+.support-form input[type=file]::file-selector-button,
+input[type=file].support-file-input::file-selector-button {
+    margin-right: .85rem;
+    padding: .55rem 1.15rem;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--orange);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(244, 140, 6, .25);
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.support-fields input[type=file]::file-selector-button:hover,
+.filter-field input[type=file]::file-selector-button:hover,
+.support-form input[type=file]::file-selector-button:hover,
+input[type=file].support-file-input::file-selector-button:hover {
+    background: var(--navy);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(47, 50, 125, .25);
+}
+
+.support-fields input[type=file]::-webkit-file-upload-button,
+.filter-field input[type=file]::-webkit-file-upload-button,
+.support-form input[type=file]::-webkit-file-upload-button,
+input[type=file].support-file-input::-webkit-file-upload-button {
+    margin-right: .85rem;
+    padding: .55rem 1.15rem;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--orange);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(244, 140, 6, .25);
+    transition: background .2s ease, transform .2s ease;
+}
+
+.support-fields input[type=file]::-webkit-file-upload-button:hover,
+.filter-field input[type=file]::-webkit-file-upload-button:hover,
+.support-form input[type=file]::-webkit-file-upload-button:hover,
+input[type=file].support-file-input::-webkit-file-upload-button:hover {
+    background: var(--navy);
+    transform: translateY(-1px);
+}

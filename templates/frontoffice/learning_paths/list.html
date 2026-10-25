@@ -1,0 +1,101 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Parcours d’apprentissage | SkillForge</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    {% include "frontoffice/partials/navbar.html" %}
+    <main class="max-w-screen-xl mx-auto px-8 py-16">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">SkillForge</p>
+            <h1 class="text-4xl sm:text-5xl font-bold mt-3">Parcours d’apprentissage</h1>
+            <p class="text-gray-500 text-lg mt-5">Progressez étape par étape avec des cours réunis dans un ordre cohérent.</p>
+        </div>
+        <form method="get" class="bg-white rounded-2xl shadow-sm p-6 mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5 items-end" role="search">
+            <div>
+                <label for="path-search" class="block text-sm font-semibold text-gray-700 mb-2">Rechercher</label>
+                <input id="path-search" type="search" name="q" value="{{ filters.search }}" placeholder="Titre, description ou cours" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+            </div>
+            <div>
+                <label for="path-theme" class="block text-sm font-semibold text-gray-700 mb-2">Thème</label>
+                <select id="path-theme" name="theme" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                    <option value="">Tous les thèmes</option>
+                    {% for value, label in theme_choices %}
+                        <option value="{{ value }}"{% if filters.theme == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="path-level" class="block text-sm font-semibold text-gray-700 mb-2">Niveau</label>
+                <select id="path-level" name="level" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                    <option value="">Tous les niveaux</option>
+                    {% for value, label in level_choices %}
+                        <option value="{{ value }}"{% if filters.level == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="path-sort" class="block text-sm font-semibold text-gray-700 mb-2">Trier par</label>
+                <select id="path-sort" name="sort" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                    {% for value, label in sort_choices %}
+                        <option value="{{ value }}"{% if filters.sort == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button class="px-5 py-2 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600" type="submit">Appliquer</button>
+                <a class="px-5 py-2 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200" href="{% url 'learning_paths:list' %}">Effacer</a>
+            </div>
+        </form>
+        <div class="grid gap-6 md:grid-cols-3">
+            {% for learning_path in learning_paths %}
+                <article class="bg-white rounded-2xl shadow-lg p-7 border-t-4 border-yellow-500 flex flex-col">
+                    <p class="text-sm text-yellow-600 font-semibold">{{ learning_path.courses|length }} cours</p>
+                    <h2 class="text-xl font-bold text-gray-900 mt-2">{{ learning_path.title }}</h2>
+                    <p class="text-gray-600 mt-3 leading-relaxed">{{ learning_path.description }}</p>
+                    <p class="text-sm text-gray-500 mt-4">{{ learning_path.theme_label }} · {{ learning_path.level_label }}</p>
+
+                    {# --- Aperçu des compétences visées --- #}
+                    {% if learning_path.preview_competencies %}
+                        <div class="mt-5 pt-4 border-t border-gray-100">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Compétences visées</p>
+                            <ul class="flex flex-wrap gap-2" aria-label="Compétences visées par ce parcours">
+                                {% for competency in learning_path.preview_competencies %}
+                                    <li class="inline-flex items-center gap-1 rounded-full bg-yellow-50 border border-yellow-200 px-3 py-1 text-xs text-yellow-800 font-medium">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+                                        {{ competency }}
+                                    </li>
+                                {% endfor %}
+                                {% if learning_path.extra_competencies_count %}
+                                    <li class="inline-flex items-center rounded-full bg-gray-100 border border-gray-200 px-3 py-1 text-xs text-gray-500 font-medium">
+                                        +{{ learning_path.extra_competencies_count }} autres
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <a class="mt-auto pt-4 inline-block font-semibold text-gray-900 hover:text-yellow-600" href="{% url 'learning_paths:detail' path_id=learning_path.id %}">Voir les étapes →</a>
+                </article>
+            {% empty %}
+                <p class="text-gray-500 md:col-span-3 text-center">
+                    {% if filters.search or filters.theme or filters.level %}Aucun parcours ne correspond à ces critères.{% else %}Aucun parcours n'est publié pour le moment.{% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        {% if current_user.role == "student" %}
+            <div class="text-center mt-10">
+                <a class="inline-block px-6 py-3 bg-white text-gray-800 font-semibold rounded-full border border-gray-200 shadow-sm hover:text-yellow-600" href="{% url 'learning_paths:student_list' %}">Voir mes parcours et ma progression</a>
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html>

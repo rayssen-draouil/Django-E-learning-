@@ -21,7 +21,7 @@
         <div class="sf-masthead__actions">
             {% if not is_admin %}<a class="sf-btn sf-btn--ghost" href="#nouvelle-demande">New request</a>{% endif %}
             <a class="sf-btn sf-btn--ghost" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="site-nav-badge">{{ unread_count }}</span>{% endif %}</a>
-            {% if is_admin %}<a class="sf-btn sf-btn--ghost" href="{% url 'support:faq' %}">Knowledge Base</a><a class="sf-btn sf-btn--accent" href="{% url 'support:dashboard' %}">Dashboard</a>{% endif %}
+            {% if is_admin %}<a class="sf-btn sf-btn--accent" href="{% url 'support:dashboard' %}">Dashboard</a>{% endif %}
             {% if not is_admin %}<a class="sf-btn sf-btn--primary" href="{% url 'support:create' %}">＋ New request</a>{% endif %}
         </div>
     </header>

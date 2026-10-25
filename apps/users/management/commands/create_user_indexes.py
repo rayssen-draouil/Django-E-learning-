@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 from pymongo import ASCENDING
 from pymongo.errors import PyMongoError
 
+from apps.learning_paths.repositories import create_indexes as create_learning_path_indexes
 from apps.mentors.bookings import create_indexes as create_booking_indexes
 from apps.mentors.classroom import create_indexes as create_classroom_indexes
 from apps.mentors.notifications import create_indexes as create_notification_indexes
@@ -17,7 +18,7 @@ from apps.users.services import (
 
 
 class Command(BaseCommand):
-    help = "Create required MongoDB indexes for users, sessions, mentors, bookings, reviews, and notifications."
+    help = "Create required MongoDB indexes across all platform collections."
 
     def handle(self, *args, **options):
         try:
@@ -33,6 +34,7 @@ class Command(BaseCommand):
             create_notification_indexes()
             create_recommendation_indexes()
             create_classroom_indexes()
+            create_learning_path_indexes()
         except (UserStorageError, PyMongoError) as error:
             raise CommandError("Could not prepare MongoDB indexes.") from error
         self.stdout.write(

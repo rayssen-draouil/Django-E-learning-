@@ -1,17 +1,14 @@
 from django.shortcuts import render
 
 from apps.users.decorators import roles_required
+from .catalog import COURSES
 
 
 def courses(request):
     return render(request, "frontoffice/learning_page.html", {
         "page_title": "Cours",
         "page_intro": "Développez vos compétences avec des parcours conçus pour progresser à votre rythme.",
-        "items": [
-            ("Python pour débutants", "Apprenez les bases de Python avec des exercices pratiques.", "12 modules"),
-            ("Développement web", "Construisez des interfaces modernes et accessibles.", "18 modules"),
-            ("Bases de données", "Maîtrisez la conception et l'utilisation des bases de données.", "10 modules"),
-        ],
+        "items": [(course["title"], course["description"], course["detail"]) for course in COURSES],
         "item_label": "cours",
     })
 

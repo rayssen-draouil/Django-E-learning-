@@ -24,6 +24,16 @@
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             <span>Mes cours</span>
         </a>
+        <a href="{% if user.role == 'instructor' or user.role == 'admin' %}{% url 'learning_paths:manage_list' %}{% else %}{% url 'learning_paths:list' %}{% endif %}" class="{% if section == 'learning_paths' %}active{% endif %}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"></path><circle cx="7" cy="5" r="1"></circle><circle cx="7" cy="12" r="1"></circle><circle cx="7" cy="19" r="1"></circle></svg>
+            <span>Parcours</span>
+        </a>
+        {% if user.role == 'student' %}
+        <a href="{% url 'learning_paths:student_list' %}" class="{% if section == 'my_learning_paths' %}active{% endif %}">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M5 3h14v18l-7-4-7 4z"></path></svg>
+            <span>Mes parcours</span>
+        </a>
+        {% endif %}
         <a href="{% if user.role == 'student' %}{% url 'users:backoffice_mentors' %}{% else %}{% url 'users:mentors' %}{% endif %}" class="{% if section == 'mentors' %}active{% endif %}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <span>Mentors</span>

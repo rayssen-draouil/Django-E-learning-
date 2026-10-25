@@ -257,3 +257,84 @@
         gap: 0.7rem;
     }
 }
+
+
+/* --- File Attachment Input Styling ("Choisir un fichier") --- */
+.support-filters input[type=file],
+.support-fields input[type=file],
+.filter-field input[type=file],
+input[type=file].support-file-input {
+    display: block;
+    width: 100%;
+    padding: .55rem .75rem;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: .75rem;
+    background: #f8fafc;
+    color: #64748b;
+    font-family: 'Poppins', sans-serif;
+    font-size: .85rem;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color .2s ease, background-color .2s ease;
+}
+
+.support-filters input[type=file]:hover,
+.support-fields input[type=file]:hover,
+.filter-field input[type=file]:hover,
+input[type=file].support-file-input:hover {
+    border-color: #F48C06;
+    background: #fff;
+}
+
+.support-filters input[type=file]::file-selector-button,
+.support-fields input[type=file]::file-selector-button,
+.filter-field input[type=file]::file-selector-button,
+input[type=file].support-file-input::file-selector-button {
+    margin-right: .85rem;
+    padding: .55rem 1.15rem;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    background: #F48C06;
+    font-family: 'Poppins', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(244, 140, 6, .25);
+    transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.support-filters input[type=file]::file-selector-button:hover,
+.support-fields input[type=file]::file-selector-button:hover,
+.filter-field input[type=file]::file-selector-button:hover,
+input[type=file].support-file-input::file-selector-button:hover {
+    background-color: #2F327D;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(47, 50, 125, .25);
+}
+
+.support-filters input[type=file]::-webkit-file-upload-button,
+.support-fields input[type=file]::-webkit-file-upload-button,
+.filter-field input[type=file]::-webkit-file-upload-button,
+input[type=file].support-file-input::-webkit-file-upload-button {
+    margin-right: .85rem;
+    padding: .55rem 1.15rem;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    background: #F48C06;
+    font-family: 'Poppins', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(244, 140, 6, .25);
+    transition: background-color .2s ease, transform .2s ease;
+}
+
+.support-filters input[type=file]::-webkit-file-upload-button:hover,
+.support-fields input[type=file]::-webkit-file-upload-button:hover,
+.filter-field input[type=file]::-webkit-file-upload-button:hover,
+input[type=file].support-file-input::-webkit-file-upload-button:hover {
+    background-color: #2F327D;
+    transform: translateY(-1px);
+}

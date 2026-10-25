@@ -1,0 +1,133 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ learning_path.title }} | SkillForge</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    {% include "frontoffice/partials/navbar.html" %}
+    <main class="max-w-4xl mx-auto px-8 py-16">
+        <a class="text-sm font-semibold text-yellow-600 hover:text-yellow-700" href="{% url 'learning_paths:list' %}">← Retour aux parcours</a>
+        <header class="mt-6 mb-10">
+            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Parcours d’apprentissage</p>
+            <h1 class="text-4xl font-bold text-gray-900 mt-3">{{ learning_path.title }}</h1>
+            <p class="text-gray-600 text-lg mt-4">{{ learning_path.description }}</p>
+            <a class="mt-5 inline-block px-5 py-2 bg-white text-blue-700 font-semibold rounded-full shadow-sm border border-gray-200 hover:bg-gray-50" href="{% url 'learning_paths:export_pdf' path_id=learning_path.id %}">Télécharger le parcours en PDF</a>
+            {% if is_enrolled %}
+                <div class="mt-6 bg-white rounded-xl shadow-sm p-5">
+                    <div class="flex justify-between items-center gap-4">
+                        <p class="font-semibold text-gray-800">{{ learning_path.completed_count }} / {{ learning_path.total_courses }} cours terminés</p>
+                        <p class="font-bold text-yellow-600">{{ learning_path.progress_percentage }}%</p>
+                    </div>
+                    <div class="mt-3 h-2 rounded-full bg-gray-200 overflow-hidden" role="progressbar" aria-label="Progression du parcours" aria-valuenow="{{ learning_path.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="h-full rounded-full bg-yellow-500" style="width: {{ learning_path.progress_percentage }}%"></div>
+                    </div>
+                    {% if learning_path.is_complete %}<p class="mt-3 text-green-700 font-semibold">Parcours terminé !</p>{% endif %}
+                </div>
+                <section class="mt-6 bg-white rounded-xl shadow-sm p-6" aria-labelledby="learning-path-assistant-title">
+                    <p class="text-yellow-600 font-semibold text-sm uppercase tracking-wider">Assistant IA pédagogique</p>
+                    <h2 id="learning-path-assistant-title" class="text-2xl font-bold text-gray-900 mt-2">Une question sur ce parcours ?</h2>
+                    <p class="text-gray-600 mt-2">L’assistant s’appuie sur les descriptions et compétences des cours de ce parcours. Il citera ses sources et signalera si les ressources ne suffisent pas.</p>
+                    <form method="post" action="{% url 'learning_paths:student_detail' path_id=learning_path.id %}" class="mt-4">
+                        {% csrf_token %}
+                        <label class="block font-semibold text-gray-800" for="{{ question_form.question.id_for_label }}">{{ question_form.question.label }}</label>
+                        {{ question_form.question }}
+                        {% if question_form.question.errors %}
+                            <p class="mt-2 text-sm text-red-700" role="alert">{{ question_form.question.errors|striptags }}</p>
+                        {% endif %}
+                        <button class="mt-3 px-5 py-2 bg-blue-700 text-white font-semibold rounded-full hover:bg-blue-800" type="submit">Poser ma question</button>
+                    </form>
+                    {% if ai_error %}
+                        <p class="mt-4 text-red-700" role="alert">{{ ai_error }}</p>
+                    {% endif %}
+                    {% if ai_answer %}
+                        <div class="mt-5 border-t border-gray-200 pt-4" aria-live="polite">
+                            <h3 class="font-bold text-gray-900">Réponse</h3>
+                            <p class="mt-2 text-gray-700 whitespace-pre-line">{{ ai_answer.answer }}</p>
+                            {% if ai_answer.sources %}
+                                <h4 class="mt-4 text-sm font-bold text-gray-800">Sources de ce parcours</h4>
+                                <ul class="mt-2 list-disc pl-5 text-sm text-blue-700">
+                                    {% for source in ai_answer.sources %}
+                                        <li><a class="underline hover:text-blue-900" href="#course-{{ source.id }}">{{ source.title }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </section>
+            {% elif current_user.role == "student" %}
+                <form method="post" action="{% url 'learning_paths:enroll' path_id=learning_path.id %}" class="mt-6">
+                    {% csrf_token %}
+                    <button class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-full shadow hover:bg-yellow-600" type="submit">M’inscrire à ce parcours</button>
+                </form>
+            {% elif not current_user %}
+                <a class="mt-6 inline-block px-6 py-3 bg-yellow-500 text-white font-semibold rounded-full shadow hover:bg-yellow-600" href="{% url 'users:login' %}">Connectez-vous pour vous inscrire</a>
+            {% endif %}
+        </header>
+        <section class="mb-8 bg-white rounded-xl shadow-sm p-6" aria-labelledby="competency-map-title">
+            <div class="flex flex-wrap justify-between items-start gap-3">
+                <div>
+                    <h2 id="competency-map-title" class="text-2xl font-bold text-gray-900">Carte des compétences</h2>
+                    <p class="mt-1 text-sm text-gray-600">Compétences visées par les cours de ce parcours.</p>
+                </div>
+                <ul class="flex flex-wrap gap-2 text-xs font-semibold" aria-label="Légende des statuts">
+                    <li class="rounded-full bg-green-100 text-green-800 px-3 py-1">Acquise</li>
+                    {% if is_enrolled %}<li class="rounded-full bg-blue-100 text-blue-800 px-3 py-1">En cours</li>{% endif %}
+                    <li class="rounded-full bg-gray-100 text-gray-700 px-3 py-1">À travailler</li>
+                </ul>
+            </div>
+            {% if not is_enrolled %}
+                <p class="mt-3 text-sm text-gray-500">Inscrivez-vous pour suivre l’acquisition de vos compétences. « En cours » désigne l’étape actuelle du parcours.</p>
+            {% endif %}
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                {% for course in learning_path.courses %}
+                    {% if course.competencies %}
+                        <article class="rounded-lg border border-gray-200 p-4">
+                            <div class="flex justify-between items-start gap-3">
+                                <h3 class="font-bold text-gray-900">{{ course.title }}</h3>
+                                <span class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold {% if course.competency_status == 'acquired' %}bg-green-100 text-green-800{% elif course.competency_status == 'in_progress' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-700{% endif %}">{{ course.competency_status_label|default:"À travailler" }}</span>
+                            </div>
+                            <ul class="mt-3 list-disc pl-5 text-sm text-gray-600">
+                                {% for competency in course.competencies %}<li>{{ competency }}</li>{% endfor %}
+                            </ul>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        <ol class="space-y-4">
+            {% for course in learning_path.courses %}
+                <li id="course-{{ course.id }}" class="bg-white rounded-xl shadow-sm p-6 flex flex-wrap items-center gap-5">
+                    <span class="w-10 h-10 shrink-0 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">{{ forloop.counter }}</span>
+                    <div class="flex-1">
+                        <h2 class="text-xl font-bold text-gray-900">{{ course.title }}</h2>
+                        <p class="text-gray-600 mt-2">{{ course.description }}</p>
+                        <p class="text-sm text-yellow-600 font-semibold mt-3">{{ course.detail }}</p>
+                    </div>
+                    {% if is_enrolled %}
+                        <form method="post" action="{% url 'learning_paths:progress' path_id=learning_path.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="course_id" value="{{ course.id }}">
+                            <input type="hidden" name="completed" value="{% if course.is_completed %}false{% else %}true{% endif %}">
+                            <button class="px-4 py-2 rounded-full font-semibold {% if course.is_completed %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}" type="submit">
+                                {% if course.is_completed %}Marquer comme non terminé{% else %}Marquer comme terminé{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </main>
+    <style>
+        #id_question { display: block; width: 100%; margin-top: .5rem; padding: .75rem; border: 1px solid #d1d5db; border-radius: .75rem; }
+        #id_question:focus { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+    </style>
+</body>
+</html>

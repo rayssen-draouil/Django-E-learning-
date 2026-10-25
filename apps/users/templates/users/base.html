@@ -207,6 +207,10 @@
     <div class="site-nav-links">
         <a class="nav-link-item" href="{% url 'home' %}">Home</a>
         <a class="nav-link-item" href="{% url 'users:courses' %}">Cours</a>
+        <a class="nav-link-item" href="{% url 'learning_paths:list' %}">Parcours</a>
+        {% if is_student %}
+            <a class="nav-link-item" href="{% url 'learning_paths:student_list' %}">Mes parcours</a>
+        {% endif %}
         <a class="nav-link-item" href="{% url 'users:mentors' %}">Mentors</a>
         <a class="nav-link-item" href="{% url 'users:quiz' %}">Quiz</a>
         {% if request.session.user_id %}

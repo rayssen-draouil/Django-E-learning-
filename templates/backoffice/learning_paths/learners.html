@@ -1,0 +1,64 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Suivi des apprenants | SkillForge</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backoffice/dashboard.css' %}">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell">
+    {% include "backoffice/partials/sidebar.html" with section="learning_paths" role_label="Espace instructeur" %}
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">VOTRE ESPACE SKILLFORGE</p>
+                <h1>Suivi des apprenants</h1>
+                <p class="header-subtitle">{{ learning_path.title }} · {{ learners|length }} apprenant(s) inscrit(s)</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'learning_paths:manage_list' %}" class="outline-button">Mes parcours</a>
+                {% include "backoffice/partials/user_role_chip.html" %}
+            </div>
+        </header>
+        <section class="panel courses-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Progression des apprenants</h2>
+                    <p>Avancement calculé à partir des étapes marquées comme terminées.</p>
+                </div>
+            </div>
+            <div class="course-list">
+                {% for learner in learners %}
+                    <article class="course-row">
+                        <div class="course-info">
+                            <h3>{{ learner.name }}</h3>
+                            <div class="course-meta">
+                                <span>Inscrit le {{ learner.enrolled_at|date:"d/m/Y" }}</span>
+                                <span>{{ learner.completed_count }} / {{ learner.total_courses }} cours · {{ learner.progress_percentage }}%</span>
+                            </div>
+                            <div class="learner-progress" role="progressbar" aria-label="Progression de {{ learner.name }}" aria-valuenow="{{ learner.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                <span style="width: {{ learner.progress_percentage }}%"></span>
+                            </div>
+                            {% if learner.is_complete %}<p class="learner-complete">Parcours terminé</p>{% endif %}
+                        </div>
+                    </article>
+                {% empty %}
+                    <p class="learner-empty">Aucun apprenant n’est inscrit à ce parcours pour le moment.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div>
+<style>
+    .learner-progress { height: .35rem; margin-top: .6rem; overflow: hidden; border-radius: 999px; background: #e9edf7; }
+    .learner-progress span { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+    .learner-complete { margin: .5rem 0 0; color: #159b64; font-size: .72rem; font-weight: 700; }
+    .learner-empty { margin: 0; color: var(--muted); font-size: .82rem; }
+</style>
+</body>
+</html>

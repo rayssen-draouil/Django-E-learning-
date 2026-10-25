@@ -8,33 +8,30 @@
                 <p class="header-subtitle">Review and assign requests, and move each one toward resolution.</p>
             </div>
             <div class="header-actions">
+                <a href="{% url 'support:list' %}" class="outline-button">Front Office Support</a>
                 <a href="{% url 'support:notifications' %}" class="outline-button">Notifications{% if unread_count %} ({{ unread_count }}){% endif %}</a>
-                <a href="{% url 'support:faq' %}" class="outline-button">Knowledge Base</a>
-                <a href="{% url 'support:dashboard' %}" class="primary-button">Dashboard</a>
+                                <a href="{% url 'support:dashboard' %}" class="primary-button">Dashboard</a>
             </div>
         </header>
-
         {% if unread_count %}
         <aside class="support-banner">
             <span>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.</span>
             <a href="{% url 'support:notifications' %}">View notifications →</a>
         </aside>
         {% endif %}
-
-        <section class="panel" aria-label="Queue filters">
+<section class="panel" aria-label="Queue filters">
             <form class="support-form" method="get">
+                <input type="hidden" name="view" value="admin">
                 <div class="support-form-grid">
                     {% for field in filter_form %}<div class="filter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
                 </div>
                 <div class="support-form-actions">
                     <button class="primary-button" type="submit">Filter</button>
-                    <a class="outline-button" href="{% url 'support:list' %}">Reset</a>
+                    <a class="outline-button" href="{% url 'support:list' %}?view=admin">Reset</a>
                 </div>
             </form>
         </section>
-
         <p class="support-result"><span><strong>{{ queue.total }}</strong> ticket{{ queue.total|pluralize }} in the queue</span><span>Tri&nbsp;: {% if filters.sort == "priority" %}priority{% elif filters.sort == "oldest" %}oldest first{% else %}recent activity{% endif %}</span></p>
-
         <section class="panel" aria-label="Requests">
             <div class="panel-heading">
                 <div><h2>Requests</h2><p>Filtered list, most recent first by default.</p></div>
@@ -63,7 +60,6 @@
                 {% endfor %}
             </div>
         </section>
-
         {% if queue.pages > 1 %}
         <nav class="support-pager" aria-label="Pagination">
             {% if queue.page > 1 %}<a class="outline-button" href="?{{ request.GET.urlencode }}&amp;page={{ queue.page|add:"-1" }}">‹ Previous</a>{% else %}<span class="outline-button is-disabled">‹ Previous</span>{% endif %}

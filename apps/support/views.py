@@ -134,18 +134,23 @@ def ticket_list(request):
 
     # Front page: the "New request" form lives directly on this page;
     # a valid POST creates the ticket and leads to its detail page.
-    creation_form = None
-    if not is_admin:
-        creation_form = TicketForm(request.POST if request.method == "POST" else None)
-        if request.method == "POST" and creation_form.is_valid():
-            try:
-                ticket = services.create_ticket(creation_form.cleaned_data, request.mongo_user)
-            except (services.SupportStorageError, PyMongoError):
-                return _storage_error(request)
-            messages.success(request, "Your request was created. The assistant also prepared some helpful suggestions.")
-            return redirect("support:detail", ticket_id=ticket["_id"])
+    creation_form = TicketForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and creation_form.is_valid():
+        try:
+            ticket = services.create_ticket(creation_form.cleaned_data, request.mongo_user)
+        except (services.SupportStorageError, PyMongoError):
+            return _storage_error(request)
+        messages.success(request, "Your request was created. The assistant also prepared some helpful suggestions.")
+        return redirect("support:detail", ticket_id=ticket["_id"])
 
-    template_name = "support/list_admin.html" if is_admin else "support/list_student.html"
+    is_admin_panel = is_admin and (
+        request.GET.get("view") == "admin"
+        or request.GET.get("panel") == "1"
+        or "status" in request.GET
+        or "assignee" in request.GET
+        or request.GET.get("sort") == "priority"
+    ) and request.GET.get("view") != "front"
+    template_name = "support/list_admin.html" if is_admin_panel else "support/list_student.html"
     return render(request, template_name, {"tickets": queue["tickets"], "queue": queue, "filters": filters,
         "filter_form": filter_form, "is_admin": is_admin, "unread_count": unread, "stats": stats,
         "creation_form": creation_form,
@@ -284,7 +289,7 @@ def ticket_create(request):
     requests from old open forms are processed, then redirected to front."""
     if request.mongo_user.get("role") == "admin":
         return HttpResponseForbidden("Administrators cannot create student tickets.")
-    front_url = reverse("support:list") + "#new-request"
+    front_url = reverse("support:list") + "#nouvelle-demande"
     if request.method == "POST":
         form = TicketForm(request.POST)
         if form.is_valid():
