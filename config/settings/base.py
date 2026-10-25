@@ -17,28 +17,40 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+def _load_project_env_file() -> None:
+    """Load simple KEY=value entries from the project-root .env if present.
 
-def _load_env_file(path: Path) -> None:
-    if not path.is_file():
+    Existing process environment values always win. The path is anchored to
+    BASE_DIR so Django behaves the same regardless of the shell's cwd.
+    """
+    env_file = BASE_DIR / ".env"
+    if not env_file.is_file():
         return
     try:
-        with open(path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#') or '=' not in line:
-                    continue
-                k, _, v = line.partition('=')
-                k = k.strip()
-                v = v.strip().strip('"').strip("'")
-                os.environ.setdefault(k, v)
-    except Exception:
-        pass
+        lines = env_file.read_text(encoding="utf-8-sig").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        entry = line.strip()
+        if not entry or entry.startswith("#"):
+            continue
+        if entry.startswith("export "):
+            entry = entry[7:].lstrip()
+        key, separator, value = entry.partition("=")
+        key = key.strip()
+        if not separator or not key.isidentifier() or key in os.environ:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        os.environ[key] = value
 
 
-_load_env_file(BASE_DIR / '.env')
+_load_project_env_file()
 
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 def _env_bool(name: str, default: bool) -> bool:
     value = os.environ.get(name)
@@ -190,7 +202,6 @@ GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_BASE_URL = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 GROQ_TIMEOUT_SECONDS = float(os.environ.get("GROQ_TIMEOUT_SECONDS", "6.0"))
 
-
 # LiveKit Real-Time Classroom Configuration
 LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "").strip()
 LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY", "").strip()
@@ -198,3 +209,10 @@ LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "").strip()
 LIVEKIT_TOKEN_TTL_SECONDS = int(os.environ.get("LIVEKIT_TOKEN_TTL_SECONDS", "900"))
 CLASSROOM_EARLY_JOIN_MINUTES = int(os.environ.get("CLASSROOM_EARLY_JOIN_MINUTES", "15"))
 CLASSROOM_LATE_JOIN_GRACE_MINUTES = int(os.environ.get("CLASSROOM_LATE_JOIN_GRACE_MINUTES", "180"))
+
+# Gemini credentials are used only by server-side quiz generation.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_TIMEOUT_SECONDS = int(os.environ.get("GEMINI_TIMEOUT_SECONDS", "45"))
+QUIZ_AI_GENERATION_LIMIT = int(os.environ.get("QUIZ_AI_GENERATION_LIMIT", "5"))
+QUIZ_AI_GENERATION_WINDOW_SECONDS = int(os.environ.get("QUIZ_AI_GENERATION_WINDOW_SECONDS", "3600"))

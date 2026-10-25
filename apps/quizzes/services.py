@@ -76,7 +76,7 @@ def submit_quiz(quiz_id: Any, *, user: dict[str, Any], answers: dict[ObjectId, l
         selected = {parse_object_id(value) for value in answers.get(question_id, [])}
         valid_options = {option["_id"] for option in question.get("options", [])}
         if not selected.issubset(valid_options):
-            raise QuizSubmissionError("Une réponse envoyée ne correspond pas à cette question.")
+            raise QuizSubmissionError("A submitted answer does not belong to this question.")
         correct = set(question.get("correct_option_ids", []))
         is_correct = selected == correct
         points = float(question.get("points", 1))
@@ -202,7 +202,7 @@ def update_managed_quiz(quiz_id: Any, *, data: dict[str, Any], user: dict[str, A
 def publish_managed_quiz(quiz_id: Any, *, user: dict[str, Any]) -> None:
     quiz = get_managed_quiz(quiz_id, user)
     if not quiz.get("questions"):
-        raise QuizSubmissionError("Ajoutez au moins une question avant de soumettre le quiz.")
+        raise QuizSubmissionError("Add at least one question before publishing the quiz.")
     try:
         if not repositories.update_quiz(quiz["_id"], {"status": "published", "updated_at": _now()}):
             raise QuizNotFoundError

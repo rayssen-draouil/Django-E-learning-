@@ -49,6 +49,8 @@
             <a href="{% url 'users:mentor_sessions_list' %}">Coaching Sessions</a>
         {% elif user.role == 'instructor' or user.role == 'admin' %}
             <a href="{% url 'users:quiz_manage_list' %}">Ouvrir la gestion</a>
+        {% elif user.role == 'student' %}
+            <a href="{% url 'users:backoffice_courses' %}">Voir les cours</a>
         {% else %}
             <a href="{% url 'users:courses' %}">Voir les cours</a>
         {% endif %}
