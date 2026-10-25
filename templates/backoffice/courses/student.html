@@ -25,11 +25,7 @@
         <div class="course-grid">
             {% for course in courses %}
                 <article class="course-card">
-                    {% if course.thumbnail %}
-                        <img class="course-card-media" src="{{ course.thumbnail }}" alt="Illustration du cours {{ course.title }}" loading="lazy">
-                    {% else %}
-                        <div class="course-card-media placeholder" aria-hidden="true">SkillForge</div>
-                    {% endif %}
+                    <img class="course-card-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}" loading="lazy">
                     <div class="course-card-body">
                         <div class="badge-row">
                             <span class="course-badge category">{{ course.category_label }}</span>

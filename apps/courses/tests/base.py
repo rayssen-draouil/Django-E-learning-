@@ -7,7 +7,7 @@ from django.conf import settings
 from django.test import TestCase
 from pymongo import MongoClient
 
-from apps.courses import ai, repository
+from apps.courses import ai, repository, tasks
 
 TEST_DATABASE_NAME = "e_learning_test"
 
@@ -26,9 +26,12 @@ def course_document(**overrides):
         "price": 0.0,
         "language": "fr",
         "is_free": True,
+        "image": "",
+        "image_alt": "",
         "thumbnail": "",
         "thumbnail_url": "",
         "status": "published",
+        "tags": [],
         "instructor_id": ObjectId(),
         "instructor_name": "Ada Lovelace",
         "created_at": now,
@@ -70,6 +73,12 @@ class MongoTestCase(TestCase):
         cls.ai_collection = cls.mongo_db["ai_logs"]
         cls.original_ai_collection = ai.ai_logs_collection
         ai.ai_logs_collection = cls.ai_collection
+        cls.ai_tasks_collection = cls.mongo_db["course_ai_tasks"]
+        cls.original_ai_tasks_collection = tasks.ai_tasks_collection
+        tasks.ai_tasks_collection = cls.ai_tasks_collection
+        cls.translations_collection = cls.mongo_db["course_translations"]
+        cls.original_translations_collection = repository.course_translations_collection
+        repository.course_translations_collection = cls.translations_collection
 
     @classmethod
     def tearDownClass(cls):
@@ -78,6 +87,8 @@ class MongoTestCase(TestCase):
         finally:
             repository.courses_collection = cls.original_collection
             ai.ai_logs_collection = cls.original_ai_collection
+            tasks.ai_tasks_collection = cls.original_ai_tasks_collection
+            repository.course_translations_collection = cls.original_translations_collection
             cls.mongo_client.close()
             super().tearDownClass()
 
@@ -85,8 +96,12 @@ class MongoTestCase(TestCase):
         super().setUp()
         self.collection.delete_many({})
         self.ai_collection.delete_many({})
+        self.ai_tasks_collection.delete_many({})
+        self.translations_collection.delete_many({})
 
     def tearDown(self):
         self.collection.delete_many({})
         self.ai_collection.delete_many({})
+        self.ai_tasks_collection.delete_many({})
+        self.translations_collection.delete_many({})
         super().tearDown()

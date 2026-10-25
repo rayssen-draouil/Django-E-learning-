@@ -47,7 +47,9 @@ class CourseViewTests(MongoTestCase):
             status="published",
             instructor_id=self.owner["_id"],
             instructor_name="Ada Lovelace",
-            thumbnail="https://example.com/python.png",
+            image="courses/python.png",
+            image_alt="Illustration du cours Python publié",
+            thumbnail="courses/python.png",
         )
         self.draft = course_document(
             slug="python-brouillon",
@@ -112,6 +114,43 @@ class CourseViewTests(MongoTestCase):
 
         response = self.client.get(url, {"q": "introuvable"})
         self.assertContains(response, "Aucun cours trouvé")
+
+    def test_public_catalogue_supports_recent_title_price_and_duration_sorting(self):
+        self.collection.delete_many({})
+        self.collection.insert_many([
+            course_document(
+                slug="alpha", title="Alpha", status="published", price=30,
+                duration_hours=5, instructor_id=self.owner["_id"],
+            ),
+            course_document(
+                slug="beta", title="Beta", status="published", price=10,
+                duration_hours=20, instructor_id=self.owner["_id"],
+            ),
+            course_document(
+                slug="gamma", title="Gamma", status="published", price=20,
+                duration_hours=10, instructor_id=self.owner["_id"],
+            ),
+        ])
+        url = reverse("users:courses")
+        expected = {
+            "title": ["Alpha", "Beta", "Gamma"],
+            "price_asc": ["Beta", "Gamma", "Alpha"],
+            "duration_asc": ["Alpha", "Gamma", "Beta"],
+        }
+        for sort_by, titles in expected.items():
+            with self.subTest(sort_by=sort_by):
+                response = self.client.get(url, {"sort": sort_by})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.context["sort_by"], sort_by)
+                self.assertEqual(
+                    [course["title"] for course in response.context["courses"]], titles
+                )
+        for label in ("Plus récents", "Titre, de A à Z", "Prix croissant", "Durée croissante"):
+            self.assertContains(response, label)
+
+        invalid = self.client.get(url, {"sort": "inconnu"})
+        self.assertEqual(invalid.context["sort_by"], "recent")
+        self.assertEqual(invalid.status_code, 200)
 
     def test_public_catalogue_paginates_results(self):
         extra = [
@@ -258,7 +297,14 @@ class CourseViewTests(MongoTestCase):
             reverse("users:course_manage_list"), "/users/backoffice/cours/manage/"
         )
         self.assertEqual(
-            reverse("users:course_manage_create"), "/users/backoffice/cours/manage/create/"
+            reverse("users:course_manage_create"), "/users/backoffice/cours/create/"
+        )
+        self.assertEqual(
+            reverse("courses:course_manage_create"), "/backoffice/cours/create/"
+        )
+        self.assertEqual(
+            reverse("courses:course_manage_detail", args=["abc"]),
+            "/backoffice/cours/abc/",
         )
         list_response = self.client.get(reverse("users:course_manage_list_legacy"))
         self.assertRedirects(
@@ -497,3 +543,54 @@ class CourseViewTests(MongoTestCase):
         self.assertEqual(response.status_code, 503)
         self.assertContains(response, "Impossible de supprimer", status_code=503)
         self.assertIsNotNone(repository.get_course(self.draft["_id"]))
+
+    def test_xss_payload_in_title_and_description_is_auto_escaped(self):
+        xss_course = course_document(
+            slug="xss-test",
+            title="<script>alert('xss-title')</script>",
+            description="<img src=x onerror=alert('xss-desc')>",
+            status="published",
+            instructor_id=self.owner["_id"],
+        )
+        self.collection.insert_one(xss_course)
+        # Public list
+        response = self.client.get(reverse("users:courses"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<script>alert('xss-title')</script>")
+        self.assertContains(response, "&lt;script&gt;alert(&#x27;xss-title&#x27;)&lt;/script&gt;")
+
+        # Detail view
+        detail_response = self.client.get(reverse("users:course_detail", args=["xss-test"]))
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertNotContains(detail_response, "<script>alert('xss-title')</script>")
+        self.assertNotContains(detail_response, "<img src=x onerror=alert('xss-desc')>")
+        self.assertContains(detail_response, "&lt;img src=x onerror=alert(&#x27;xss-desc&#x27;)&gt;")
+
+    def test_nosql_injection_payload_in_search_and_filter_params(self):
+        response = self.client.get(reverse("users:courses"), {"q": '{"$ne": ""}', "category": '{"$gt": ""}'})
+        self.assertEqual(response.status_code, 200)
+
+        client = self._authenticate(Client(), self.owner)
+        manage_response = client.get(reverse("users:course_manage_list"), {"q": '{"$ne": ""}', "status": '{"$gt": ""}'})
+        self.assertEqual(manage_response.status_code, 200)
+
+    def test_pagination_out_of_range_and_invalid_values(self):
+        for invalid_page in ("-1", "0", "99999", "abc"):
+            with self.subTest(page=invalid_page):
+                response = self.client.get(reverse("users:courses"), {"page": invalid_page})
+                self.assertEqual(response.status_code, 200)
+
+    def test_invalid_object_id_or_slug_returns_404_never_500(self):
+        client = self._authenticate(Client(), self.owner)
+        invalid_ids = ["not-an-id", "123", "507f1f77bcf86cd79943901", '{"$ne": 1}']
+        for inv_id in invalid_ids:
+            with self.subTest(inv_id=inv_id):
+                for route in ("course_manage_detail", "course_manage_edit", "course_manage_delete"):
+                    res = client.get(reverse(f"users:{route}", args=[inv_id]))
+                    self.assertEqual(res.status_code, 404)
+
+        invalid_slugs = ["non-existent-course", "slug-with-$operator", "$ne"]
+        for inv_slug in invalid_slugs:
+            with self.subTest(inv_slug=inv_slug):
+                res = self.client.get(f"/users/cours/{inv_slug}/")
+                self.assertEqual(res.status_code, 404)

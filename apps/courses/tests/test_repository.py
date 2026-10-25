@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
@@ -71,3 +73,48 @@ class CourseRepositoryTests(MongoTestCase):
         self.assertEqual(len(page_one), 2)
         self.assertEqual(len(page_two), 1)
         self.assertFalse({item["_id"] for item in page_one} & {item["_id"] for item in page_two})
+
+    def test_public_sort_orders_by_recent_title_price_and_duration(self):
+        now = datetime.now(timezone.utc)
+        self.collection.insert_many([
+            course_document(
+                slug="alpha", title="Alpha", status="published", price=30,
+                duration_hours=5, updated_at=now - timedelta(days=2),
+            ),
+            course_document(
+                slug="beta", title="Beta", status="published", price=10,
+                duration_hours=20, updated_at=now,
+            ),
+            course_document(
+                slug="gamma", title="Gamma", status="published", price=20,
+                duration_hours=10, updated_at=now - timedelta(days=1),
+            ),
+        ])
+
+        def titles(sort_by):
+            return [
+                item["title"]
+                for item in repository.list_courses(published_only=True, sort_by=sort_by)
+            ]
+
+        self.assertEqual(titles("recent"), ["Beta", "Gamma", "Alpha"])
+        self.assertEqual(titles("title"), ["Alpha", "Beta", "Gamma"])
+        self.assertEqual(titles("price_asc"), ["Beta", "Gamma", "Alpha"])
+        self.assertEqual(titles("duration_asc"), ["Alpha", "Gamma", "Beta"])
+        self.assertEqual(titles("unknown"), ["Beta", "Gamma", "Alpha"])
+
+    def test_search_matches_tags_and_rejects_nosql_injection(self):
+        self.collection.insert_one(
+            course_document(
+                slug="tagged-course",
+                title="Formation Complète",
+                status="published",
+                tags=["django", "mongodb"],
+            )
+        )
+        self.assertEqual(repository.count_courses(search="mongodb", published_only=True), 1)
+        # Injection payload rejected safely (returns 0 matches)
+        self.assertEqual(repository.count_courses(search={"$ne": ""}, published_only=True), 0)
+        self.assertEqual(repository.count_courses(search="$where", published_only=True), 0)
+        self.assertIsNone(repository.get_course_by_slug("$gt"))
+        self.assertFalse(repository.slug_exists("$where"))

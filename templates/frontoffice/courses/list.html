@@ -34,9 +34,17 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="filter-field">
+            <label for="course-sort">Trier par</label>
+            <select id="course-sort" name="sort">
+                {% for value, label in sort_choices %}
+                    <option value="{{ value }}"{% if sort_by == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <div class="filter-actions">
             <button class="course-button" type="submit">Filtrer</button>
-            {% if search or category or level %}
+            {% if search or category or level or sort_by != 'recent' %}
                 <a class="course-button secondary" href="{% url 'users:courses' %}">Réinitialiser</a>
             {% endif %}
         </div>
@@ -51,11 +59,7 @@
         <div class="course-grid">
             {% for course in courses %}
                 <article class="course-card">
-                    {% if course.thumbnail %}
-                        <img class="course-card-media" src="{{ course.thumbnail }}" alt="Illustration du cours {{ course.title }}" loading="lazy">
-                    {% else %}
-                        <div class="course-card-media placeholder" aria-hidden="true">SkillForge</div>
-                    {% endif %}
+                    <img class="course-card-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}" loading="lazy">
                     <div class="course-card-body">
                         <div class="badge-row">
                             <span class="course-badge category">{{ course.category_label }}</span>
@@ -80,7 +84,7 @@
         <div class="empty-state">
             <h2>Aucun cours trouvé</h2>
             <p>{% if search or category or level %}Aucun cours ne correspond à ces filtres. Essayez une autre recherche.{% else %}Aucun cours publié pour le moment. Revenez bientôt.{% endif %}</p>
-            {% if search or category or level %}<a class="course-button secondary" href="{% url 'users:courses' %}">Voir tous les cours</a>{% endif %}
+            {% if search or category or level or sort_by != 'recent' %}<a class="course-button secondary" href="{% url 'users:courses' %}">Voir tous les cours</a>{% endif %}
         </div>
     {% endif %}
 

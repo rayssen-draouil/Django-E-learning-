@@ -17,7 +17,7 @@ def form_data(**overrides):
         "level": "beginner",
         "is_free": "on",
         "price": "",
-        "thumbnail": "https://example.com/python.png",
+        "image_alt": "Un serpent Python sur un clavier",
         "status": "draft",
     }
     data.update(overrides)
@@ -32,7 +32,8 @@ class CourseFormTests(SimpleTestCase):
         self.assertEqual(document["price"], 0.0)
         self.assertTrue(document["is_free"])
         self.assertEqual(document["slug"], "")
-        self.assertEqual(document["thumbnail"], "https://example.com/python.png")
+        self.assertEqual(document["image_alt"], "Un serpent Python sur un clavier")
+        self.assertNotIn("image", document)
 
     def test_paid_course_accepts_a_positive_price(self):
         form = CourseForm(form_data(is_free="", price="19.99"))
@@ -58,7 +59,7 @@ class CourseFormTests(SimpleTestCase):
             form_data(title="x" * 161),
             form_data(title="ab"),
             form_data(description="x" * 5001),
-            form_data(thumbnail="not-a-url"),
+            form_data(image_alt="x" * 161),
         )
         for data in cases:
             with self.subTest(data=data):
@@ -105,8 +106,10 @@ class CourseFormTests(SimpleTestCase):
             "level": "advanced",
             "is_free": False,
             "price": 49.5,
-            "thumbnail": "https://example.com/course.png",
+            "image": "courses/existing.png",
+            "image_alt": "Une illustration existante",
             "status": "published",
+            "tags": ["django", "backend"],
         }
         form = CourseForm(None, course=course)
         self.assertFalse(form.is_bound)
@@ -115,6 +118,8 @@ class CourseFormTests(SimpleTestCase):
         self.assertEqual(form["price"].value(), 49.5)
         self.assertEqual(form["objectives"].value(), "Objectif un\nObjectif deux")
         self.assertEqual(form["category"].value(), "web")
+        self.assertEqual(form["tags"].value(), "django, backend")
+        self.assertEqual(form["image_alt"].value(), "Une illustration existante")
         self.assertEqual(form["status"].value(), "published")
 
     def test_invalid_fields_are_linked_to_their_help_text_and_errors(self):
@@ -135,3 +140,13 @@ class CourseFormTests(SimpleTestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["title"], "Python avancé")
         self.assertEqual(form.cleaned_data["description"], "Une description.")
+
+    def test_tags_are_sanitized_and_stored_as_a_list(self):
+        form = CourseForm(form_data(tags=" Django, <b>Python</b>, django, data science "))
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.to_document()["tags"], ["django", "python", "data science"])
+
+    def test_tags_enforce_count_and_per_tag_length(self):
+        too_many = ", ".join(f"tag{i}" for i in range(9))
+        self.assertFalse(CourseForm(form_data(tags=too_many)).is_valid())
+        self.assertFalse(CourseForm(form_data(tags="x" * 31)).is_valid())

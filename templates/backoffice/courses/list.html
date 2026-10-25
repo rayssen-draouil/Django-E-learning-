@@ -1,13 +1,16 @@
 {% extends "backoffice/courses/base.html" %}
-{% block title %}Mes cours{% endblock %}
+{% block title %}Cours{% endblock %}
 {% block content %}
     <header class="dashboard-header">
         <div>
             <p class="eyebrow">ESPACE {{ role_label|upper }}</p>
-            <h1>Mes cours</h1>
+            <h1>Cours</h1>
             <p class="header-subtitle">Créez, modifiez et publiez vos cours. Les brouillons restent privés.</p>
         </div>
-        <a class="course-button" href="{% url 'users:course_manage_create' %}">Créer un cours</a>
+        <div class="course-header-actions">
+            <a class="course-button secondary" href="{% url 'users:course_manage_ai_report' %}">Rapport IA</a>
+            <a class="course-button" href="{% url 'users:course_manage_create' %}">Créer un cours</a>
+        </div>
     </header>
 
     <div class="course-management-tip" role="note">
@@ -33,46 +36,105 @@
             </div>
             <a class="text-link" href="{% url 'users:courses' %}">Voir le catalogue →</a>
         </div>
-        <div class="course-list">
-            {% for course in courses %}
-                <article class="course-row course-manage-row">
-                    {% if course.thumbnail %}
-                        <img class="course-thumb" src="{{ course.thumbnail }}" alt="Illustration du cours {{ course.title }}" loading="lazy">
-                    {% else %}
-                        <div class="course-thumb-placeholder" aria-hidden="true">SkillForge</div>
+
+        <form class="course-filters backoffice-filters" method="get" action="{% url 'users:course_manage_list' %}" role="search">
+            <div class="filter-field">
+                <label for="manage-search">Rechercher un cours</label>
+                <input id="manage-search" type="search" name="q" value="{{ search }}" maxlength="100" placeholder="Titre ou catégorie">
+            </div>
+            <div class="filter-field">
+                <label for="manage-status">Statut</label>
+                <select id="manage-status" name="status">
+                    <option value="">Tous les statuts</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}"{% if status == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="course-button" type="submit">Filtrer</button>
+                {% if search or status %}
+                    <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Réinitialiser</a>
+                {% endif %}
+            </div>
+        </form>
+
+        {% if courses %}
+            <div class="course-table-wrapper">
+                <table class="course-table">
+                    <caption class="visually-hidden">Liste de vos cours, avec actions de gestion</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Image</th>
+                            <th scope="col">Cours</th>
+                            <th scope="col">Catégorie</th>
+                            <th scope="col">Niveau</th>
+                            <th scope="col">Prix</th>
+                            <th scope="col">Statut</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                            <tr>
+                                <td>
+                                    <img class="course-thumb" src="{{ course.image_url }}" alt="{{ course.image_alt }}" loading="lazy">
+                                </td>
+                                <td>
+                                    <strong class="course-table-title">{{ course.title }}</strong>
+                                    <span class="course-table-slug">{{ course.slug }}</span>
+                                    <span class="course-table-meta">{{ course.duration_hours }} h · {{ course.language|upper }}</span>
+                                </td>
+                                <td>{{ course.category_label }}</td>
+                                <td>{{ course.level_label }}</td>
+                                <td class="course-price">{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</td>
+                                <td>
+                                    <span class="course-badge {{ course.status }}">
+                                        {% if course.status == "published" %}Publié{% else %}Brouillon{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="course-actions" aria-label="Actions pour {{ course.title }}">
+                                        <a class="course-button secondary small" href="{% url 'users:course_manage_detail' course_id=course.id %}">Détail</a>
+                                        <a class="course-button secondary small" href="{% url 'users:course_manage_edit' course_id=course.id %}">Modifier</a>
+                                        <form method="post" action="{% url 'users:course_manage_publish' course_id=course.id %}">
+                                            {% csrf_token %}
+                                            <button class="course-button small" type="submit">
+                                                {% if course.status == "published" %}Dépublier{% else %}Publier{% endif %}
+                                            </button>
+                                        </form>
+                                        <a class="course-button danger small" href="{% url 'users:course_manage_delete' course_id=course.id %}" aria-label="Supprimer {{ course.title }}">Supprimer</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_count > 1 %}
+                <nav class="pagination" aria-label="Pagination des cours">
+                    {% if previous_page %}
+                        <a class="course-button secondary small" href="?page={{ previous_page }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}" rel="prev">Page précédente</a>
                     {% endif %}
-                    <div class="course-info">
-                        <h3>{{ course.title }}</h3>
-                        <div class="course-meta-line">
-                            <span class="course-badge {{ course.status }}">
-                                {% if course.status == "published" %}Publié{% else %}Brouillon{% endif %}
-                            </span>
-                            <span>{{ course.category_label }}</span>
-                            <span>{{ course.level_label }}</span>
-                            <span>{{ course.duration_hours }} h · {{ course.language|upper }}</span>
-                            <span class="course-price">{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</span>
-                        </div>
-                        {% if course.description %}<p>{{ course.description|truncatechars:160 }}</p>{% endif %}
-                    </div>
-                    <div class="course-actions" aria-label="Actions pour {{ course.title }}">
-                        <a class="course-button secondary small" href="{% url 'users:course_manage_detail' course_id=course.id %}">Détail</a>
-                        <a class="course-button secondary small" href="{% url 'users:course_manage_edit' course_id=course.id %}">Modifier</a>
-                        <form method="post" action="{% url 'users:course_manage_publish' course_id=course.id %}">
-                            {% csrf_token %}
-                            <button class="course-button small" type="submit">
-                                {% if course.status == "published" %}Dépublier{% else %}Publier{% endif %}
-                            </button>
-                        </form>
-                        <a class="course-button danger small" href="{% url 'users:course_manage_delete' course_id=course.id %}" aria-label="Supprimer {{ course.title }}">Supprimer</a>
-                    </div>
-                </article>
-            {% empty %}
-                <div class="empty-state">
+                    <span>Page {{ page }} sur {{ page_count }}</span>
+                    {% if next_page %}
+                        <a class="course-button secondary small" href="?page={{ next_page }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}" rel="next">Page suivante</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                {% if search or status %}
+                    <h3>Aucun cours ne correspond à ces filtres</h3>
+                    <p>Essayez une autre recherche ou affichez tous les cours.</p>
+                    <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Voir tous les cours</a>
+                {% else %}
                     <h3>Aucun cours pour le moment</h3>
                     <p>Créez votre premier cours pour le retrouver ici, même en brouillon.</p>
                     <a class="course-button" href="{% url 'users:course_manage_create' %}">Créer un cours</a>
-                </div>
-            {% endfor %}
-        </div>
+                {% endif %}
+            </div>
+        {% endif %}
     </section>
 {% endblock %}

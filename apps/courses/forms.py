@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
+import re
 
 from django import forms
 from django.utils.text import slugify
 from pymongo.errors import PyMongoError
 
 from . import repository
+from .images import inspect_image
 
 CATEGORY_CHOICES = (
     ("programming", "Programmation"),
@@ -36,7 +38,7 @@ class CourseForm(forms.Form):
     title = forms.CharField(
         label="Titre",
         max_length=160,
-        widget=forms.TextInput(attrs={"autocomplete": "off", "minlength": 3}),
+        widget=forms.TextInput(attrs={"autocomplete": "off", "minlength": 3, "maxlength": 160}),
     )
     slug = forms.CharField(
         label="Identifiant d'URL (slug)",
@@ -47,16 +49,23 @@ class CourseForm(forms.Form):
     description = forms.CharField(
         label="Description",
         max_length=5000,
-        widget=forms.Textarea(attrs={"rows": 8}),
+        widget=forms.Textarea(attrs={"rows": 8, "maxlength": 5000}),
     )
     objectives = forms.CharField(
         label="Objectifs d'apprentissage",
         max_length=2000,
         required=False,
-        widget=forms.Textarea(attrs={"rows": 5}),
+        widget=forms.Textarea(attrs={"rows": 5, "maxlength": 2000}),
         help_text="Un objectif par ligne. L'assistant IA en propose cinq.",
     )
     category = forms.ChoiceField(label="Catégorie", choices=CATEGORY_CHOICES)
+    tags = forms.CharField(
+        label="Tags",
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={"autocomplete": "off", "maxlength": 255}),
+        help_text="Séparez les tags par des virgules (8 maximum, 30 caractères chacun).",
+    )
     level = forms.ChoiceField(label="Niveau", choices=LEVEL_CHOICES)
     duration_hours = forms.DecimalField(
         label="Durée (heures)",
@@ -65,7 +74,7 @@ class CourseForm(forms.Form):
         min_value=Decimal("0"),
         required=False,
         initial=0,
-        widget=forms.NumberInput(attrs={"min": "0", "step": "0.25", "inputmode": "decimal"}),
+        widget=forms.NumberInput(attrs={"min": "0", "max": "9999.99", "step": "0.25", "inputmode": "decimal"}),
     )
     language = forms.CharField(
         label="Langue",
@@ -81,21 +90,23 @@ class CourseForm(forms.Form):
         decimal_places=2,
         min_value=Decimal("0"),
         required=False,
-        widget=forms.NumberInput(attrs={"min": "0", "step": "0.01", "inputmode": "decimal"}),
+        widget=forms.NumberInput(attrs={"min": "0", "max": "999999.99", "step": "0.01", "inputmode": "decimal"}),
         help_text="Obligatoire pour un cours payant. Ignoré pour un cours gratuit.",
     )
-    thumbnail = forms.URLField(
-        label="Image de couverture (URL)",
-        max_length=500,
+    image = forms.ImageField(
+        label="Image de couverture",
         required=False,
-        help_text="Adresse d'une image affichée sur la fiche du cours. Facultatif.",
+        widget=forms.ClearableFileInput(
+            attrs={"accept": "image/jpeg,image/png,image/webp"}
+        ),
+        help_text="JPG, PNG ou WebP, 2 Mo maximum. Laissez vide pour conserver l'image actuelle.",
     )
-    thumbnail_url = forms.URLField(
-        label="Image de couverture (URL)",
-        max_length=500,
+    image_alt = forms.CharField(
+        label="Texte alternatif de l'image",
+        max_length=160,
         required=False,
-        widget=forms.HiddenInput(),
-        help_text="Adresse d'une image affichée sur la fiche du cours. Facultatif.",
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
+        help_text="Décrivez l'image pour les personnes qui ne peuvent pas la voir. Le titre du cours est utilisé par défaut.",
     )
     status = forms.ChoiceField(label="Statut", choices=STATUS_CHOICES, initial="draft")
 
@@ -109,13 +120,13 @@ class CourseForm(forms.Form):
                 "description": course.get("description", ""),
                 "objectives": "\n".join(course.get("objectives") or []),
                 "category": course.get("category", CATEGORY_CHOICES[0][0]),
+                "tags": ", ".join(course.get("tags") or []),
                 "level": course.get("level", LEVEL_CHOICES[0][0]),
                 "duration_hours": course.get("duration_hours", 0),
                 "language": course.get("language", "fr"),
                 "is_free": course.get("is_free", False),
                 "price": course.get("price") or "",
-                "thumbnail": course.get("thumbnail_url") or course.get("thumbnail", ""),
-                "thumbnail_url": course.get("thumbnail_url") or course.get("thumbnail", ""),
+                "image_alt": course.get("image_alt") or "",
                 "status": course.get("status", "draft"),
             })
         errors = self.errors if self.is_bound else {}
@@ -142,6 +153,41 @@ class CourseForm(forms.Form):
     def clean_objectives(self):
         raw = self.cleaned_data.get("objectives") or ""
         return [" ".join(line.split()) for line in raw.splitlines() if line.strip()]
+
+    def clean_tags(self):
+        raw = self.cleaned_data.get("tags") or ""
+        tags: list[str] = []
+        for value in raw.split(","):
+            tag = re.sub(r"<[^>]*>", "", value).replace("\x00", "")
+            tag = re.sub(r"[^\w\s-]", "", tag, flags=re.UNICODE)
+            tag = " ".join(tag.split()).lower()
+            if not tag:
+                continue
+            if len(tag) > 30:
+                raise forms.ValidationError(
+                    "Chaque tag doit contenir au maximum 30 caractères."
+                )
+            if tag not in tags:
+                tags.append(tag)
+        if len(tags) > 8:
+            raise forms.ValidationError("Saisissez au maximum 8 tags.")
+        return tags
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image:
+            try:
+                inspect_image(image)
+            except forms.ValidationError as error:
+                raise error
+            except Exception as error:  # Pillow/storage errors must stay user friendly.
+                raise forms.ValidationError(
+                    "Le fichier n'est pas une image valide ou il est corrompu."
+                ) from error
+        return image
+
+    def clean_image_alt(self):
+        return " ".join((self.cleaned_data.get("image_alt") or "").split())[:160]
 
     def clean_slug(self):
         raw_slug = (self.cleaned_data.get("slug") or "").strip()
@@ -176,8 +222,7 @@ class CourseForm(forms.Form):
         data["duration_hours"] = float(data.get("duration_hours") or 0)
         data["language"] = data.get("language") or "fr"
         data["is_free"] = bool(data.get("is_free"))
-        thumbnail = (data.get("thumbnail_url") or data.get("thumbnail") or "").strip()
-        data["thumbnail"] = thumbnail
-        data["thumbnail_url"] = thumbnail
+        data.pop("image", None)
+        data["image_alt"] = (data.get("image_alt") or "").strip()
         data["objectives"] = data.get("objectives") or []
         return data

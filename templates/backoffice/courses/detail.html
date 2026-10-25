@@ -7,7 +7,7 @@
             <h1>{{ course.title }}</h1>
             <p class="header-subtitle">Consultez les informations du cours et gérez sa publication.</p>
         </div>
-        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour à mes cours</a>
+        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Retour aux cours</a>
     </header>
 
     <section class="panel" aria-labelledby="course-detail-heading">
@@ -24,14 +24,12 @@
             </div>
         </div>
 
-        {% if course.thumbnail %}
-            <img class="course-detail-media" src="{{ course.thumbnail }}" alt="Illustration du cours {{ course.title }}">
-        {% endif %}
+        <img class="course-detail-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}">
 
         <dl class="course-detail-list">
             <div>
                 <dt>Description</dt>
-                <dd>{{ course.description }}</dd>
+                <dd>{{ course.description|linebreaks }}</dd>
             </div>
             {% if course.objectives %}
                 <div>
@@ -43,6 +41,10 @@
                     </dd>
                 </div>
             {% endif %}
+            <div>
+                <dt>Texte alternatif de l'image</dt>
+                <dd>{{ course.image_alt }}</dd>
+            </div>
             <div>
                 <dt>Tarif</dt>
                 <dd>{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</dd>
@@ -62,6 +64,10 @@
             <div>
                 <dt>Identifiant d'URL</dt>
                 <dd>{{ course.slug }}</dd>
+            </div>
+            <div>
+                <dt>Mis à jour le</dt>
+                <dd>{{ course.updated_at|date:"d/m/Y H:i" }}</dd>
             </div>
         </dl>
 

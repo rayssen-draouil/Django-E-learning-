@@ -207,6 +207,18 @@ class CourseServiceTests(SimpleTestCase):
         self.assertEqual(listing.call_args.kwargs["limit"], services.PAGE_SIZE)
         self.assertTrue(listing.call_args.kwargs["published_only"])
 
+    def test_public_list_exposes_the_four_sort_choices_and_defaults_invalid_values(self):
+        self.assertEqual(
+            [value for value, _label in services.PUBLIC_SORT_CHOICES],
+            ["recent", "title", "price_asc", "duration_asc"],
+        )
+        with patch("apps.courses.services.repository.count_courses", return_value=0), \
+             patch("apps.courses.services.repository.list_courses", return_value=[]) as listing:
+            services.list_public_courses(sort_by="duration_asc")
+            self.assertEqual(listing.call_args.kwargs["sort_by"], "duration_asc")
+            services.list_public_courses(sort_by="price_desc")
+            self.assertEqual(listing.call_args.kwargs["sort_by"], "recent")
+
     def test_public_list_maps_storage_errors(self):
         with patch("apps.courses.services.repository.count_courses", side_effect=PyMongoError):
             with self.assertRaises(services.CourseStorageError):
