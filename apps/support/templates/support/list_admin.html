@@ -31,7 +31,7 @@
                 </div>
             </form>
         </section>
-        <p class="support-result"><span><strong>{{ queue.total }}</strong> ticket{{ queue.total|pluralize }} in the queue</span><span>Tri&nbsp;: {% if filters.sort == "priority" %}priority{% elif filters.sort == "oldest" %}oldest first{% else %}recent activity{% endif %}</span></p>
+        <p class="support-result"><span><strong>{{ queue.total }}</strong> ticket{{ queue.total|pluralize }} in the queue</span><span>Sort&nbsp;: {% if filters.sort == "priority" %}priority{% elif filters.sort == "oldest" %}oldest first{% else %}recent activity{% endif %}</span></p>
         <section class="panel" aria-label="Requests">
             <div class="panel-heading">
                 <div><h2>Requests</h2><p>Filtered list, most recent first by default.</p></div>

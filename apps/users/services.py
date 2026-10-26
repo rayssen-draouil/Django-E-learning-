@@ -248,10 +248,10 @@ def consume_password_reset(
 
 
 ADMIN_ROLE_LABELS = {
-    "admin": "Administrateur",
-    "instructor": "Instructeur",
+    "admin": "Administrator",
+    "instructor": "Instructor",
     "mentor": "Mentor",
-    "student": "Étudiant",
+    "student": "Student",
 }
 
 
@@ -269,9 +269,9 @@ def admin_list_users(*, search: str = "", role: str = "", active: str = "") -> l
 
 def admin_change_role(user_id: str, role: str, acting_user: dict[str, Any]) -> None:
     if role not in ALLOWED_ROLES:
-        raise AdminActionError("Rôle inconnu.")
+        raise AdminActionError("Unknown role.")
     if str(acting_user["_id"]) == str(user_id) and role != "admin":
-        raise AdminActionError("Vous ne pouvez pas retirer votre propre rôle administrateur.")
+        raise AdminActionError("You cannot remove your own administrator role.")
     try:
         matched = repositories.set_user_role(ObjectId(user_id), role, _now())
     except (TypeError, ValueError):
@@ -284,7 +284,7 @@ def admin_change_role(user_id: str, role: str, acting_user: dict[str, Any]) -> N
 
 def admin_set_active(user_id: str, is_active: bool, acting_user: dict[str, Any]) -> None:
     if str(acting_user["_id"]) == str(user_id) and not is_active:
-        raise AdminActionError("Vous ne pouvez pas désactiver votre propre compte.")
+        raise AdminActionError("You cannot deactivate your own account.")
     try:
         matched = repositories.set_user_active(ObjectId(user_id), is_active, _now())
     except (TypeError, ValueError):
@@ -305,9 +305,9 @@ def admin_create_account(
 ) -> dict[str, Any]:
     """Création de compte depuis la console admin (rôle maîtrisé, e-mail unique)."""
     if role not in ALLOWED_ROLES:
-        raise AdminActionError("Rôle inconnu.")
+        raise AdminActionError("Unknown role.")
     if len(password) < 8:
-        raise AdminActionError("Le mot de passe temporaire doit faire au moins 8 caractères.")
+        raise AdminActionError("Temporary password must be at least 8 characters.")
     normalized_email = email.strip().lower()
     timestamp = _now()
     document = {
