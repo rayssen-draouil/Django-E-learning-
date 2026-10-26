@@ -1,5 +1,5 @@
 {% extends "users/base.html" %}
-{% block title %}Inscription | SkillForge{% endblock %}
+{% block title %}Sign Up | SkillForge{% endblock %}
 {% block main_class %}auth-container{% endblock %}
 {% block extra_head %}
 <style>
@@ -50,9 +50,9 @@
 {% block content %}
 <section class="auth-card auth-card-register">
     <div class="auth-brand-mark"><span>S</span></div>
-    <p class="auth-eyebrow">Rejoignez SkillForge</p>
-    <h1>Créez votre compte</h1>
-    <p class="auth-subtitle">Commencez à apprendre avec des cours, des mentors et des quiz.</p>
+    <p class="auth-eyebrow">Join SkillForge</p>
+    <h1>Create your account</h1>
+    <p class="auth-subtitle">Start learning with courses, mentors, and quizzes.</p>
     <form method="post" novalidate>
         {% csrf_token %}{{ form.non_field_errors }}
         {% for field in form %}
@@ -61,9 +61,9 @@
                 {% if field.help_text %}<p class="helptext" id="hint_{{ field.html_name }}">{{ field.help_text }}</p>{% endif %}
             </div>
         {% endfor %}
-        <button class="auth-button" type="submit">Créer mon compte</button>
+        <button class="auth-button" type="submit">Create Account</button>
     </form>
-    <p class="auth-switch">Déjà inscrit ? <a href="{% url 'users:login' %}">Se connecter</a></p>
+    <p class="auth-switch">Already have an account? <a href="{% url 'users:login' %}">Log In</a></p>
 </section>
 <script>
 (function () {
@@ -101,19 +101,19 @@
     }
 
     var regles = {
-        first_name: function (v) { return [v.length > 0, "Prénom obligatoire"]; },
-        last_name: function (v) { return [v.length > 0, "Nom obligatoire"]; },
-        email: function (v) { return [v.length > 0 && EMAIL_RE.test(v), "Adresse e-mail invalide"]; },
-        role: function (v) { return [v === "student" || v === "instructor", "Choisissez un type de compte"]; },
+        first_name: function (v) { return [v.length > 0, "First name is required"]; },
+        last_name: function (v) { return [v.length > 0, "Last name is required"]; },
+        email: function (v) { return [v.length > 0 && EMAIL_RE.test(v), "Invalid email address"]; },
+        role: function (v) { return [v === "student" || v === "instructor" || v === "mentor", "Choose an account type"]; },
         password: function (v) {
-            if (v.length < 8) return [false, "Mot de passe : au moins 8 caractères"];
-            if (!/[a-z]/.test(v)) return [false, "Ajoutez au moins une lettre minuscule"];
-            if (!/[A-Z]/.test(v)) return [false, "Ajoutez au moins une lettre majuscule"];
-            if (!/[0-9]/.test(v)) return [false, "Ajoutez au moins un chiffre"];
+            if (v.length < 8) return [false, "Password: at least 8 characters"];
+            if (!/[a-z]/.test(v)) return [false, "Add at least one lowercase letter"];
+            if (!/[A-Z]/.test(v)) return [false, "Add at least one uppercase letter"];
+            if (!/[0-9]/.test(v)) return [false, "Add at least one number"];
             return [true, ""];
         },
         password_confirm: function (v) {
-            return [v.length > 0 && v === champ("password").value, "Les mots de passe ne correspondent pas"];
+            return [v.length > 0 && v === champ("password").value, "Passwords do not match"];
         }
     };
 
