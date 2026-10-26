@@ -6,7 +6,9 @@ from .base import _env_bool, _env_list
 
 DEBUG = _env_bool("DJANGO_DEBUG", True)
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "development-only-secret-change-me")
-ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+for _h in _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver"):
+    if _h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_h)
 
 # Développement : relecture des templates à chaque requête (pas de cache),
 # sinon toute modification de fichier .html n'apparaît qu'après un restart.

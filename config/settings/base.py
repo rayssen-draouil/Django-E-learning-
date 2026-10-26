@@ -65,7 +65,28 @@ def _env_list(name: str, default: str) -> list[str]:
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "development-only-secret-change-me")
 DEBUG = False
-ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "")
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+if ".onrender.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".onrender.com")
+if "django-e-learning.onrender.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("django-e-learning.onrender.com")
+
+CSRF_TRUSTED_ORIGINS = _env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+if RENDER_EXTERNAL_HOSTNAME:
+    _origin = f"https://{RENDER_EXTERNAL_HOSTNAME}"
+    if _origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_origin)
+if "https://*.onrender.com" not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
+if "https://django-e-learning.onrender.com" not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append("https://django-e-learning.onrender.com")
+
+# Support reverse proxy headers on Render
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 
 # Application definition
@@ -83,6 +104,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -145,8 +167,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -204,7 +235,15 @@ _sender_email = (
 DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else _sender_email
 EMAIL_SENDER = DEFAULT_FROM_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
+RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+_is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_HOSTNAME"))
+_default_site_url = (
+    RENDER_EXTERNAL_URL
+    or (f"https://{RENDER_EXTERNAL_HOSTNAME}" if RENDER_EXTERNAL_HOSTNAME else "https://django-e-learning.onrender.com")
+    if _is_render
+    else "http://127.0.0.1:8000"
+)
+SITE_URL = os.environ.get("SITE_URL", _default_site_url)
 
 # Groq AI Configuration (Mentor Recommendations, Study Assistant & Support AI)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
