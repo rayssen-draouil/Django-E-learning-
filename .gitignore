@@ -33,3 +33,6 @@ backoffice/dist/
 
 .coverage
 .coverage.*
+
+staticfiles/
+media/
