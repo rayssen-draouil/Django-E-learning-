@@ -50,6 +50,11 @@ _LANGUAGES = {"fr": "français", "en": "anglais"}
 def build_prompt(parameters: dict[str, Any]) -> str:
     language = _LANGUAGES[parameters["language"]]
     question_type = _QUESTION_TYPE_NAMES[parameters["question_type"]]
+    duration_minutes = parameters.get("duration_minutes")
+    if duration_minutes:
+        duration_line = f"Quiz duration: {duration_minutes} minutes"
+    else:
+        duration_line = "Quiz duration: Untimed / No time limit"
     return f"""You are an experienced learning assessment author. Create a high-quality quiz using the validated parameters below.
 
 Write the entire quiz in {language}. Return only the requested JSON object matching the supplied response schema. Do not add markdown or explanatory text.
@@ -59,6 +64,7 @@ Topic: {parameters['topic']}
 Description: {parameters['description']}
 Learning objectives: {parameters['objectives']}
 Question count: exactly {parameters['question_count']}
+{duration_line}
 Difficulty: {_DIFFICULTY_NAMES[parameters['difficulty']]}
 Question types: {question_type}
 

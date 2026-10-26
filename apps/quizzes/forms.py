@@ -126,6 +126,13 @@ class QuizAIGenerationForm(forms.Form):
         choices=((5, "5 questions"), (10, "10 questions"), (15, "15 questions"), (20, "20 questions")),
         coerce=int,
     )
+    duration_minutes = forms.IntegerField(
+        label="Duration (minutes)",
+        min_value=0,
+        max_value=300,
+        required=False,
+        initial=15,
+    )
     difficulty = forms.ChoiceField(
         label="Difficulty",
         choices=(("beginner", "Beginner"), ("intermediate", "Intermediate"), ("advanced", "Advanced")),

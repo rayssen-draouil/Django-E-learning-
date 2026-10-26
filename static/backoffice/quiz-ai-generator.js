@@ -97,6 +97,8 @@
     questionList.replaceChildren();
     document.getElementById("quiz-ai-preview-title").value = "";
     document.getElementById("quiz-ai-preview-description").value = "";
+    const previewDuration = document.getElementById("quiz-ai-preview-duration");
+    if (previewDuration) previewDuration.value = "";
     errorBox.hidden = true;
     errorBox.textContent = "";
     status.textContent = "";
@@ -243,6 +245,15 @@
   const displayPreview = (quiz) => {
     document.getElementById("quiz-ai-preview-title").value = quiz.title;
     document.getElementById("quiz-ai-preview-description").value = quiz.description;
+    const previewDuration = document.getElementById("quiz-ai-preview-duration");
+    if (previewDuration) {
+      if (quiz.duration_minutes !== undefined && quiz.duration_minutes !== null) {
+        previewDuration.value = quiz.duration_minutes;
+      } else {
+        const setupDuration = document.getElementById("quiz-ai-duration");
+        previewDuration.value = setupDuration ? setupDuration.value : "15";
+      }
+    }
     questionList.replaceChildren(...quiz.questions.map((question, index) => renderQuestion(question, index)));
     updateQuestionMeta();
     setStage(2);
@@ -268,6 +279,9 @@
     const payload = Object.fromEntries(formData.entries());
     delete payload.csrfmiddlewaretoken;
     payload.question_count = Number(payload.question_count);
+    if (payload.duration_minutes !== undefined && payload.duration_minutes !== "") {
+      payload.duration_minutes = Number(payload.duration_minutes);
+    }
     setBusy(generateButton, true, "Generating…");
     status.textContent = "Gemini is preparing the questions. This may take a few seconds.";
     try {
@@ -307,6 +321,16 @@
   const readPreview = () => {
     const title = document.getElementById("quiz-ai-preview-title").value.trim();
     const description = document.getElementById("quiz-ai-preview-description").value.trim();
+    const previewDuration = document.getElementById("quiz-ai-preview-duration");
+    let duration_seconds = null;
+    let duration_minutes = 0;
+    if (previewDuration && previewDuration.value.trim() !== "") {
+      const mins = Number(previewDuration.value.trim());
+      if (Number.isFinite(mins) && mins > 0) {
+        duration_minutes = Math.round(mins);
+        duration_seconds = duration_minutes * 60;
+      }
+    }
     const questions = [...questionList.querySelectorAll("[data-question-card]")].map((card) => ({
       type: card.querySelector("[data-question-type]").value,
       prompt: card.querySelector("[data-question-prompt]").value.trim(),
@@ -318,7 +342,7 @@
         .map((row, index) => row.querySelector('input[type="radio"], input[type="checkbox"]').checked ? index : null)
         .filter((index) => index !== null),
     }));
-    return { title, description, questions };
+    return { title, description, duration_seconds, duration_minutes, questions };
   };
 
   saveButton.addEventListener("click", async () => {
@@ -328,6 +352,15 @@
     if (!payload.title || !payload.description) {
       showError("Title and description are required.");
       return;
+    }
+    const previewDuration = document.getElementById("quiz-ai-preview-duration");
+    if (previewDuration && previewDuration.value.trim() !== "") {
+      const mins = Number(previewDuration.value.trim());
+      if (!Number.isFinite(mins) || mins < 0 || mins > 300) {
+        showError("Quiz duration must be between 0 and 300 minutes.");
+        previewDuration.focus();
+        return;
+      }
     }
     if (!payload.questions.length || payload.questions.length > 100) {
       showError("The quiz must contain between 1 and 100 questions.");
