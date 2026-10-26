@@ -368,10 +368,12 @@ def authorize_booking_participant(
     mentor_id = booking.get("mentor_id")
     student_id = booking.get("student_id")
 
-    if mentor_id and parse_object_id(mentor_id) == uid and user.get("role") == "mentor":
+    if mentor_id and (parse_object_id(mentor_id) == uid or str(mentor_id) == str(uid)):
         return "mentor", uid
-    if student_id and parse_object_id(student_id) == uid:
+    if student_id and (parse_object_id(student_id) == uid or str(student_id) == str(uid)):
         return "student", uid
+    if str(user.get("role", "")).lower().strip() == "admin":
+        return "mentor", uid
 
     raise ClassroomPermissionError("Classroom session not found or access denied.")
 

@@ -1023,7 +1023,9 @@ def mentor_complete_session(
     mid = parse_object_id(mentor_user.get("_id"))
     bid = parse_object_id(booking_id)
 
-    booking = bookings_collection.find_one({"_id": bid, "mentor_id": mid})
+    booking = bookings_collection.find_one({"_id": bid, "mentor_id": {"$in": [mid, str(mid)]}})
+    if not booking and str(mentor_user.get("role", "")).lower().strip() == "admin":
+        booking = bookings_collection.find_one({"_id": bid})
     if not booking:
         raise BookingNotFoundError("Booking request not found.")
 
@@ -1031,7 +1033,7 @@ def mentor_complete_session(
         # Idempotent completion
         return True
 
-    if booking.get("status") != STATUS_ACCEPTED:
+    if booking.get("status") not in (STATUS_ACCEPTED, "in_progress", "ongoing"):
         raise BookingValidationError("Only confirmed sessions can be marked as completed.")
 
     now = _now()
