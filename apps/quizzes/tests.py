@@ -530,3 +530,28 @@ class QuizAIGenerationTests(SimpleTestCase):
             with self.assertRaises(GeminiGenerationError):
                 generate_json("prompt", {})
 
+    def test_form_accepts_valid_duration_minutes(self):
+        form = QuizAIGenerationForm({
+            "topic": "Python", "description": "Python Quiz", "objectives": "Learn Python",
+            "question_count": "5", "duration_minutes": "20", "difficulty": "intermediate",
+            "question_type": "mixed", "language": "en"
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["duration_minutes"], 20)
+
+    def test_build_prompt_includes_duration(self):
+        from apps.quizzes.ai.quiz_generator import build_prompt
+        prompt_with_dur = build_prompt({
+            "topic": "Python", "description": "Desc", "objectives": "Obj",
+            "question_count": 5, "duration_minutes": 25, "difficulty": "intermediate",
+            "question_type": "single_choice", "language": "en"
+        })
+        self.assertIn("Quiz duration: 25 minutes", prompt_with_dur)
+
+        prompt_untimed = build_prompt({
+            "topic": "Python", "description": "Desc", "objectives": "Obj",
+            "question_count": 5, "duration_minutes": 0, "difficulty": "intermediate",
+            "question_type": "single_choice", "language": "en"
+        })
+        self.assertIn("Quiz duration: Untimed / No time limit", prompt_untimed)
+

@@ -350,6 +350,18 @@ def generate_quiz_with_ai(request):
     })
     if not validation_form.is_valid():
         return JsonResponse({"error": "The generated response does not match the quiz format. Generate it again."}, status=502)
+    duration_min = form.cleaned_data.get("duration_minutes")
+    if duration_min is not None and duration_min != "":
+        try:
+            d_min = int(duration_min)
+            generated["duration_minutes"] = d_min
+            generated["duration_seconds"] = d_min * 60 if d_min > 0 else None
+        except (ValueError, TypeError):
+            generated["duration_minutes"] = 15
+            generated["duration_seconds"] = 900
+    else:
+        generated["duration_minutes"] = 0
+        generated["duration_seconds"] = None
     return JsonResponse({"quiz": generated}, status=200)
 
 
@@ -363,11 +375,28 @@ def create_ai_quiz_draft(request):
         questions_json = json.dumps(payload.get("questions"), ensure_ascii=False)
     except (TypeError, ValueError):
         return JsonResponse({"error": "The question list is invalid."}, status=400)
+    duration_val = ""
+    raw_duration = payload.get("duration_seconds")
+    if raw_duration in (None, "", "null") and "duration_minutes" in payload:
+        try:
+            mins = int(payload.get("duration_minutes"))
+            raw_duration = mins * 60 if mins > 0 else ""
+        except (ValueError, TypeError):
+            raw_duration = ""
+
+    if raw_duration not in (None, "", "null", 0, "0"):
+        try:
+            parsed = int(raw_duration)
+            if parsed > 0:
+                duration_val = parsed
+        except (ValueError, TypeError):
+            duration_val = ""
+
     form = QuizForm({
         "title": payload.get("title", ""),
         "description": payload.get("description", ""),
         "status": "draft",
-        "duration_seconds": "",
+        "duration_seconds": duration_val,
         "passing_score": "",
         "questions_json": questions_json,
     })
