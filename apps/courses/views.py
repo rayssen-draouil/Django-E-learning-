@@ -79,7 +79,7 @@ def _current_user(request) -> dict[str, Any] | None:
 
 
 def _role_label(user: dict[str, Any]) -> str:
-    return ROLE_LABELS.get(user.get("role"), "Membre")
+    return ROLE_LABELS.get(user.get("role"), "Member")
 
 
 def _page_number(value: str | None) -> int:

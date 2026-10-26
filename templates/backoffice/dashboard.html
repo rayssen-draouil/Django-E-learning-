@@ -19,7 +19,7 @@
             <header class="dashboard-header">
                 <div>
                     <p class="eyebrow">VOTRE ESPACE SKILLFORGE · {{ role_label }}</p>
-                    <h1>Bonjour {{ user.first_name|default:"apprenant" }}</h1>
+                    <h1>Hello {{ user.first_name|default:"Learner" }}</h1>
                     <p class="header-subtitle">{% if is_mentor %}Create and manage your coaching time slots.{% else %}Voici un aperçu de votre progression.{% endif %}</p>
                 </div>
                 <div class="header-actions">
@@ -28,10 +28,10 @@
                         <a href="{% url 'users:mentor_availability_create' %}" class="primary-button btn-create-availability">+ Create Availability</a>
                     {% endif %}
                     {% if user.role == 'instructor' or user.role == 'admin' %}
-                        <a href="{% url 'users:course_manage_list' %}" class="outline-button">Mes cours</a>
-                        <a href="{% url 'users:course_manage_create' %}" class="outline-button">Nouveau cours</a>
+                        <a href="{% url 'users:course_manage_list' %}" class="outline-button">Courses</a>
+                        <a href="{% url 'users:course_manage_create' %}" class="outline-button">New Course</a>
                     {% endif %}
-                    <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+                    <a href="{% url 'home' %}" class="outline-button">View Site</a>
                     {% include "backoffice/partials/user_role_chip.html" %}
                 </div>
             </header>
