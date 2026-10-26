@@ -294,12 +294,14 @@ def forgot_password(request):
             return render(request, "users/forgot_password.html", {"form": ForgotPasswordForm(), "dev_reset_link": None})
         if token:
             lien = request.build_absolute_uri(reverse("users:reset_password", args=[token]))
-            if getattr(settings, "EMAIL_HOST_USER", None):
+            email_sent = False
+            has_credentials = bool(getattr(settings, "EMAIL_HOST_USER", None) or getattr(settings, "BREVO_API_KEY", None))
+            if has_credentials:
                 try:
-                    _envoyer_lien_reset(email, lien)
+                    email_sent = _envoyer_lien_reset(email, lien)
                 except Exception:
-                    messages.error(request, "Failed to send email. Please try again in a few moments.")
-            if settings.DEBUG:
+                    email_sent = False
+            if settings.DEBUG or not email_sent:
                 dev_reset_link = lien
         messages.success(request, RAPPEL_RESET)
         return render(request, "users/forgot_password.html", {"form": ForgotPasswordForm(), "dev_reset_link": dev_reset_link})
