@@ -1,4 +1,3 @@
-
 import logging
 
 from django.conf import settings
@@ -7,7 +6,7 @@ from pymongo.errors import PyMongoError
 
 client = MongoClient(
     settings.MONGODB_URI,
-    serverSelectionTimeoutMS=5000,
+    serverSelectionTimeoutMS=10000,
 )
 
 db = client[settings.MONGODB_DATABASE]
