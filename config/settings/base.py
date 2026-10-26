@@ -66,23 +66,33 @@ def _env_list(name: str, default: str) -> list[str]:
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "development-only-secret-change-me")
 DEBUG = False
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+ALLOWED_HOSTS = [
+    "django-e-learning.onrender.com",
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1",
+    "testserver",
+    "*",
+]
 if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-if ".onrender.com" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(".onrender.com")
-if "django-e-learning.onrender.com" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("django-e-learning.onrender.com")
+for _h in _env_list("DJANGO_ALLOWED_HOSTS", ""):
+    if _h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_h)
 
-CSRF_TRUSTED_ORIGINS = _env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [
+    "https://django-e-learning.onrender.com",
+    "https://*.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
 if RENDER_EXTERNAL_HOSTNAME:
     _origin = f"https://{RENDER_EXTERNAL_HOSTNAME}"
     if _origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(_origin)
-if "https://*.onrender.com" not in CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
-if "https://django-e-learning.onrender.com" not in CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append("https://django-e-learning.onrender.com")
+for _o in _env_list("DJANGO_CSRF_TRUSTED_ORIGINS", ""):
+    if _o not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_o)
 
 # Support reverse proxy headers on Render
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -236,13 +246,18 @@ DEFAULT_FROM_EMAIL = f'"{_sender_name}" <{_sender_email}>' if _sender_name else 
 EMAIL_SENDER = DEFAULT_FROM_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
-_is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_EXTERNAL_HOSTNAME"))
+_is_render = bool(
+    os.environ.get("RENDER")
+    or os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+    or os.environ.get("RENDER_SERVICE_ID")
+    or os.environ.get("RENDER_EXTERNAL_URL")
+)
 _default_site_url = (
     RENDER_EXTERNAL_URL
     or (f"https://{RENDER_EXTERNAL_HOSTNAME}" if RENDER_EXTERNAL_HOSTNAME else "https://django-e-learning.onrender.com")
-    if _is_render
-    else "http://127.0.0.1:8000"
 )
+if not _is_render and os.environ.get("DJANGO_DEBUG", "false").lower() in ("true", "1"):
+    _default_site_url = "http://127.0.0.1:8000"
 SITE_URL = os.environ.get("SITE_URL", _default_site_url)
 
 # Groq AI Configuration (Mentor Recommendations, Study Assistant & Support AI)

@@ -264,7 +264,7 @@ def build_classroom_path(booking_id: Any) -> str:
 
 
 def build_absolute_classroom_url(booking_id: Any) -> str:
-    base_url = (getattr(settings, "SITE_URL", "http://127.0.0.1:8000") or "http://127.0.0.1:8000").rstrip("/")
+    base_url = (getattr(settings, "SITE_URL", "https://django-e-learning.onrender.com") or "https://django-e-learning.onrender.com").rstrip("/")
     return f"{base_url}{build_classroom_path(booking_id)}"
 
 
