@@ -113,7 +113,7 @@ class CourseViewTests(MongoTestCase):
         self.assertNotContains(response, "Python publié")
 
         response = self.client.get(url, {"q": "introuvable"})
-        self.assertContains(response, "Aucun cours trouvé")
+        self.assertContains(response, "No courses found")
 
     def test_public_catalogue_supports_recent_title_price_and_duration_sorting(self):
         self.collection.delete_many({})
@@ -165,13 +165,13 @@ class CourseViewTests(MongoTestCase):
         self.collection.insert_many(extra)
         url = reverse("users:courses")
         response = self.client.get(url)
-        self.assertContains(response, "Page 1 sur 2")
-        self.assertContains(response, "Page suivante")
+        self.assertContains(response, "Page 1 of 2")
+        self.assertContains(response, "Next page")
         response = self.client.get(url, {"page": 2})
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Page 2 sur 2")
-        self.assertContains(response, "Page précédente")
-        self.assertNotContains(response, "Page suivante")
+        self.assertContains(response, "Page 2 of 2")
+        self.assertContains(response, "Previous page")
+        self.assertNotContains(response, "Next page")
         self.assertEqual(self.client.get(url, {"page": "invalid"}).status_code, 200)
 
     def test_published_detail_is_public_but_drafts_are_private(self):
@@ -191,7 +191,7 @@ class CourseViewTests(MongoTestCase):
         owner_client = self._authenticate(Client(), self.owner)
         response = owner_client.get(draft_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Brouillon")
+        self.assertContains(response, "Draft")
 
         admin_client = self._authenticate(Client(), self.admin)
         self.assertEqual(admin_client.get(draft_url).status_code, 200)
@@ -287,9 +287,9 @@ class CourseViewTests(MongoTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Brouillon Python")
-        self.assertContains(response, "Publier")
-        self.assertContains(response, "Modifier")
-        self.assertContains(response, "Supprimer")
+        self.assertContains(response, "Publish")
+        self.assertContains(response, "Edit")
+        self.assertContains(response, "Delete")
         self.assertEqual(response.content.count(b"<h1"), 1)
 
     def test_legacy_course_urls_redirect_to_the_management_routes(self):
@@ -399,7 +399,7 @@ class CourseViewTests(MongoTestCase):
         delete_url = reverse("users:course_manage_delete", args=[str(self.draft["_id"])])
         response = client.get(delete_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Confirmer la suppression")
+        self.assertContains(response, "Confirm deletion")
         self.assertIsNotNone(repository.get_course(self.draft["_id"]))
         token = client.cookies["csrftoken"].value
         response = client.post(delete_url, {}, HTTP_X_CSRFTOKEN=token)
@@ -458,27 +458,27 @@ class CourseViewTests(MongoTestCase):
         with patch("apps.courses.repository.list_courses", side_effect=PyMongoError):
             response = self.client.get(reverse("users:courses"))
         self.assertEqual(response.status_code, 503)
-        self.assertContains(response, "temporairement indisponible", status_code=503)
+        self.assertContains(response, "temporarily unavailable", status_code=503)
 
         with patch("apps.courses.repository.get_course_by_slug", side_effect=PyMongoError):
             response = self.client.get(
                 reverse("users:course_detail", args=[self.published["slug"]])
             )
         self.assertEqual(response.status_code, 503)
-        self.assertContains(response, "temporairement indisponible", status_code=503)
+        self.assertContains(response, "temporarily unavailable", status_code=503)
 
         client = self._authenticate(Client(), self.owner)
         with patch("apps.courses.repository.list_courses", side_effect=PyMongoError):
             response = client.get(reverse("users:course_manage_list"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "indisponibles")
+        self.assertContains(response, "unavailable")
 
         with patch("apps.courses.repository.get_course", side_effect=PyMongoError):
             response = client.get(
                 reverse("users:course_manage_edit", args=[str(self.draft["_id"])])
             )
         self.assertEqual(response.status_code, 503)
-        self.assertContains(response, "Service temporairement indisponible", status_code=503)
+        self.assertContains(response, "Service temporarily unavailable", status_code=503)
 
     def test_optional_session_user_storage_failures_fall_back_to_anonymous(self):
         session = self.client.session

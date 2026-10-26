@@ -1,30 +1,30 @@
 {% extends "backoffice/courses/base.html" %}
-{% block title %}Mes cours{% endblock %}
+{% block title %}My Courses{% endblock %}
 {% block content %}
     <header class="dashboard-header">
         <div>
-            <p class="eyebrow">ESPACE ÉTUDIANT</p>
-            <h1>Mes cours</h1>
-            <p class="header-subtitle">Découvrez les cours publiés et poursuivez votre apprentissage.</p>
+            <p class="eyebrow">STUDENT SPACE</p>
+            <h1>My Courses</h1>
+            <p class="header-subtitle">Discover published courses and continue your learning.</p>
         </div>
-        <div class="header-actions">
-            <a class="outline-button course-button secondary" href="{% url 'users:courses' %}">Explorer le catalogue</a>
-            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
-            {% include "backoffice/partials/user_role_chip.html" %}
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:courses' %}">Explore catalog</a>
+            <a href="{% url 'home' %}" class="outline-button">View Site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
         </div>
     </header>
 
     {% if storage_error %}
-        <div class="course-message error" role="alert">Les cours sont temporairement indisponibles. Réessayez dans quelques instants.</div>
+        <div class="course-message error" role="alert">Courses are temporarily unavailable. Please try again in a few moments.</div>
     {% endif %}
 
     <section class="panel" aria-labelledby="student-courses-heading">
         <div class="panel-heading">
             <div>
-                <h2 id="student-courses-heading">Cours disponibles</h2>
-                <p>Seuls les cours publiés apparaissent dans cet espace.</p>
+                <h2 id="student-courses-heading">Available Courses</h2>
+                <p>Only published courses appear in this space.</p>
             </div>
-            <span class="trend">{{ courses|length }} cours</span>
+            <span class="trend">{{ courses|length }} course{{ courses|length|pluralize }}</span>
         </div>
         <div class="course-grid">
             {% for course in courses %}
@@ -37,18 +37,18 @@
                         </div>
                         <h3>{{ course.title }}</h3>
                         <p>{{ course.description|truncatechars:140 }}</p>
-                        <p class="course-instructor">Par {{ course.instructor_name }}</p>
+                        <p class="course-instructor">By {{ course.instructor_name }}</p>
                     </div>
                     <div class="course-card-footer">
-                        <span class="course-price">{% if course.is_free %}Gratuit{% else %}{{ course.price }} €{% endif %}</span>
-                        <a class="course-button small" href="{% url 'users:course_detail' slug=course.slug %}">Voir le cours</a>
+                        <span class="course-price">{% if course.is_free %}Free{% else %}{{ course.price }} €{% endif %}</span>
+                        <a class="course-button small" href="{% url 'users:course_detail' slug=course.slug %}">View Course</a>
                     </div>
                 </article>
             {% empty %}
                 <div class="empty-state">
-                    <h3>Aucun cours disponible</h3>
-                    <p>Les cours publiés apparaîtront ici dès qu'un instructeur les aura publiés.</p>
-                    <a class="course-button secondary" href="{% url 'users:courses' %}">Voir le catalogue</a>
+                    <h3>No courses available</h3>
+                    <p>Published courses will appear here once an instructor publishes them.</p>
+                    <a class="course-button secondary" href="{% url 'users:courses' %}">View catalog</a>
                 </div>
             {% endfor %}
         </div>

@@ -8,7 +8,7 @@
     <nav class="dashboard-nav" aria-label="Dashboard navigation">
         <a href="{% url 'users:backoffice' %}" class="{% if section == 'overview' %}active{% endif %}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            <span>Tableau de bord</span>
+            <span>Dashboard</span>
         </a>
         {% if user.role == 'mentor' %}
         <a href="{% url 'users:mentor_sessions_list' %}" class="{% if section == 'sessions' %}active{% endif %}">
@@ -22,22 +22,22 @@
         {% else %}
         <a href="{% if user.role == 'student' %}{% url 'users:backoffice_courses' %}{% else %}{% url 'users:course_manage_list' %}{% endif %}" class="{% if section == 'courses' %}active{% endif %}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span>Mes cours</span>
+            <span>{% if user.role == 'student' %}My Courses{% else %}Courses{% endif %}</span>
         </a>
         {% if user.role == 'instructor' or user.role == 'admin' %}
         <a href="{% url 'users:course_manage_create' %}">
             <span class="nav-icon" aria-hidden="true">+</span>
-            <span>Nouveau cours</span>
+            <span>New Course</span>
         </a>
         {% endif %}
         <a href="{% if user.role == 'instructor' or user.role == 'admin' %}{% url 'learning_paths:manage_list' %}{% else %}{% url 'learning_paths:list' %}{% endif %}" class="{% if section == 'learning_paths' %}active{% endif %}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"></path><circle cx="7" cy="5" r="1"></circle><circle cx="7" cy="12" r="1"></circle><circle cx="7" cy="19" r="1"></circle></svg>
-            <span>Parcours</span>
+            <span>Learning Paths</span>
         </a>
         {% if user.role == 'student' %}
         <a href="{% url 'learning_paths:student_list' %}" class="{% if section == 'my_learning_paths' %}active{% endif %}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" aria-hidden="true"><path d="M5 3h14v18l-7-4-7 4z"></path></svg>
-            <span>Mes parcours</span>
+            <span>My Learning Paths</span>
         </a>
         {% endif %}
         <a href="{% if user.role == 'student' %}{% url 'users:backoffice_mentors' %}{% else %}{% url 'users:mentors' %}{% endif %}" class="{% if section == 'mentors' %}active{% endif %}">
@@ -58,7 +58,7 @@
         </a>
         {% if user.role == 'admin' %}
         <a href="{% url 'users:admin_users' %}" class="{% if section == 'users' %}active{% endif %}">
-            <span class="nav-icon">👥</span> Utilisateurs
+            <span class="nav-icon">👥</span> Users
         </a>
         {% endif %}
         <a href="{% if user.role == 'admin' %}{% url 'support:dashboard' %}{% else %}{% url 'support:board' %}{% endif %}" class="{% if section == 'support' %}active{% endif %}">
@@ -72,11 +72,11 @@
         {% if user.role == 'mentor' %}
             <a href="{% url 'users:mentor_sessions_list' %}">Coaching Sessions</a>
         {% elif user.role == 'instructor' or user.role == 'admin' %}
-            <a href="{% url 'users:quiz_manage_list' %}">Ouvrir la gestion</a>
+            <a href="{% url 'users:quiz_manage_list' %}">Open Management</a>
         {% elif user.role == 'student' %}
-            <a href="{% url 'users:backoffice_courses' %}">Voir les cours</a>
+            <a href="{% url 'users:backoffice_courses' %}">View Courses</a>
         {% else %}
-            <a href="{% url 'users:courses' %}">Voir les cours</a>
+            <a href="{% url 'users:courses' %}">View Courses</a>
         {% endif %}
     </div>
     <form method="post" action="{% url 'users:logout' %}" class="logout-form">

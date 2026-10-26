@@ -156,16 +156,16 @@ class CourseFormAccessibilityTests(SimpleTestCase):
         content = response.content.decode("utf-8")
         for field_name in ("title", "description", "category", "level", "status"):
             self.assertIn(
-                f'id="id_{field_name}_help">Champ obligatoire.</p>',
+                f'id="id_{field_name}_help">Required field.</p>',
                 content,
                 f"Le champ obligatoire {field_name} doit afficher « Champ obligatoire. ».",
             )
         self.assertNotIn(
-            'id="id_title_help">Champ facultatif.',
+            'id="id_title_help">Optional field.',
             content,
         )
         self.assertNotIn(
-            'id="id_description_help">Champ facultatif.',
+            'id="id_description_help">Optional field.',
             content,
         )
 

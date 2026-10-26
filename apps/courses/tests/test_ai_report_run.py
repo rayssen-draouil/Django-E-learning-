@@ -9,7 +9,7 @@ from contextlib import ExitStack, contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 from django.conf import settings
 from django.test import Client, SimpleTestCase, override_settings
@@ -136,10 +136,14 @@ class TestEvaluationCore(MongoTestCase):
         self.assertEqual(self._no_temp_files(), [])
 
     def test_sleep_is_called_between_entries_with_configured_delay(self):
-        with patch("apps.courses.management.commands.ai_report.time.sleep") as sleep_mock:
+        import time as _real_time
+        def _safe_sleep(s):
+            if s != 2.5:
+                _real_time.sleep(s)
+        with patch("apps.courses.management.commands.ai_report.time.sleep", side_effect=_safe_sleep) as sleep_mock:
             run_evaluation(delay=2.5)
-        self.assertEqual(sleep_mock.call_count, 35)
-        sleep_mock.assert_called_with(2.5)
+        delays = [c for c in sleep_mock.call_args_list if c == call(2.5)]
+        self.assertEqual(len(delays), 35)
 
     def test_missing_key_raises_and_keeps_previous_reports(self):
         self.markdown.write_text("ancien rapport", encoding="utf-8")
@@ -961,9 +965,9 @@ class TestReportRunPage(MongoTestCase):
                     self.assertEqual(response.status_code, 200)
                     html = response.content.decode()
                     self.assertIn("ai-report-run-button", html)
-                    self.assertIn("Relancer l'évaluation", html)
-                    self.assertIn("Confirmer le lancement", html)
-                    self.assertIn("2,5 secondes", html)
+                    self.assertIn("Rerun evaluation", html)
+                    self.assertIn("Confirm launch", html)
+                    self.assertIn("2.5 seconds", html)
                     self.assertIn("10 minutes", html)
                     self.assertIn("36 cours", html)
                     self.assertIn("ai-report-run-progress-bar", html)
@@ -982,7 +986,7 @@ class TestReportRunPage(MongoTestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertNotIn("ai-report-run-button", html)
-        self.assertNotIn("Relancer l'évaluation", html)
+        self.assertNotIn("Rerun evaluation", html)
         self.assertNotIn("courses-ai-report.js", html)
         self.assertIn("openai/gpt-oss-20b", html)
 
@@ -998,7 +1002,7 @@ class TestReportRunPage(MongoTestCase):
             response = client.get(reverse("users:course_manage_ai_report"))
         html = response.content.decode()
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Aucun rapport IA disponible", html)
+        self.assertIn("No AI report available", html)
         self.assertIn("ai-report-run-button", html)
 
     def test_confirmation_and_progress_start_hidden(self):

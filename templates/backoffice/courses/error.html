@@ -1,15 +1,15 @@
 {% extends "backoffice/courses/base.html" %}
-{% block title %}Service indisponible{% endblock %}
+{% block title %}Service Unavailable{% endblock %}
 {% block content %}
     <header class="dashboard-header">
         <div>
-            <p class="eyebrow">ESPACE {{ role_label|upper }}</p>
-            <h1>Service temporairement indisponible</h1>
-            <p class="header-subtitle">La base de données n'a pas répondu à temps.</p>
+            <p class="eyebrow">{{ role_label|upper }} SPACE</p>
+            <h1>Service temporarily unavailable</h1>
+            <p class="header-subtitle">The database did not respond in time.</p>
         </div>
     </header>
     <section class="panel" role="alert">
-        <p>Vos cours n'ont pas pu être chargés. Réessayez dans quelques instants.</p>
-        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Réessayer</a>
+        <p>Your courses could not be loaded. Please try again in a few moments.</p>
+        <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Try again</a>
     </section>
 {% endblock %}

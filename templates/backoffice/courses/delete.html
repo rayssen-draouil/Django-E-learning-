@@ -1,28 +1,28 @@
 {% extends "backoffice/courses/base.html" %}
-{% block title %}Supprimer le cours{% endblock %}
+{% block title %}Delete Course{% endblock %}
 {% block content %}
     <header class="dashboard-header">
         <div>
             <p class="eyebrow">CONFIRMATION</p>
-            <h1>Supprimer le cours</h1>
-            <p class="header-subtitle">Cette action est définitive.</p>
+            <h1>Delete Course</h1>
+            <p class="header-subtitle">This action is permanent.</p>
         </div>
         <div class="header-actions">
-            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Retour aux cours</a>
-            <a href="{% url 'home' %}" class="outline-button">Voir le site</a>
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Back to courses</a>
+            <a href="{% url 'home' %}" class="outline-button">View Site</a>
             {% include "backoffice/partials/user_role_chip.html" %}
         </div>
     </header>
 
     <section class="panel" aria-labelledby="delete-confirmation-heading">
-        <h2 id="delete-confirmation-heading">Confirmer la suppression</h2>
-        <p>Voulez-vous vraiment supprimer le cours <strong>{{ course.title }}</strong> ? Il disparaîtra du catalogue et de vos cours.</p>
+        <h2 id="delete-confirmation-heading">Confirm Deletion</h2>
+        <p>Are you sure you want to delete the course <strong>{{ course.title }}</strong>? It will be removed from the catalog and your courses.</p>
         <div class="course-actions">
             <form method="post" action="{% url 'users:course_manage_delete' course_id=course.id %}">
                 {% csrf_token %}
-                <button class="course-button danger" type="submit">Confirmer la suppression</button>
+                <button class="course-button danger" type="submit">Confirm deletion</button>
             </form>
-            <a class="course-button secondary" href="{% url 'users:course_manage_detail' course_id=course.id %}">Annuler</a>
+            <a class="course-button secondary" href="{% url 'users:course_manage_detail' course_id=course.id %}">Cancel</a>
         </div>
     </section>
 {% endblock %}

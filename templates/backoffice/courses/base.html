@@ -1,5 +1,5 @@
 {% load static %}<!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{% static 'backoffice/courses.css' %}">
 </head>
 <body class="dashboard-body">
-    <a class="skip-link" href="#main-content">Aller au contenu principal</a>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="dashboard-shell">
         {% include "backoffice/partials/sidebar.html" with section="courses" %}
         <div class="dashboard-content">
@@ -25,7 +25,7 @@
                 {% endif %}
                 {% block content %}{% endblock %}
             </main>
-            <footer class="dashboard-footer">SkillForge &copy; 2026 &mdash; Plateforme d'apprentissage en ligne</footer>
+            <footer class="dashboard-footer">SkillForge &copy; 2026 &mdash; Online Learning Platform</footer>
         </div>
     </div>
 </body>

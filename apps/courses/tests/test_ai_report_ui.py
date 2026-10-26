@@ -20,7 +20,7 @@ from apps.courses.ai_eval.report import (
 
 from .base import MongoTestCase, user_document
 
-MOCK_BANNER = "Évaluation simulée, non représentative"
+MOCK_BANNER = "Simulated evaluation, non-representative"
 
 
 def report_payload(**overrides):
@@ -208,7 +208,7 @@ class TestAiReportPage(MongoTestCase):
             )
         html = response.content.decode()
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Aucun rapport IA disponible", html)
+        self.assertIn("No AI report available", html)
         self.assertIn("python manage.py ai_report --eval", html)
         self.assertNotIn(MOCK_BANNER, html)
 
@@ -219,7 +219,7 @@ class TestAiReportPage(MongoTestCase):
             )
         html = response.content.decode()
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Rapport IA illisible", html)
+        self.assertIn("Unreadable AI Report", html)
         self.assertIn("python manage.py ai_report --eval", html)
 
     def test_schema_invalid_report_shows_invalid_state(self):
@@ -227,7 +227,7 @@ class TestAiReportPage(MongoTestCase):
             response = self._client(self.instructor).get(
                 reverse("users:course_manage_ai_report")
             )
-        self.assertIn("Rapport IA illisible", response.content.decode())
+        self.assertIn("Unreadable AI Report", response.content.decode())
 
     def test_mock_mode_displays_the_banner(self):
         with report_file(report_payload(mode="mock")):
@@ -236,7 +236,7 @@ class TestAiReportPage(MongoTestCase):
             )
         html = response.content.decode()
         self.assertIn(MOCK_BANNER, html)
-        self.assertIn("non représentative", html)
+        self.assertIn("non-representative", html)
 
     def test_real_mode_hides_the_mock_banner(self):
         with report_file(report_payload(mode="real")):
@@ -283,7 +283,7 @@ class TestAiReportPage(MongoTestCase):
             )
         html = response.content.decode()
         self.assertEqual(html.count("<h1"), 1)
-        self.assertIn("Rapport d'évaluation IA", html)
+        self.assertIn("AI Evaluation Report", html)
 
     def test_all_tables_have_captions(self):
         with report_file(report_payload()):
@@ -295,10 +295,10 @@ class TestAiReportPage(MongoTestCase):
         captioned = re.findall(r"<table[^>]*>\s*<caption>", html)
         self.assertGreaterEqual(table_count, 4)
         self.assertEqual(len(captioned), table_count)
-        self.assertIn("Précision, rappel et F1 par catégorie", html)
-        self.assertIn("Matrice de confusion — catégories", html)
-        self.assertIn("Précision, rappel et F1 par niveau", html)
-        self.assertIn("Matrice de confusion — niveaux", html)
+        self.assertIn("Precision, recall, and F1 by category", html)
+        self.assertIn("Confusion matrix — categories", html)
+        self.assertIn("Precision, recall, and F1 by level", html)
+        self.assertIn("Confusion matrix — levels", html)
         self.assertIn('scope="col"', html)
         self.assertIn('scope="row"', html)
 
@@ -328,7 +328,7 @@ class TestAiReportPage(MongoTestCase):
             )
         html = response.content.decode()
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Métriques indisponibles", html)
+        self.assertIn("Metrics unavailable", html)
 
     def test_manage_list_links_to_the_report(self):
         response = self._client(self.instructor).get(
@@ -336,5 +336,5 @@ class TestAiReportPage(MongoTestCase):
         )
         html = response.content.decode()
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Rapport IA", html)
+        self.assertIn("AI Report", html)
         self.assertIn(reverse("users:course_manage_ai_report"), html)

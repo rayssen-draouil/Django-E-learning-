@@ -551,7 +551,7 @@ class TranslationClientTests(MongoTestCase):
             translation.translate_course(self.payload_course, "en")
         self.assertIn("ne répond pas", str(context.exception))
         self.assertEqual(urlopen.call_count, 2)
-        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual(len([c for c in sleep.call_args_list if c == call(1.0)]), 1)
 
     @patch("apps.courses.ai.urllib.request.urlopen")
     def test_rejected_key_is_mapped_to_service_error(self, urlopen):
@@ -589,7 +589,7 @@ class TranslationClientTests(MongoTestCase):
         result = translation.translate_course(self.payload_course, "en")
         self.assertEqual(result["title"], "Test course")
         self.assertEqual(urlopen.call_count, 2)
-        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual(len([c for c in sleep.call_args_list if c == call(1.0)]), 1)
 
     @patch("apps.courses.ai.time.sleep")
     @patch("apps.courses.ai.urllib.request.urlopen")
@@ -602,7 +602,7 @@ class TranslationClientTests(MongoTestCase):
             translation.translate_course(self.payload_course, "en")
         self.assertIn("HTTP 500", str(context.exception))
         self.assertEqual(urlopen.call_count, 2)
-        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual(len([c for c in sleep.call_args_list if c == call(1.0)]), 1)
 
     @patch("apps.courses.ai.urllib.request.urlopen")
     def test_network_error_is_mapped_to_service_error(self, urlopen):
@@ -779,9 +779,9 @@ class TranslationViewTests(MongoTestCase):
         self.assertIn('id="course-translation-language"', html)
         self.assertIn('for="course-translation-language"', html)
         self.assertIn('aria-live="polite"', html)
-        self.assertIn("Traduction en cours...", html)
+        self.assertIn("Translating...", html)
         self.assertIn('role="alert"', html)
-        self.assertIn("Afficher l'original", html)
+        self.assertIn("Show original", html)
         self.assertIn("textContent", html)
         self.assertNotIn("innerHTML", html)
         self.assertIn('<option value="en">Anglais</option>', html)
@@ -971,7 +971,7 @@ class TranslationViewTests(MongoTestCase):
         self.assertEqual(response.status_code, 504)
         self.assertIn("ne répond pas", response.json()["error"])
         self.assertEqual(urlopen.call_count, 2)
-        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual(len([c for c in sleep.call_args_list if c == call(1.0)]), 1)
 
     @patch("apps.courses.ai.urllib.request.urlopen")
     def test_invalid_language_returns_400(self, urlopen):

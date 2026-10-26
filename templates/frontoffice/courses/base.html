@@ -1,9 +1,9 @@
 {% load static %}<!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Cours{% endblock %} | SkillForge</title>
+    <title>{% block title %}Courses{% endblock %} | SkillForge</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'backoffice/images/favicon.png' %}">
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
@@ -14,7 +14,7 @@
     <script nomodule src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine-ie11.min.js" defer></script>
 </head>
 <body class="course-site bg-gray-50 text-gray-800">
-    <a class="course-skip-link" href="#main-content">Aller au contenu principal</a>
+    <a class="course-skip-link" href="#main-content">Skip to main content</a>
     {% include "frontoffice/partials/navbar.html" %}
 
     <main class="course-main max-w-screen-xl mx-auto px-8 py-10" id="main-content">
@@ -33,22 +33,22 @@
             <div class="flex flex-col md:flex-row justify-between items-center pb-8 border-b border-gray-700 gap-6">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl font-bold tracking-widest text-white">SkillForge</span>
-                    <span class="text-gray-400 text-sm border-l border-gray-600 pl-3">Apprendre, pratiquer et progresser à son rythme.</span>
+                    <span class="text-gray-400 text-sm border-l border-gray-600 pl-3">Learn, practice and advance at your own pace.</span>
                 </div>
                 <div class="flex flex-wrap gap-6 text-sm text-gray-300">
-                    <a href="{% url 'home' %}" class="hover:text-yellow-400 transition">Accueil</a>
-                    <a href="{% url 'users:courses' %}" class="hover:text-yellow-400 transition">Cours</a>
-                    <a href="{% url 'learning_paths:list' %}" class="hover:text-yellow-400 transition">Parcours</a>
+                    <a href="{% url 'home' %}" class="hover:text-yellow-400 transition">Home</a>
+                    <a href="{% url 'users:courses' %}" class="hover:text-yellow-400 transition">Courses</a>
+                    <a href="{% url 'learning_paths:list' %}" class="hover:text-yellow-400 transition">Learning Paths</a>
                     <a href="{% url 'users:mentors' %}" class="hover:text-yellow-400 transition">Mentors</a>
                     <a href="{% url 'users:quiz' %}" class="hover:text-yellow-400 transition">Quiz</a>
                     <a href="{% url 'support:list' %}" class="hover:text-yellow-400 transition">Support</a>
                 </div>
             </div>
             <div class="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 gap-4">
-                <p>&copy; 2026 SkillForge Inc. Tous droits réservés.</p>
+                <p>&copy; 2026 SkillForge Inc. All rights reserved.</p>
                 <div class="flex gap-4">
-                    <a href="#!" class="hover:text-gray-200">Confidentialité</a>
-                    <a href="#!" class="hover:text-gray-200">Conditions d'utilisation</a>
+                    <a href="#!" class="hover:text-gray-200">Privacy Policy</a>
+                    <a href="#!" class="hover:text-gray-200">Terms of Service</a>
                 </div>
             </div>
         </div>
