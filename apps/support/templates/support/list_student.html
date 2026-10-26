@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Centre d'aide &amp; Support | SkillForge</title>
+    <title>Help Center &amp; Support | SkillForge</title>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontoffice/css/skilline.css' %}">
     <link rel="stylesheet" href="{% static 'support/css/support_front.css' %}?v=1">
@@ -17,22 +18,22 @@
 
     <main class="max-w-screen-xl mx-auto px-8 py-16">
         <div class="text-center max-w-2xl mx-auto mb-10">
-            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Centre d'aide</p>
-            <h1 class="text-4xl sm:text-5xl font-bold text-darken mt-3">Assistance &amp; Support</h1>
-            <p class="text-gray-500 text-lg mt-5">Posez vos questions, suivez vos demandes et échangez avec l'équipe support.</p>
+            <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Help Center</p>
+            <h1 class="text-4xl sm:text-5xl font-bold text-darken mt-3">Help &amp; Support</h1>
+            <p class="text-gray-500 text-lg mt-5">Ask questions, track your requests, and collaborate with our support team.</p>
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
-            {% if is_admin %}<a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:list' %}?view=admin">⚙ File d'attente Admin &rarr;</a>{% endif %}
+            {% if is_admin %}<a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:list' %}?view=admin">⚙ Admin Queue &rarr;</a>{% endif %}
             <a class="px-8 py-3 text-sm font-semibold text-center bg-white text-gray-800 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline border border-gray-200" href="{% url 'support:notifications' %}">Notifications{% if unread_count %} <span class="sx-badge">{{ unread_count }}</span>{% endif %}</a>
-            <a class="px-8 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ Nouvelle demande</a>
+            <a class="px-8 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline" href="#nouvelle-demande">＋ New request</a>
         </div>
 
         <section id="nouvelle-demande" class="bg-white rounded-2xl shadow-lg border-t-4 border-yellow-500 p-7 md:p-10 mb-12 max-w-3xl mx-auto">
             <div class="text-center mb-8">
-                <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Formulaire de support</p>
-                <h2 class="text-2xl sm:text-3xl font-bold text-darken mt-2">Soumettre une nouvelle demande</h2>
-                <p class="text-gray-500 mt-3">Décrivez votre problème le plus précisément possible afin que notre équipe puisse vous aider rapidement.</p>
+                <p class="text-yellow-500 font-semibold uppercase tracking-widest text-sm">Support Form</p>
+                <h2 class="text-2xl sm:text-3xl font-bold text-darken mt-2">Submit a new request</h2>
+                <p class="text-gray-500 mt-3">Describe your issue as accurately as possible so our team can assist you quickly.</p>
             </div>
             <form method="post" class="support-filters max-w-xl mx-auto" novalidate>
                 {% csrf_token %}
@@ -45,8 +46,8 @@
                     </div>
                 {% endfor %}
                 <div class="text-center mb-4">
-                    <button type="button" id="ai-btn-new" data-url="{% url 'support:ai_suggestion' %}" class="px-6 py-2.5 text-sm font-semibold text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline">&#129302; Analyser ma demande avec l'IA</button>
-                    <p class="mt-2 text-xs text-gray-400">L'assistant IA catégorise votre problème et suggère une priorité. Vous gardez la main sur le formulaire.</p>
+                    <button type="button" id="ai-btn-new" data-url="{% url 'support:ai_suggestion' %}" class="px-6 py-2.5 text-sm font-semibold text-center bg-white text-gray-800 border border-gray-200 rounded-full shadow hover:bg-gray-100 focus:outline-none focus:shadow-outline inline-flex items-center gap-2 justify-center"><iconify-icon icon="solar:magic-stick-3-bold-duotone" class="text-blue-500 text-base"></iconify-icon> Analyze request with AI</button>
+                    <p class="mt-2 text-xs text-gray-400">The AI assistant categorizes your issue and suggests a priority. You retain full control over the form.</p>
                 </div>
                 <div id="ai-new-out" class="hidden rounded-2xl border-t-4 border-blue-400 bg-blue-50 p-5 mb-5 text-left">
                     <div class="flex flex-wrap items-center gap-2 mb-3" id="ai-new-chips"></div>
@@ -54,7 +55,7 @@
                     <div class="space-y-3" id="ai-new-list"></div>
                 </div>
                 <div class="text-center mt-6">
-                    <button class="px-10 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline cursor-pointer" type="submit">Envoyer la demande →</button>
+                    <button class="px-10 py-3 text-sm font-semibold text-center bg-yellow-500 text-white rounded-full shadow hover:bg-yellow-600 focus:outline-none focus:shadow-outline cursor-pointer" type="submit">Submit request &rarr;</button>
                 </div>
             </form>
         </section>
@@ -84,7 +85,7 @@
                         <span class="sx-priority sx-priority--{{ ticket.priority }}">{{ priorities|get_item:ticket.priority }}</span>
                     </div>
                     <div class="mt-4 text-gray-400 text-xs">{{ ticket.updated_at|date:"M j, Y, H:i" }} · #{{ ticket.id }}</div>
-                    <span class="mt-3 text-darken font-semibold hover:text-yellow-500">Consulter le ticket →</span>
+                    <span class="mt-3 text-darken font-semibold hover:text-yellow-500">View ticket &rarr;</span>
                 </a>
             {% endfor %}
         </div>

@@ -360,17 +360,17 @@ def admin_users(request):
             except AdminActionError as erreur:
                 messages.error(request, str(erreur))
             except DuplicateEmailError:
-                messages.error(request, "Cette adresse e-mail possède déjà un compte.")
+                messages.error(request, "An account with this email address already exists.")
             except UserNotFoundError:
-                messages.error(request, "Compte introuvable (peut-être vient-il d'être supprimé).")
+                messages.error(request, "Account not found (it may have been deleted).")
             except Exception:
-                messages.error(request, "Action impossible pour le moment (sur e-mail : vérifiez l'adresse).")
+                messages.error(request, "Action could not be completed. Please verify the email address and try again.")
             else:
                 messages.success(request, {
-                    "toggle_active": "Statut du compte mis à jour.",
-                    "change_role": "Rôle du compte mis à jour.",
-                    "create": "Compte créé. Communiquez le mot de passe temporaire à l'intéressé.",
-                    "send_reset": "Lien de réinitialisation envoyé par e-mail (valable 30 minutes).",
+                    "toggle_active": "Account status updated successfully.",
+                    "change_role": "Account role updated successfully.",
+                    "create": "Account created successfully. Provide the temporary password to the user.",
+                    "send_reset": "Password reset link sent by email (valid for 30 minutes).",
                 }[action])
         return redirect(f"{reverse('users:admin_users')}?{request.GET.urlencode()}")
     search = request.GET.get("q", "").strip()
@@ -380,7 +380,7 @@ def admin_users(request):
         comptes_documents = admin_list_users(search=search, role=role, active=active)
     except UserStorageError:
         comptes_documents = []
-        messages.error(request, "Service utilisateurs indisponible.")
+        messages.error(request, "User service is temporarily unavailable.")
     comptes = []
     for _doc in comptes_documents:
         _doc = dict(_doc)
