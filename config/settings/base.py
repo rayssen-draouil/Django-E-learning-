@@ -212,9 +212,17 @@ USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "")
 
 # Email Configuration (Brevo / SMTP / Console)
 _smtp_host = os.environ.get("SMTP_HOST") or os.environ.get("EMAIL_HOST")
+_smtp_user = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_HOST_USER", "")
+_smtp_pass = (
+    os.environ.get("SMTP_PASS")
+    or os.environ.get("EMAIL_HOST_PASSWORD")
+    or os.environ.get("brevo_smtp_key", "")
+)
+
+# Use Brevo SMTP if credentials and host are present; otherwise fall back safely to console backend
 _default_backend = (
     "apps.mentors.email_backend.BrevoEmailBackend"
-    if _smtp_host
+    if (_smtp_host and _smtp_user and _smtp_pass)
     else "django.core.mail.backends.console.EmailBackend"
 )
 EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", _default_backend)
@@ -222,12 +230,9 @@ EMAIL_HOST = _smtp_host or "smtp-relay.brevo.com"
 EMAIL_PORT = int(os.environ.get("SMTP_PORT") or os.environ.get("EMAIL_PORT", 587))
 EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
-EMAIL_HOST_USER = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = (
-    os.environ.get("SMTP_PASS")
-    or os.environ.get("EMAIL_HOST_PASSWORD")
-    or os.environ.get("brevo_smtp_key", "")
-)
+EMAIL_HOST_USER = _smtp_user
+EMAIL_HOST_PASSWORD = _smtp_pass
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "10"))
 EMAIL_SSL_VERIFY = (
     _env_bool("BREVO_SSL_VERIFY", True)
     if "BREVO_SSL_VERIFY" in os.environ

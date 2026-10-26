@@ -70,20 +70,25 @@ RAPPEL_RESET = (
 )
 
 
-def _envoyer_lien_reset(email: str, lien: str) -> None:
-    """Envoie le lien via le relais SMTP configuré (Brevo/Console). Lève en cas d'échec."""
+def _envoyer_lien_reset(email: str, lien: str) -> bool:
+    """Envoie le lien via le relais SMTP configuré (Brevo/Console)."""
     context = {"lien": lien, "expire_minutes": 30}
-    texte = render_to_string("users/emails/reset_password.txt", context)
-    html = render_to_string("users/emails/reset_password.html", context)
-    sender = getattr(settings, "EMAIL_SENDER", getattr(settings, "DEFAULT_FROM_EMAIL", "contact@skillforge.com"))
-    message = EmailMultiAlternatives(
-        subject="Réinitialisation de votre mot de passe SkillForge",
-        body=texte,
-        from_email=sender,
-        to=[email],
-    )
-    message.attach_alternative(html, "text/html")
-    message.send()
+    try:
+        texte = render_to_string("users/emails/reset_password.txt", context)
+        html = render_to_string("users/emails/reset_password.html", context)
+        sender = getattr(settings, "EMAIL_SENDER", getattr(settings, "DEFAULT_FROM_EMAIL", "contact@skillforge.com"))
+        message = EmailMultiAlternatives(
+            subject="SkillForge Password Reset",
+            body=texte,
+            from_email=sender,
+            to=[email],
+        )
+        message.attach_alternative(html, "text/html")
+        message.send(fail_silently=False)
+        return True
+    except Exception as error:
+        logging.getLogger(__name__).error("Failed to send reset email to %s: %s", email, error)
+        return False
 
 
 def _envoyer_lien_reset_email(request, user_id: str) -> None:
