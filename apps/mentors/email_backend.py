@@ -56,14 +56,19 @@ class BrevoEmailBackend(EmailBackend):
             return 0
 
     def _send_via_http(self, message, api_key: str) -> bool:
+        import urllib.error
+
         from_str = message.from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "miladiadem58@gmail.com")
-        m = re.match(r'^(?:"?([^"]*)"?\s)?<?([^>]+)>?$', from_str)
-        if m:
+        m = re.match(r'^(?:"?([^"]*)"?\s)?<?([^>]+)>?$', str(from_str))
+        if m and m.group(2):
             sender_name = m.group(1) or "SkillForge"
-            sender_email = m.group(2)
+            sender_email = m.group(2).strip()
         else:
             sender_name = "SkillForge"
-            sender_email = from_str
+            sender_email = str(from_str).strip()
+
+        if not sender_email or "@" not in sender_email:
+            sender_email = "miladiadem58@gmail.com"
 
         html_content = ""
         text_content = message.body or ""
@@ -89,10 +94,23 @@ class BrevoEmailBackend(EmailBackend):
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "accept": "application/json",
-                "api-key": api_key,
+                "api-key": api_key.strip(),
                 "content-type": "application/json",
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=getattr(settings, "EMAIL_TIMEOUT", 10)) as resp:
-            return resp.status in (200, 201, 202)
+        try:
+            with urllib.request.urlopen(req, timeout=getattr(settings, "EMAIL_TIMEOUT", 10)) as resp:
+                logger.info("Brevo HTTPS API delivery successful: %s for %s", resp.status, message.to)
+                return resp.status in (200, 201, 202)
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8", errors="ignore")
+            logger.error("Brevo API HTTP %d error sending to %s: %s", e.code, message.to, err_body)
+            if not self.fail_silently:
+                raise
+            return False
+        except Exception as e:
+            logger.error("Brevo API network error sending to %s: %s", message.to, e)
+            if not self.fail_silently:
+                raise
+            return False

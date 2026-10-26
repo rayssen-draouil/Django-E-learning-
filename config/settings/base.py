@@ -215,11 +215,26 @@ _smtp_host = os.environ.get("SMTP_HOST") or os.environ.get("EMAIL_HOST")
 _smtp_user = os.environ.get("SMTP_USER") or os.environ.get("EMAIL_HOST_USER", "")
 _smtp_pass = (
     os.environ.get("SMTP_PASS")
+    or os.environ.get("BREVO_SMTP_KEY")
     or os.environ.get("EMAIL_HOST_PASSWORD")
     or os.environ.get("brevo_smtp_key", "")
 )
 
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "") or os.environ.get("brevo_api_key", "")
+# Automatically detect Brevo REST API key across any environment variable
+BREVO_API_KEY = (
+    os.environ.get("BREVO_API_KEY", "").strip()
+    or os.environ.get("brevo_api_key", "").strip()
+    or os.environ.get("BREVO_KEY", "").strip()
+    or (os.environ.get("BREVO_SMTP_KEY", "").strip() if os.environ.get("BREVO_SMTP_KEY", "").strip().startswith("xkeysib-") else "")
+    or (os.environ.get("EMAIL_HOST_PASSWORD", "").strip() if os.environ.get("EMAIL_HOST_PASSWORD", "").strip().startswith("xkeysib-") else "")
+    or (os.environ.get("SMTP_PASS", "").strip() if os.environ.get("SMTP_PASS", "").strip().startswith("xkeysib-") else "")
+    or (os.environ.get("brevo_smtp_key", "").strip() if os.environ.get("brevo_smtp_key", "").strip().startswith("xkeysib-") else "")
+)
+if not BREVO_API_KEY:
+    for _k, _v in os.environ.items():
+        if isinstance(_v, str) and _v.strip().startswith("xkeysib-"):
+            BREVO_API_KEY = _v.strip()
+            break
 
 # Use Brevo HTTP/SMTP backend if API key or SMTP credentials are present; otherwise console
 _default_backend = (
