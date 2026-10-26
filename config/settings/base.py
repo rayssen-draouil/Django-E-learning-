@@ -197,9 +197,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # MongoDB configuration
-MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")
-MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "e_learning")
-MONGODB_SESSIONS_COLLECTION = os.environ.get("MONGODB_SESSIONS_COLLECTION", "django_sessions")
+MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/").strip('"').strip("'")
+MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "e_learning").strip('"').strip("'")
+MONGODB_SESSIONS_COLLECTION = os.environ.get("MONGODB_SESSIONS_COLLECTION", "django_sessions").strip('"').strip("'")
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "90"))
@@ -208,7 +208,7 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 # Optional token used only by the controlled admin-account provisioning service.
 # Keep it outside source control in production.
-USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "")
+USERS_ADMIN_BOOTSTRAP_TOKEN = os.environ.get("USERS_ADMIN_BOOTSTRAP_TOKEN", "").strip('"').strip("'")
 
 # Email Configuration (Brevo / SMTP / Console)
 _smtp_host = os.environ.get("SMTP_HOST") or os.environ.get("EMAIL_HOST")
