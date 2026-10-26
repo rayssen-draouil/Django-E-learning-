@@ -1,0 +1,92 @@
+{% extends "backoffice/courses/base.html" %}
+{% block title %}Course Details{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">{{ role_label|upper }} SPACE</p>
+            <h1>{{ course.title }}</h1>
+            <p class="header-subtitle">View course details and manage publication.</p>
+        </div>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Back to courses</a>
+            <a href="{% url 'home' %}" class="outline-button">View Site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
+        </div>
+    </header>
+
+    <section class="panel" aria-labelledby="course-detail-heading">
+        <div class="panel-heading">
+            <div>
+                <h2 id="course-detail-heading">Course Details</h2>
+                <p>
+                    <span class="course-badge {{ course.status }}">
+                        {% if course.status == "published" %}Published{% else %}Draft{% endif %}
+                    </span>
+                    <span class="course-badge category">{{ course.category_label }}</span>
+                    <span class="course-badge level">{{ course.level_label }}</span>
+                </p>
+            </div>
+        </div>
+
+        <img class="course-detail-media" src="{{ course.image_url }}" alt="{{ course.image_alt }}">
+
+        <dl class="course-detail-list">
+            <div>
+                <dt>Description</dt>
+                <dd>{{ course.description|linebreaks }}</dd>
+            </div>
+            {% if course.objectives %}
+                <div>
+                    <dt>Learning objectives</dt>
+                    <dd>
+                        <ul class="course-objectives">
+                            {% for objective in course.objectives %}<li>{{ objective }}</li>{% endfor %}
+                        </ul>
+                    </dd>
+                </div>
+            {% endif %}
+            <div>
+                <dt>Image alt text</dt>
+                <dd>{{ course.image_alt }}</dd>
+            </div>
+            <div>
+                <dt>Price</dt>
+                <dd>{% if course.is_free %}Free{% else %}{{ course.price }} €{% endif %}</dd>
+            </div>
+            <div>
+                <dt>Duration</dt>
+                <dd>{{ course.duration_hours }} h</dd>
+            </div>
+            <div>
+                <dt>Language</dt>
+                <dd>{{ course.language }}</dd>
+            </div>
+            <div>
+                <dt>Instructor</dt>
+                <dd>{{ course.instructor_name }}</dd>
+            </div>
+            <div>
+                <dt>URL slug</dt>
+                <dd>{{ course.slug }}</dd>
+            </div>
+            <div>
+                <dt>Updated on</dt>
+                <dd>{{ course.updated_at|date:"d/m/Y H:i" }}</dd>
+            </div>
+        </dl>
+
+        <div class="course-actions" aria-label="Actions for {{ course.title }}">
+            {% if course.status == "published" %}
+                <a class="course-button secondary" href="{% url 'users:course_detail' slug=course.slug %}">View in catalog</a>
+            {% endif %}
+            <a class="course-button secondary" href="{% url 'users:course_manage_edit' course_id=course.id %}">Edit</a>
+            <form method="post" action="{% url 'users:course_manage_publish' course_id=course.id %}">
+                {% csrf_token %}
+                <button class="course-button" type="submit">
+                    {% if course.status == "published" %}Unpublish{% else %}Publish{% endif %}
+                </button>
+            </form>
+            <a class="course-button danger" href="{% url 'users:course_manage_delete' course_id=course.id %}">Delete</a>
+        </div>
+    </section>
+{% endblock %}

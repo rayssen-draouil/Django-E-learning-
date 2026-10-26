@@ -65,8 +65,8 @@ from .services import (
 )
 
 RAPPEL_RESET = (
-    "Si un compte actif existe avec cette adresse, un lien vous a été envoyé. "
-    "Consultez votre boîte de réception (et vos spams)."
+    "If an active account exists with this address, a reset link has been sent. "
+    "Check your inbox (and spam folder)."
 )
 
 
@@ -103,8 +103,6 @@ def _envoyer_lien_reset_email(request, user_id: str) -> None:
 @user_required
 def backoffice(request):
     role = request.mongo_user.get("role", "student")
-    if role == "student":
-        return HttpResponseForbidden("Students cannot access the back office. Please use your front-office learning space.")
 
     quiz_stats = {
         "attempts": [],
@@ -267,12 +265,12 @@ def register(request):
                 role=form.cleaned_data.get("role", "student"),
             )
         except DuplicateEmailError:
-            form.add_error("email", "Cette adresse e-mail est déjà utilisée.")
+            form.add_error("email", "This email address is already in use.")
         except UserStorageError:
-            messages.error(request, "Inscription impossible pour le moment.")
+            messages.error(request, "Registration is currently unavailable.")
         else:
             request.session["user_id"] = str(user["_id"])
-            messages.success(request, "Inscription réussie.")
+            messages.success(request, "Registration successful.")
             return redirect("users:profile")
     return render(request, "users/register.html", {"form": form})
 
@@ -287,7 +285,7 @@ def forgot_password(request):
         try:
             token = create_password_reset(email)
         except UserStorageError:
-            messages.error(request, "Impossible de lancer la réinitialisation pour le moment.")
+            messages.error(request, "Unable to initiate password reset at this time.")
             return render(request, "users/forgot_password.html", {"form": ForgotPasswordForm(), "dev_reset_link": None})
         if token:
             lien = request.build_absolute_uri(reverse("users:reset_password", args=[token]))
@@ -295,7 +293,7 @@ def forgot_password(request):
                 try:
                     _envoyer_lien_reset(email, lien)
                 except Exception:
-                    messages.error(request, "L'envoi de l'e-mail a échoué. Réessayez dans quelques instants.")
+                    messages.error(request, "Failed to send email. Please try again in a few moments.")
             if settings.DEBUG:
                 dev_reset_link = lien
         messages.success(request, RAPPEL_RESET)
@@ -309,22 +307,22 @@ def reset_password(request, token: str):
     try:
         jeton_valable = is_password_reset_valid(token)
     except UserStorageError:
-        messages.error(request, "Impossible de vérifier le lien pour le moment.")
+        messages.error(request, "Unable to verify reset link at this time.")
         return redirect("users:forgot_password")
     if not jeton_valable:
-        messages.error(request, "Ce lien de réinitialisation est invalide ou expiré. Refaites la demande.")
+        messages.error(request, "This reset link is invalid or expired. Please submit a new request.")
         return redirect("users:forgot_password")
     form = ResetPasswordForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         try:
             change = consume_password_reset(token, form.cleaned_data["password"])
         except UserStorageError:
-            messages.error(request, "Impossible de changer le mot de passe pour le moment.")
+            messages.error(request, "Unable to change password at this time.")
             return redirect("users:forgot_password")
         if not change:
-            messages.error(request, "Ce lien de réinitialisation est invalide ou expiré. Refaites la demande.")
+            messages.error(request, "This reset link is invalid or expired. Please submit a new request.")
             return redirect("users:forgot_password")
-        messages.success(request, "Votre mot de passe a été changé. Connectez-vous avec le nouveau.")
+        messages.success(request, "Your password has been changed. Please log in with your new password.")
         return redirect("users:login")
     return render(request, "users/reset_password.html", {"form": form, "token": token})
 
@@ -412,26 +410,24 @@ def login_view(request):
                 form.cleaned_data["email"], form.cleaned_data["password"]
             )
         except UserStorageError:
-            messages.error(request, "Connexion impossible pour le moment.")
+            messages.error(request, "Login is currently unavailable.")
         else:
             if user:
                 request.session.flush()
                 request.session["user_id"] = str(user["_id"])
-                messages.success(request, "Connexion réussie.")
+                messages.success(request, "Login successful.")
                 next_url = request.GET.get("next") or request.POST.get("next")
                 if next_url:
                     return redirect(next_url)
-                if user.get("role") == "student":
-                    return redirect("users:profile")
                 return redirect("users:backoffice")
-            form.add_error(None, "Adresse e-mail ou mot de passe incorrect.")
+            form.add_error(None, "Invalid email address or password.")
     return render(request, "users/login.html", {"form": form})
 
 
 def logout_view(request):
     if request.method == "POST":
         request.session.flush()
-        messages.success(request, "Vous êtes déconnecté.")
+        messages.success(request, "You have been logged out.")
     return redirect("users:login")
 
 

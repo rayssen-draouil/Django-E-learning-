@@ -1,0 +1,67 @@
+{% if metrics %}
+    <section class="panel ai-report-section" aria-labelledby="ai-{{ anchor }}-heading">
+        <div class="panel-heading">
+            <div>
+                <h2 id="ai-{{ anchor }}-heading">{{ title }}</h2>
+                <p>Accuracy: {{ metrics.accuracy }} · Macro-F1: {{ metrics.macro_f1 }}</p>
+            </div>
+        </div>
+
+        <div class="course-table-wrapper ai-report-table-wrapper" tabindex="0" role="region" aria-label="Precision, recall and F1 by {{ singular }}">
+            <table class="course-table ai-report-table">
+                <caption>Precision, recall, and F1 by {{ singular }}, calculated on answered cases.</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Class</th>
+                        <th scope="col">Precision</th>
+                        <th scope="col">Recall</th>
+                        <th scope="col">F1</th>
+                        <th scope="col">Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in metrics.per_class %}
+                        <tr>
+                            <th scope="row">{{ row.label }}</th>
+                            <td>{{ row.precision }}</td>
+                            <td>{{ row.recall }}</td>
+                            <td>{{ row.f1 }}</td>
+                            <td>{{ row.support }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="course-table-wrapper ai-report-table-wrapper" tabindex="0" role="region" aria-label="Confusion matrix — {{ title|lower }}">
+            <table class="course-table ai-report-table ai-report-matrix">
+                <caption>Confusion matrix — {{ title|lower }}: rows = actual class, columns = predicted class. Diagonal cells are in bold.</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Actual \ Predicted class</th>
+                        {% for label in metrics.labels %}
+                            <th scope="col">{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in metrics.matrix_rows %}
+                        <tr>
+                            <th scope="row">{{ row.label }}</th>
+                            {% for cell in row.cells %}
+                                <td{% if cell.diagonal %} class="is-diagonal"{% endif %}>
+                                    {% if cell.diagonal %}<strong>{{ cell.value }}</strong>{% else %}{{ cell.value }}{% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% else %}
+    <section class="panel ai-report-section" aria-labelledby="ai-{{ anchor }}-heading">
+        <h2 id="ai-{{ anchor }}-heading">{{ title }}</h2>
+        <p class="ai-report-unavailable">Metrics unavailable: no cases were answered.</p>
+    </section>
+{% endif %}

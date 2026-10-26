@@ -11,7 +11,7 @@ from django.urls import reverse
 from . import services
 from .forms import QuizAIGenerationForm, QuizForm, QuizImportForm, QuizSubmissionForm
 from .ai.quiz_generator import InvalidGeneratedQuiz, generate_quiz
-from .ai.gemini_client import GeminiConfigurationError, GeminiGenerationError
+from .ai.gemini_client import GeminiConfigurationError, GeminiGenerationError, generate_json
 
 
 def question_data(**overrides):
@@ -506,4 +506,27 @@ class QuizAIGenerationTests(SimpleTestCase):
         valid["questions"][0]["correct_option_indices"] = [9]
         with self.assertRaises(InvalidGeneratedQuiz):
             generate_quiz(params, json_generator=lambda prompt, schema: json.dumps(valid))
+
+    @override_settings(GROQ_API_KEY="", GEMINI_API_KEY="")
+    def test_generate_json_raises_configuration_error_when_no_keys(self):
+        with self.assertRaises(GeminiConfigurationError):
+            generate_json("prompt", {})
+
+    @override_settings(GROQ_API_KEY="test-groq-key", GROQ_BASE_URL="https://api.groq.com/openai/v1")
+    def test_generate_json_calls_groq_successfully(self):
+        sample_json = '{"title": "Test", "description": "Desc", "questions": []}'
+        with patch("urllib.request.urlopen") as mock_urlopen:
+            mock_resp = mock_urlopen.return_value.__enter__.return_value
+            mock_resp.read.return_value = json.dumps({
+                "choices": [{"message": {"content": f"```json\n{sample_json}\n```"}}]
+            }).encode("utf-8")
+            result = generate_json("create a quiz", {})
+        self.assertEqual(result, sample_json)
+
+    @override_settings(GROQ_API_KEY="test-groq-key")
+    def test_generate_json_raises_generation_error_on_network_failure(self):
+        import urllib.error
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("connection refused")):
+            with self.assertRaises(GeminiGenerationError):
+                generate_json("prompt", {})
 

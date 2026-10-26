@@ -29,12 +29,13 @@ class SessionStore(SessionBase):
             return
 
     def save(self, must_create=False):
+        data = self._get_session(no_load=must_create)
         if self.session_key is None:
             return self.create()
         expiry = self.get_expiry_date()
         document = {
             "_id": self.session_key,
-            "session_data": self.encode(self._get_session(no_load=must_create)),
+            "session_data": self.encode(data),
             "expire_date": expiry,
         }
         try:
@@ -57,14 +58,24 @@ class SessionStore(SessionBase):
     def load(self):
         if not self.session_key:
             return {}
-        document = self._collection.find_one(
-            {"_id": self.session_key, "expire_date": {"$gt": timezone.now()}},
-            {"session_data": 1},
-        )
-        return self.decode(document["session_data"]) if document else {}
+        try:
+            document = self._collection.find_one(
+                {"_id": self.session_key, "expire_date": {"$gt": timezone.now()}},
+                {"session_data": 1},
+            )
+        except Exception:
+            self._session_key = None
+            return {}
+        if not document:
+            self._session_key = None
+            return {}
+        try:
+            return self.decode(document["session_data"])
+        except Exception:
+            self._session_key = None
+            return {}
 
     @classmethod
     def clear_expired(cls):
         collection = db[settings.MONGODB_SESSIONS_COLLECTION]
         collection.delete_many({"expire_date": {"$lte": timezone.now()}})
-

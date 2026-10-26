@@ -1,0 +1,135 @@
+{% extends "backoffice/courses/base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">{{ role_label|upper }} SPACE</p>
+            <h1>{{ title }}</h1>
+            <p class="header-subtitle">{% if course %}Update the details for course “{{ course.title }}”.{% else %}Fill in the course details. It will be created as a draft by default.{% endif %}</p>
+        </div>
+        <div class="header-actions">
+            <a class="outline-button course-button secondary" href="{% url 'users:course_manage_list' %}">Back to courses</a>
+            <a href="{% url 'home' %}" class="outline-button">View Site</a>
+            {% include "backoffice/partials/user_role_chip.html" %}
+        </div>
+    </header>
+
+    {% if course %}
+        <section class="panel course-image-panel" aria-labelledby="current-image-heading">
+            <h2 id="current-image-heading">Current image</h2>
+            <img class="course-image-preview" src="{{ course.image_url }}" alt="{{ course.image_alt }}">
+            {% if not course.image %}
+                <p class="course-help">No image uploaded: the default illustration is displayed.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {# AI status live region (global, aria-live) #}
+    <div id="ai-status" aria-live="polite" aria-atomic="true" class="ai-status" role="status"></div>
+    <p id="ai-error" class="ai-error" role="alert" hidden></p>
+    <button type="button" class="course-button secondary" id="ai-retry" hidden>Retry</button>
+
+    <form method="post" enctype="multipart/form-data" class="panel course-form">
+        {% csrf_token %}
+        <p class="course-form-intro">Fields marked with an asterisk are required. Data is validated before saving.</p>
+        {% if form.non_field_errors %}
+            <div class="course-form-alert" id="form-errors" role="alert">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="course-field{% if field.errors %} has-error{% endif %}{% if field.name == 'is_free' %} course-checkbox{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+                {{ field }}
+                <p class="course-help" id="{{ field.auto_id }}_help">{% if field.field.required %}Required field.{% elif field.help_text %}{{ field.help_text }}{% else %}Optional field.{% endif %}</p>
+                {% if field.errors %}
+                    <div class="course-error" id="{{ field.auto_id }}_error" role="alert">
+                        {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+
+                {# ── AI buttons per field ────────────────────────────────── #}
+                {% if field.name == 'objectives' %}
+                <div class="ai-action-bar">
+                    <button type="button" class="course-button ai-btn"
+                        id="ai-btn-objectives"
+                        data-ai-url="{% url 'users:course_manage_ai_objectives' %}"
+                        data-ai-status-url="{% url 'users:course_manage_ai_status' '__TASK__' %}"
+                        data-ai-action="objectives"
+                        aria-describedby="ai-objectives-hint">
+                        ✦ Generate with AI
+                    </button>
+                    <span class="ai-field-hint" id="ai-objectives-hint">AI generates 5 learning objectives based on the title and description.</span>
+                </div>
+                {% endif %}
+
+                {% if field.name == 'description' %}
+                <div class="ai-action-bar">
+                    <button type="button" class="course-button ai-btn"
+                        id="ai-btn-improve"
+                        data-ai-url="{% url 'users:course_manage_ai_improve_description' %}"
+                        data-ai-status-url="{% url 'users:course_manage_ai_status' '__TASK__' %}"
+                        data-ai-action="improve_description"
+                        aria-describedby="ai-improve-hint">
+                        ✦ Improve
+                    </button>
+                    <span class="ai-field-hint" id="ai-improve-hint">AI suggests a clearer description. You can accept or decline the suggestion.</span>
+                </div>
+                {# Suggestion box for improved description #}
+                <div id="ai-improve-suggestion" class="ai-suggestion-box" hidden aria-live="polite">
+                    <p class="ai-suggestion-label"><strong>AI Suggestion:</strong></p>
+                    <p id="ai-improve-text" class="ai-suggestion-text"></p>
+                    <div class="ai-suggestion-actions">
+                        <button type="button" class="course-button ai-accept-btn" id="ai-improve-accept" aria-label="Accept suggestion and replace description">
+                            ✓ Accept
+                        </button>
+                        <button type="button" class="course-button ai-reject-btn" id="ai-improve-reject" aria-label="Decline suggestion">
+                            ✕ Decline
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if field.name == 'category' %}
+                <div class="ai-action-bar">
+                    <button type="button" class="course-button ai-btn"
+                        id="ai-btn-meta"
+                        data-ai-url="{% url 'users:course_manage_ai_suggest_meta' %}"
+                        data-ai-status-url="{% url 'users:course_manage_ai_status' '__TASK__' %}"
+                        data-ai-action="suggest_meta"
+                        aria-describedby="ai-meta-hint">
+                        ✦ Suggest category and tags
+                    </button>
+                    <span class="ai-field-hint" id="ai-meta-hint">AI proposes a category, level, and tags based on the title and description.</span>
+                </div>
+                {# Suggestion box for meta #}
+                <div id="ai-meta-suggestion" class="ai-suggestion-box" hidden aria-live="polite">
+                    <p class="ai-suggestion-label"><strong>AI Suggestion:</strong></p>
+                    <dl class="ai-meta-list" id="ai-meta-list"></dl>
+                    <div class="ai-suggestion-actions">
+                        <button type="button" class="course-button ai-accept-btn" id="ai-meta-accept" aria-label="Apply suggestion for category, level and tags">
+                            ✓ Apply
+                        </button>
+                        <button type="button" class="course-button ai-reject-btn" id="ai-meta-reject" aria-label="Decline metadata suggestion">
+                            ✕ Decline
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+                {# ── end AI buttons ──────────────────────────────────────── #}
+            </div>
+        {% endfor %}
+
+        <div class="course-form-actions">
+            <button class="course-button" type="submit">Save</button>
+            {% if course %}
+                <a class="course-button secondary" href="{% url 'users:course_manage_detail' course_id=course.id %}">Cancel</a>
+            {% else %}
+                <a class="course-button secondary" href="{% url 'users:course_manage_list' %}">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+    <script src="{% static 'backoffice/courses-ai.js' %}" defer></script>
+{% endblock %}

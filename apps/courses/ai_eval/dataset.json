@@ -1,0 +1,255 @@
+[
+  {
+    "id": "prog-01",
+    "title": "Fondamentaux du langage Python",
+    "description": "Apprenez les variables, boucles, fonctions et la POO en Python pour automatiser vos tâches et créer vos premiers programmes.",
+    "true_category": "programming",
+    "true_level": "beginner"
+  },
+  {
+    "id": "prog-02",
+    "title": "Algorithmes et structures de données avancées",
+    "description": "Arbres binaires, graphes, programmation dynamique et complexité algorithmique en C++.",
+    "true_category": "programming",
+    "true_level": "advanced"
+  },
+  {
+    "id": "prog-03",
+    "title": "Rust pour développeurs expérimentés",
+    "description": "Gestion de la mémoire sans garbage collector, ownership, borrow checker et concurrence sécurisée.",
+    "true_category": "programming",
+    "true_level": "advanced"
+  },
+  {
+    "id": "prog-04",
+    "title": "Programmation fonctionnelle avec Elixir",
+    "description": "Découvrez les processus légers, le pattern matching, OTP et la tolérance aux pannes sur la machine virtuelle Erlang.",
+    "true_category": "programming",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "prog-05",
+    "title": "Introduction à la programmation en Java",
+    "description": "Premiers pas avec Java, types primitifs, classes, collections et principes de base de la programmation orientée objet.",
+    "true_category": "programming",
+    "true_level": "beginner"
+  },
+  {
+    "id": "prog-06",
+    "title": "Architecture logicielle et Clean Code",
+    "description": "Principes SOLID, design patterns, refactoring et écriture de code testable et maintenable.",
+    "true_category": "programming",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "web-01",
+    "title": "Développement d'applications web avec Django",
+    "description": "Créez des sites dynamiques avec Django : modèles, vues, formulaires, authentification et déploiement.",
+    "true_category": "web",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "web-02",
+    "title": "React et TypeScript de zéro à la production",
+    "description": "Maîtrisez les composants, hooks, contextes et le typage strict pour bâtir des interfaces web performantes.",
+    "true_category": "web",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "web-03",
+    "title": "HTML5 et CSS3 pour débutants complets",
+    "description": "Apprenez à structurer une page web et à la styliser avec flexbox, grid et les règles de base du responsive design.",
+    "true_category": "web",
+    "true_level": "beginner"
+  },
+  {
+    "id": "web-04",
+    "title": "Conception et sécurité des API REST avec Node.js",
+    "description": "Construisez des API performantes avec Express, validation JWT, rate limiting et protection contre les failles OWASP.",
+    "true_category": "web",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "web-05",
+    "title": "Performances web et architectures JAMstack",
+    "description": "Optimisation du Largest Contentful Paint, rendu hybride avec Next.js et stratégies de cache avancées.",
+    "true_category": "web",
+    "true_level": "advanced"
+  },
+  {
+    "id": "web-06",
+    "title": "Créer une API GraphQL évolutive",
+    "description": "Schémas GraphQL, résolveurs, abonnements en temps réel et fédération de sous-graphes.",
+    "true_category": "web",
+    "true_level": "advanced"
+  },
+  {
+    "id": "data-01",
+    "title": "Introduction à la Data Science avec Python et Pandas",
+    "description": "Nettoyage de données, manipulation de DataFrames, agrégations et visualisations pour débuter l'analyse de données.",
+    "true_category": "data",
+    "true_level": "beginner"
+  },
+  {
+    "id": "data-02",
+    "title": "Machine Learning supervisé et non supervisé",
+    "description": "Régression, arbres de décision, clustering k-means, forêts aléatoires et validation croisée avec Scikit-Learn.",
+    "true_category": "data",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "data-03",
+    "title": "Deep Learning et vision par ordinateur avec PyTorch",
+    "description": "Réseaux neuronaux convolutifs (CNN), transfer learning et segmentation d'images en temps réel.",
+    "true_category": "data",
+    "true_level": "advanced"
+  },
+  {
+    "id": "data-04",
+    "title": "Bases de l'ingénierie des données et SQL",
+    "description": "Modélisation relationnelle, requêtes complexes, indexation et pipelines ETL pour transformer des données brutes.",
+    "true_category": "data",
+    "true_level": "beginner"
+  },
+  {
+    "id": "data-05",
+    "title": "Traitement automatique du langage naturel (NLP)",
+    "description": "Transformers, tokenisation, plongements de mots et affinement de modèles de langue (LLM).",
+    "true_category": "data",
+    "true_level": "advanced"
+  },
+  {
+    "id": "data-06",
+    "title": "Visualisation de données percutante avec Power BI",
+    "description": "Création de tableaux de bord interactifs, mesures DAX et storytelling visuel pour la prise de décision.",
+    "true_category": "data",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "design-01",
+    "title": "Principes fondamentaux du design UI/UX",
+    "description": "Ergonomie, typographie, hiérarchie visuelle et conception de maquettes centrées sur l'utilisateur pour le web et mobile.",
+    "true_category": "design",
+    "true_level": "beginner"
+  },
+  {
+    "id": "design-02",
+    "title": "Maîtriser Figma pour le prototypage interactif",
+    "description": "Composants, auto-layout, variables et systèmes de conception (Design Systems) pour équipes produit.",
+    "true_category": "design",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "design-03",
+    "title": "Accessibilité numérique et conformité RGAA",
+    "description": "Audit d'accessibilité web, contrastes WCAG, navigation clavier et conception de formulaires universels.",
+    "true_category": "design",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "design-04",
+    "title": "Design System d'entreprise à grande échelle",
+    "description": "Gouvernance de tokens de design, documentation vivante et pont technique entre designers et ingénieurs front-end.",
+    "true_category": "design",
+    "true_level": "advanced"
+  },
+  {
+    "id": "design-05",
+    "title": "Bases du graphisme vectoriel avec Illustrator",
+    "description": "Plume, formes géométriques, palettes de couleurs et création de logos et icônes vectorielles.",
+    "true_category": "design",
+    "true_level": "beginner"
+  },
+  {
+    "id": "design-06",
+    "title": "Animation d'interfaces et micro-interactions",
+    "description": "Transitions fluides, timing functions, animations SVG et feedback utilisateur pour enrichir l'expérience.",
+    "true_category": "design",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "biz-01",
+    "title": "Gestion de projet agile avec Scrum et Kanban",
+    "description": "Rôles Scrum, rituels agiles, planification de sprints et backlog management pour livrer de la valeur rapidement.",
+    "true_category": "business",
+    "true_level": "beginner"
+  },
+  {
+    "id": "biz-02",
+    "title": "Finance d'entreprise pour non-financiers",
+    "description": "Lire un bilan comptable, analyser un compte de résultat, calculer un seuil de rentabilité et comprendre les flux de trésorerie.",
+    "true_category": "business",
+    "true_level": "beginner"
+  },
+  {
+    "id": "biz-03",
+    "title": "Stratégie de croissance et Growth Marketing",
+    "description": "Acquisition de clients, entonnoir AARRR, tests A/B et analyse de cohortes pour startups et PME.",
+    "true_category": "business",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "biz-04",
+    "title": "Négociation commerciale et vente B2B",
+    "description": "Méthodes de prospection, qualification des prospects, closing et gestion de cycle de vente complexe en entreprise.",
+    "true_category": "business",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "biz-05",
+    "title": "Management d'équipes et leadership transversal",
+    "description": "Délégation, animation de réunions, résolution de conflits et développement de l'autonomie des collaborateurs.",
+    "true_category": "business",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "biz-06",
+    "title": "Levée de fonds et valorisation de startup",
+    "description": "Term sheet, pacte d'actionnaires, dilution du capital et préparation du pitch deck devant des investisseurs en capital-risque.",
+    "true_category": "business",
+    "true_level": "advanced"
+  },
+  {
+    "id": "other-01",
+    "title": "Prise de parole en public et communication orale",
+    "description": "Gérer son trac, structurer son discours, poser sa voix et captiver son auditoire lors d'une présentation.",
+    "true_category": "other",
+    "true_level": "beginner"
+  },
+  {
+    "id": "other-02",
+    "title": "Gestion du temps et efficacité personnelle",
+    "description": "Priorisation avec la matrice d'Eisenhower, méthode Pomodoro, réduction des distractions et organisation quotidienne.",
+    "true_category": "other",
+    "true_level": "beginner"
+  },
+  {
+    "id": "other-03",
+    "title": "Introduction à la photographie reflex et hybride",
+    "description": "Triangle d'exposition (vitesse, ouverture, ISO), composition de l'image et travail de la lumière naturelle.",
+    "true_category": "other",
+    "true_level": "beginner"
+  },
+  {
+    "id": "other-04",
+    "title": "Techniques de vulgarisation scientifique et technique",
+    "description": "Rendre accessibles des concepts complexes à travers des métaphores, des schémas et des démonstrations pratiques.",
+    "true_category": "other",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "other-05",
+    "title": "Méthodologie de recherche et esprit critique",
+    "description": "Identifier les biais cognitifs, évaluer la fiabilité des sources d'information et structurer un raisonnement d'analyse.",
+    "true_category": "other",
+    "true_level": "intermediate"
+  },
+  {
+    "id": "other-06",
+    "title": "Création et animation de podcasts audio",
+    "description": "Enregistrement sonore, montage sous Audacity, hébergement RSS et promotion auprès d'une communauté.",
+    "true_category": "other",
+    "true_level": "beginner"
+  }
+]
+

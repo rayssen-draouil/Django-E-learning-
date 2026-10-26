@@ -1,0 +1,104 @@
+Rapport de vérification — module courses
+========================================
+Date : 2026-10-25
+Environnement : Python 3.13.2, Django 5.2.18, pymongo 4.18.3
+Exécutable : .venv/Scripts/python.exe
+
+Commandes exécutées
+-------------------
+1. python manage.py check
+2. python manage.py test
+3. python -m coverage run manage.py test && python -m coverage report -m
+
+1) python manage.py check
+-------------------------
+System check identified no issues (0 silenced).
+Exit code: 0
+
+2) python manage.py test
+------------------------
+----------------------------------------------------------------------
+Ran 407 tests in 18.891s
+
+OK
+Found 407 test(s).
+System check identified no issues (0 silenced).
+Exit code: 0
+
+3) Couverture (suite complète, configuration .coveragerc)
+---------------------------------------------------------
+Name                                                        Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------------
+apps\courses\__init__.py                                        0      0   100%
+apps\courses\ai.py                                            349     28    92%   111, 139, 236-243, 288-289, 295, 301-302, 358-360, 362, 367, 396, 438, 550, 585-590, 622-623
+apps\courses\ai_eval\__init__.py                                0      0   100%
+apps\courses\ai_eval\metrics.py                                33      0   100%
+apps\courses\ai_eval\report.py                                125     15    88%   36, 45, 48, 50, 54, 58, 60, 62, 67, 83, 85, 91, 98, 126-127
+apps\courses\apps.py                                            4      0   100%
+apps\courses\forms.py                                         114      3    97%   183-184, 198
+apps\courses\images.py                                        101     10    90%   30, 56, 71-72, 76-77, 80, 94, 117-118
+apps\courses\management\__init__.py                             0      0   100%
+apps\courses\management\commands\__init__.py                    0      0   100%
+apps\courses\management\commands\ai_report.py                 278     16    94%   121-122, 124, 205-206, 241-242, 292, 311, 329, 335, 451-452, 520-521, 568
+apps\courses\management\commands\create_course_indexes.py      11      0   100%
+apps\courses\management\commands\seed_courses.py               58      2    97%   84-85
+apps\courses\repository.py                                     85      4    95%   30, 37, 42, 47
+apps\courses\services.py                                      178      7    96%   63-64, 259-260, 289, 309, 323
+apps\courses\tasks.py                                         285     65    77%   25-29, 81, 92, 97-135, 147, 225, 240-241, 251-252, 409-410, 445-446, 449-450, 477-480, 487-488, 490-500, 507, 512, 514, 516-517, 528-531, 541-542, 552-553, 563-564, 569
+apps\courses\translation.py                                   169      0   100%
+apps\courses\urls.py                                            5      0   100%
+apps\courses\views.py                                         404     39    90%   236-237, 362-364, 396-397, 405, 407, 411-413, 415-420, 422, 427-428, 451, 466-467, 473, 482-483, 493-494, 506-507, 518-519, 611-613, 615-617, 649, 672, 674
+-----------------------------------------------------------------------------------------
+TOTAL                                                        2199    189    91%
+Exit code: 0
+
+4) Suite de tests de la traduction (53 tests dédiés)
+----------------------------------------------------
+Client Groq mocké (HTTP), cache MongoDB, clé absente, 401/403/404, 429 avec
+retry du client Groq, timeout, JSON invalide puis retry, nombre d'objectifs
+incorrect, injection de prompt traitée comme donnée, charge XSS nettoyée et
+rendue via textContent, langue invalide, source égale à la cible sans appel,
+brouillon 404, CSRF, limiteur 10/minute, limite de 5 000 caractères,
+invalidation du cache (modification, statut, suppression), index unique
+compound et journalisation ai_logs (action translate, durée, succès, longueur).
+apps/courses/translation.py : 100 % ; apps/courses/views.py : 90 %.
+
+5) Suite de tests du lancement web de l'évaluation (58 tests dédiés)
+--------------------------------------------------------------------
+test_ai_report_run.py couvre : le cœur run_evaluation (36 entrées, progression
+1→36, délai configuré avec sleep mocké, mode real, modèle, generated_at), la
+clé GROQ_API_KEY absente sans repli mock, l'écriture atomique (fichier temporaire,
+os.replace, nettoyage en cas d'échec, conservation de l'ancien rapport), un run
+sans aucun cas répondu traité comme un échec, les états pending/running/done/error
+et le contrat JSON exact, le verrou Mongo (une évaluation à la fois, 409), le
+délai de 10 minutes (429 avec temps restant), les pannes d'insertion et de
+dispatch, la matrice de permissions (anonyme, étudiant, instructeur, administrateur),
+le CSRF, GET interdit sur le lancement, POST interdit sur le statut, les deux
+namespaces, l'affichage administrateur du bouton et sa dissimulation aux
+instructeurs, ainsi que les garanties statiques (textContent, pas de innerHTML,
+GET de statut, rechargement automatique, [hidden], cibles tactiles 44 px).
+Un test de bout en bout déclenche le POST, interroge le statut GET, vérifie
+l'écriture de report.json puis le refus 429 du second lancement.
+
+Notes
+-----
+- Les tests utilisent la base MongoDB dédiée e_learning_test via MongoTestCase.
+- apps/courses/tasks.py atteint 77 % : les branches Celery, le repli thread,
+  les pannes de verrou/insertion/dispatch et le filet de sécurité du worker sont
+  exercés ; le repli local historique des tâches IA génériques reste partiellement
+  couvert. Aucun échec de test n'est masqué par ce chiffre.
+- La couverture est calculée sur la suite complète (407 tests), pas uniquement sur
+  apps.courses.tests, afin de compter les parcours déclenchés depuis les autres apps.
+- ai_report : la couverture inclut le contournement du limiteur web, le délai entre
+  appels, la ventilation des erreurs API / JSON-enum et l'écriture atomique des
+  rapports report.md et report.json.
+- Lancement web : le verrou et l'état de progression sont persistés dans
+  course_ai_tasks ; aucun secret ni texte de cours n'est journalisé ou écrit dans
+  les rapports. Les tests mockent HTTP et ne lisent aucune clé réelle.
+- La page Rapport IA est couverte par une matrice de permissions, les états vide,
+  JSON invalide et mock, les valeurs affichées, l'échappement XSS, l'unicité du h1,
+  les légendes de tableaux et le lien depuis la liste des cours.
+- Traduction : le cache est injecté dans MongoTestCase (collection course_translations)
+  et purgé entre les tests ; les appels HTTP Groq sont mockés, aucune clé réelle
+  n'est lue ni écrite. Les tests vérifient que les textes et la clé ne figurent
+  jamais dans ai_logs.

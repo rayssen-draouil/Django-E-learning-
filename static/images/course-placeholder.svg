@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="placeholder-title placeholder-desc">
+  <title id="placeholder-title">SkillForge course placeholder</title>
+  <desc id="placeholder-desc">Decorative illustration used when a course has no image.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2e1"/>
+      <stop offset="1" stop-color="#e5f7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <circle cx="1040" cy="150" r="120" fill="#ffb703" fill-opacity=".25"/>
+  <circle cx="220" cy="600" r="160" fill="#1f2140" fill-opacity=".08"/>
+  <rect x="410" y="250" width="460" height="230" rx="28" fill="#ffffff" fill-opacity=".85" stroke="#1f2140" stroke-opacity=".18" stroke-width="4"/>
+  <rect x="450" y="300" width="260" height="22" rx="11" fill="#1f2140" fill-opacity=".35"/>
+  <rect x="450" y="345" width="360" height="18" rx="9" fill="#1f2140" fill-opacity=".2"/>
+  <rect x="450" y="385" width="300" height="18" rx="9" fill="#1f2140" fill-opacity=".2"/>
+  <path d="M520 520h240l40 70H480z" fill="#ffb703" fill-opacity=".7"/>
+  <text x="640" y="640" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="42" font-weight="700" fill="#1f2140">SkillForge</text>
+</svg>
