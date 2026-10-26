@@ -25,7 +25,7 @@ def send_templated_email(
         logger.warning("Skipping email: invalid recipient '%s'", recipient_email)
         return False
 
-    base_url = getattr(settings, "SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+    base_url = getattr(settings, "SITE_URL", "https://django-e-learning.onrender.com").rstrip("/")
     if "action_url" in context and context["action_url"].startswith("/"):
         context["action_url"] = f"{base_url}{context['action_url']}"
 
