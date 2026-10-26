@@ -219,10 +219,12 @@ _smtp_pass = (
     or os.environ.get("brevo_smtp_key", "")
 )
 
-# Use Brevo SMTP if credentials and host are present; otherwise fall back safely to console backend
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "") or os.environ.get("brevo_api_key", "")
+
+# Use Brevo HTTP/SMTP backend if API key or SMTP credentials are present; otherwise console
 _default_backend = (
     "apps.mentors.email_backend.BrevoEmailBackend"
-    if (_smtp_host and _smtp_user and _smtp_pass)
+    if (BREVO_API_KEY or (_smtp_host and _smtp_user and _smtp_pass))
     else "django.core.mail.backends.console.EmailBackend"
 )
 EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", _default_backend)
